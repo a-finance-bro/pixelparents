@@ -1,8 +1,22 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 15, 2026 — 7:53 AM Pacific
+
+### Summary of changes since last update
+Hardened the new pre-commit secret guard in response to roborev findings on the previous commit (job 5, verdict F). The generic credential scan was case-sensitive and would have missed the most common secret casing (uppercase env-style vars like `AWS_SECRET_ACCESS_KEY=` / `CLOUDFLARE_API_TOKEN=`); fixed that plus two lower-severity issues. Re-tested and confirmed the guard now blocks uppercase secrets while still ignoring placeholders.
+
+### Detail of changes made:
+- **Case-insensitive generic scan (Medium fix):** `grep -EI` → `grep -EiI` so uppercase `KEY=value` secrets are caught (the original missed them; high-signal provider fingerprints already matched specific token shapes regardless of case).
+- **Fixed-string log reminder (Low fix):** `grep -qx "$prd"` → `grep -qxF "$prd"` so branch names with regex metacharacters (e.g. `feature/foo.bar`) compare literally.
+- **Narrowed scan exclusion (Low fix):** the added-line scan now excludes only `.githooks/pre-commit` (the file that legitimately contains the patterns) instead of the whole `.githooks/` dir, so future hook scripts are still scanned for secrets.
+- **Verification:** planted uppercase `AWS_SECRET_ACCESS_KEY`/`CLOUDFLARE_API_TOKEN` values (now blocked); confirmed placeholder values (`your_token_here`, anything containing `EXAMPLE`) still pass; real repo files still pass.
+- roborev finding job 5 closed after these fixes landed.
+
+### Potential concerns to address:
+- The generic credential heuristic is still best-effort: it requires a `keyword=value` shape with 16+ value chars and skips a placeholder allowlist, so novel secret formats or secrets not preceded by a known keyword can slip. The CI secret-scan backstop (gitleaks/trufflehog) remains the recommended belt-and-suspenders for a public repo.
+
 ## Progress Update as of June 15, 2026 — 7:46 AM Pacific
-*(Most recent updates at top)*
 
 ### Summary of changes since last update
 First entry for this branch. Bootstrapped the project from an empty repo into a deployed, live one-page Next.js site: scaffolded a Next.js (App Router + TypeScript + Tailwind) app, built a "Hello, world" landing page featuring the pixel mascot centered on a black background, pushed to GitHub (preserving the pre-existing LICENSE), deployed to Vercel production, and wired the custom domain `pixelparents.org` through Cloudflare DNS. Also added open-source safety tooling (a secret-scanning pre-commit hook) and this progress-logging workflow.

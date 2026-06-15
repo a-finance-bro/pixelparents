@@ -41,7 +41,7 @@ done <<< "$staged_files"
 # 1b. Scan ADDED lines for secret-shaped content
 #     (.githooks/ is excluded so this file's own patterns don't self-trigger)
 # ---------------------------------------------------------------------------
-added=$(git diff --cached --no-color -U0 -- . ':(exclude).githooks/**' \
+added=$(git diff --cached --no-color -U0 -- . ':(exclude).githooks/pre-commit' \
           | grep -E '^\+' | grep -Ev '^\+\+\+' || true)
 
 if [ -n "$added" ]; then
@@ -56,7 +56,7 @@ if [ -n "$added" ]; then
 
   # Generic "key = long-value" assignments, minus obvious placeholders
   gen=$(echo "$added" \
-    | grep -EI "(api[_-]?key|secret|token|password|passwd|credential|access[_-]?key)[[:space:]]*[:=][[:space:]]*['\"]?[A-Za-z0-9/+_-]{16,}" \
+    | grep -EiI "(api[_-]?key|secret|token|password|passwd|credential|access[_-]?key)[[:space:]]*[:=][[:space:]]*['\"]?[A-Za-z0-9/+_-]{16,}" \
     | grep -Eiv "your_|example|changeme|placeholder|dummy|sample|redacted|xxxx|<[a-z_]+>|\\\$\{|process\.env|os\.environ" || true)
   if [ -n "$gen" ]; then
     echo "${YEL}⚠ Possible hardcoded credential (review before committing):${NC}"
@@ -70,7 +70,7 @@ fi
 # ---------------------------------------------------------------------------
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
 prd="PRD/${branch}.md"
-if ! printf '%s\n' "$staged_files" | grep -qx "$prd"; then
+if ! printf '%s\n' "$staged_files" | grep -qxF "$prd"; then
   echo "${YEL}⚠ Reminder:${NC} $prd was not updated in this commit."
   echo "  Add a new 'Progress Update' entry (newest at top) to document this work."
 fi
