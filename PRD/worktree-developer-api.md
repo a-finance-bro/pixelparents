@@ -1,6 +1,45 @@
 # Pixel Parents — Progress Log (branch: `worktree-developer-api`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 15, 2026 — 8:58 PM Pacific
+
+### Summary of changes since last update
+Deployed the Developer API to production and made `api_keys` **self-healing** to
+survive the multi-agent shared-DB collision. The API is live and fully working at
+https://pixelparents.org/developers.
+
+### Detail of changes made:
+- **Deployed to prod:** merged developer-api into `main` (`76e25b0`), pushed, and
+  Vercel auto-deployed. `/developers` page + all API endpoints are live.
+- **Neon wired up:** the user provisioned Neon ("neon-rose-planet") via the Vercel
+  integration — `DATABASE_URL` (+ POSTGRES_*/PG*) is in Vercel env (Prod/Preview/Dev)
+  and in the primary repo's `.env.local`. Created `api_keys` via `scripts/db-setup.mjs`.
+- **End-to-end verified in prod:** issue key → 201; `/api/v1/me` → 200 (tier public);
+  `/api/v1/stats` → 200 (`database:"ready"`); `/api/v1/breakdowns` → 403 approval_required;
+  bad key → 401.
+- **Root-caused the 503s:** NOT env/deploy. The `api_keys` table was being **dropped**
+  by a parallel agent's `drizzle-kit push` (its schema doesn't include api_keys, so push
+  treats it as orphaned). Same DB holds `signups`/`children` (signup agent) — mutual
+  destruction risk between two partial schemas pushing to one Neon DB.
+- **Durable fix — self-healing table:** added `lib/db/ensure.ts` (`ensureApiKeysTable`,
+  idempotent `CREATE TABLE IF NOT EXISTS`, memoized once per cold start) and call it at
+  the top of `issueApiKey` / `verifyApiKey` / `listApiKeys`. If an external push drops the
+  table, the next API call recreates it — endpoint never stays broken. Verified locally by
+  dropping the table and confirming recreate+insert. Chose this over hand-mirroring the
+  signup agent's `signups`/`children` in my schema (that risked a push *altering their live
+  tables* and would conflict when their feature merges).
+- **Kept** `scripts/db-setup.mjs` (manual recreate util); removed throwaway introspection scripts.
+
+### Potential concerns to address:
+- **Self-heal recreates the TABLE, not the ROWS.** If another agent's push drops api_keys,
+  previously-issued keys are lost (table comes back empty). Acceptable now (no real users),
+  but the permanent fix is still: **one shared Drizzle schema on `main` + migrations, and
+  NO `drizzle-kit push` against the shared Neon DB.** Other agents must stop running push.
+- **Full schema consolidation deferred** until the signup feature merges to `main` — at
+  that point put `signups`/`children`/`api_keys` (+ any Clerk tables) in one `lib/db/schema/`
+  dir, one `drizzle.config`, and switch to `db:generate`+migrate.
+- **This branch is behind `main`** (which has the Clerk-auth merge + README). Merging this
+  commit forward; admin approve/revoke UI still not wired into the Clerk-gated `/admin`.
 ## Progress Update as of June 15, 2026 — 6:37 PM Pacific
 
 ### Summary of changes since last update
