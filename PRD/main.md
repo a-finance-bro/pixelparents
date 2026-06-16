@@ -1,6 +1,103 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 16, 2026 — 12:50 PM Pacific
+
+### Summary of changes since last update
+All Pixel Parents email now sends from the verified `DROdio@pixelparents.org`
+sender and carries DROdio's signature block. (`pixelparents.org` was already a
+verified sending domain on Resend — no DNS work needed.) Sent a test email from
+the new address to confirm.
+
+### Detail of changes made:
+- **Resend:** confirmed `pixelparents.org` domain is `verified` (sending enabled).
+  Sent a test email from `DROdio@pixelparents.org` to drodio@storytell.ai +
+  DROdio@pixelparents.org (Resend id 011804c4…).
+- **`lib/email.ts`:** refactored to a single `sendEmail()` helper that all
+  notifications route through. New default `FROM = "DROdio <DROdio@pixelparents.org>"`.
+  Every email now appends a signature block:
+  `— / DROdio / Devina's dad (7th grade) / +1.202.250.3846 cell or WhatsApp`.
+- **Vercel env:** updated `RESEND_FROM` (Production) to
+  `DROdio <DROdio@pixelparents.org>` (code default matches as a safety net).
+- Verified `next build` + TypeScript clean.
+
+### Potential concerns to address:
+- `RESEND_FROM` updated for **Production** only (Preview/Dev unset → fall back to
+  the code default, which is the same address). Fine for live email.
+## Progress Update as of June 16, 2026 — 12:01 PM Pacific
+
+### Summary of changes since last update
+On a new API access request, the applicant now also gets a confirmation email
+("under review"), alongside the existing admin notification. Guarded so a
+duplicate submit doesn't re-email.
+
+### Detail of changes made:
+- **`lib/email.ts`:** added `notifyApiRequestReceived({to,name})` — "Your Pixel
+  Parents API request is under review ⏳", links to /account.
+- **`lib/db/api-keys.ts`:** `createRequest` now returns `{ row, created }`.
+- **`app/(authed)/account/actions.ts`:** `submitRequest` emails the applicant +
+  admin only when `created` is true (no re-emailing on duplicate submits).
+- Verified `next build` + TypeScript clean.
+## Progress Update as of June 16, 2026 — 8:39 AM Pacific
+
+### Summary of changes since last update
+Fixed the public entry into the approval flow. This app's Clerk `auth.protect()`
+**rewrites signed-out visitors to 404** (same as `/admin`), so the `/developers`
+"Request API access" CTA → `/account` would 404 for logged-out users. Routed the
+CTA through `/sign-in?redirect_url=/account` and made the sign-in page honor a
+relative `redirect_url` (also benefits the admin login).
+
+### Detail of changes made:
+- **`app/developers/page.tsx`:** both CTAs now link to `/sign-in?redirect_url=/account`.
+- **`app/(authed)/sign-in/[[...sign-in]]/page.tsx`:** reads `redirect_url` (relative
+  paths only — open-redirect guard) and passes `forceRedirectUrl` / `signUpForceRedirectUrl`
+  to `<SignIn>`. Signed-out → sign-in/up → lands on `/account`.
+
+### Verified earlier (prod, SQL-seeded keys): approved key → 200, pending → 401,
+no key → 401, /breakdowns (approved) → 200, /developers → 200. `/account` 404s for
+signed-out (expected — matches `/admin`); the CTA now sends them to sign-in first.
+## Progress Update as of June 16, 2026 — 8:35 AM Pacific
+
+### Summary of changes since last update
+Replaced instant self-serve API keys with an **approval flow**: Clerk account
+up front → request → admin approve/reject (+ email) → reveal key on a Clerk-gated
+`/account` page. One gate now — every endpoint requires an approved key. Spec:
+`docs/superpowers/specs/2026-06-16-api-key-approval-flow-design.md`.
+
+### Detail of changes made:
+- **Schema (`lib/db/schema/api-keys.ts`):** added `clerk_user_id`, `status`
+  (pending|approved|rejected), `decided_at`, `decided_by`, `reject_reason`,
+  `revealed_at`; `key_hash`/`key_prefix` now nullable; `tier` retired. Live Neon
+  DB migrated via idempotent ALTERs (`lib/db/ensure.ts` self-migrates on cold
+  start; also ran `scripts/migrate-apikeys.mjs` — 2 legacy keys backfilled `approved`).
+- **DB ops (`lib/db/api-keys.ts`):** `getRequestByClerkUser`, `createRequest`
+  (one active row/user), `getRequestById`, `approveRequest`, `rejectRequest`,
+  `revealOrRotateKey` (generates key only after approval, raw shown once),
+  `listRequests`. `verifyApiKey` now requires `status='approved'` + not revoked.
+- **Auth (`lib/api/authorize.ts`):** collapsed to one check — approved key or 401.
+  All four `/api/v1/*` routes updated; `/me` returns `{status:"approved"}`.
+  Removed `tierSatisfies`/`Tier`. Deleted the old public `POST /api/developers/keys`.
+- **`/account` (new, `app/(authed)/account/`):** Clerk-gated page renders by state
+  (none→request form, pending, rejected→reason+reapply, approved→reveal/regenerate
+  key). Server actions `submitRequest`/`revealKey`/`regenerateKey`. `proxy.ts` now
+  protects `/account` too.
+- **Admin (`app/(authed)/admin/api-requests/`):** filled the stub — lists requests
+  (pending first) with Approve / Reject(reason) server actions; re-checks `isAdminEmail`.
+- **Email (`lib/email.ts`):** `notifyAdminNewApiRequest` (on new request) +
+  `notifyApiDecision` (approved/rejected to applicant, approval links to /account).
+- **Public `/developers`:** removed the open key console; now a "Request API access"
+  CTA → `/account`, a 3-step "how access works", and endpoints with no tier column.
+- **Validation:** `keyRequestSchema` → `apiRequestSchema` (just `intended_use`).
+- Verified: `next build` + TypeScript clean; `vitest` 11/11.
+
+### Potential concerns to address:
+- **No server-side OHS verification** — "OHS families only" is honor-system +
+  manual admin review (by design for now).
+- **Clerk sign-up must be enabled** in the Clerk instance for new applicants to
+  create accounts; admin approval still required before any key.
+- End-to-end (Clerk sign-in → request → approve → reveal → call API) is verified
+  via a SQL-seeded approved key against prod; full UI path should be smoke-tested
+  in the browser.
 ## Progress Update as of June 16, 2026 — 4:44 AM Pacific
 
 ### Summary of changes since last update
