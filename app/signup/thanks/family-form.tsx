@@ -332,7 +332,8 @@ export default function FamilyForm({
             name="childNotes"
             value={childNotes}
             onChange={(e) => setChildNotes(e.target.value)}
-            rows={3}
+            rows={4}
+            placeholder="What do they most enjoy doing with others? What would you like to expose them to more (or less) of? What kinds of activities would you like them to do with other OHS kids & families?"
             className={inputCls}
           />
         </div>
