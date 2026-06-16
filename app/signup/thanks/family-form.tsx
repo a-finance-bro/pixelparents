@@ -232,7 +232,8 @@ export default function FamilyForm({
 
         <div>
           <label className={labelCls}>
-            Photos of things you enjoy doing as a family
+            Would you like to share any photos of your family, including
+            activities you enjoy?
           </label>
           <p className="mt-1 text-xs text-white/40">
             Resized &amp; optimized in your browser before upload. Add as many as
@@ -273,7 +274,12 @@ export default function FamilyForm({
         <hr className="border-white/10" />
 
         {/* Child-level */}
-        <h2 className="text-lg font-semibold">About your child</h2>
+        <div>
+          <h2 className="text-lg font-semibold">About your child</h2>
+          <p className="text-sm text-white/50">
+            (Feel free to add non-OHS children as well)
+          </p>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={labelCls} htmlFor="childFirstName">Child&apos;s first name</label>
@@ -326,7 +332,8 @@ export default function FamilyForm({
             name="childNotes"
             value={childNotes}
             onChange={(e) => setChildNotes(e.target.value)}
-            rows={3}
+            rows={4}
+            placeholder="What do they most enjoy doing with others? What would you like to expose them to more (or less) of? What kinds of activities would you like them to do with other OHS kids & families?"
             className={inputCls}
           />
         </div>

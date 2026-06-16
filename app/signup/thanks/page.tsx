@@ -51,18 +51,21 @@ export default async function ThanksPage({
         width={2000}
         height={1125}
         priority
-        className="aspect-[5/2] w-full object-cover object-top"
+        className="aspect-[13/5] w-full object-cover object-top"
       />
       <div className="mx-auto w-full max-w-2xl px-6 py-12">
         {admin && id ? (
           <Link
             href={`/admin/parents/${id}/edit`}
-            className="mb-4 inline-block text-sm font-medium text-teal-300 hover:underline"
+            className="mb-4 inline-block text-sm font-medium text-amber-400 hover:underline"
           >
             ← Edit parent details
           </Link>
         ) : null}
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{greeting}</h1>
+        <h2 className="mt-2 text-xl font-semibold text-white/90 sm:text-2xl">
+          Please tell us about your interests + child(ren), below.
+        </h2>
 
         <div className="mt-6 space-y-4 text-white/70">
           <p>
@@ -71,7 +74,7 @@ export default async function ThanksPage({
               href="https://festival.so/profile/founder/drodio"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-teal-300 hover:underline"
+              className="text-amber-400 hover:underline"
             >
               DROdio
             </a>
@@ -81,7 +84,7 @@ export default async function ThanksPage({
               href="https://chief.bot"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-teal-300 hover:underline"
+              className="text-amber-400 hover:underline"
             >
               Chief
             </a>
@@ -101,7 +104,7 @@ export default async function ThanksPage({
               href="https://github.com/drodio/pixelparents"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-teal-300 hover:underline"
+              className="text-amber-400 hover:underline"
             >
               open source
             </a>{" "}
@@ -126,7 +129,7 @@ export default async function ThanksPage({
                 For reference, here are{" "}
                 <a
                   href={DRODIO_SUBMISSION_URL}
-                  className="text-teal-300 hover:underline"
+                  className="text-amber-400 hover:underline"
                 >
                   my answers
                 </a>
@@ -134,6 +137,9 @@ export default async function ThanksPage({
               </>
             ) : null}
           </p>
+          <h2 className="pt-2 text-xl font-semibold text-white sm:text-2xl">
+            Your location, interests &amp; child(ren)
+          </h2>
           <p className="text-white/50">
             This information is optional — feel free to hold off until later if
             you prefer. It&apos;s stored in a Neon serverless Postgres database,
