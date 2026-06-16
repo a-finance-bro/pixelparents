@@ -1,6 +1,26 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 15, 2026 — 6:18 PM Pacific
+
+### Summary of changes since last update
+Brainstormed and wrote an approved design spec for a **Developer API** for pixelparents.org (modeled on festival.so/developers), plus a `/developers` docs page. No implementation code yet — spec only, committed so the parallel signup agent and future agents can see the plan and the coordination contract.
+
+### Detail of changes made:
+- **Spec:** `docs/superpowers/specs/2026-06-15-developer-api-design.md` — full design, user-approved.
+- **Reconciled the "require approval" ask:** getting an API key is **self-serve/instant**; getting **elevated data** requires DROdio approval. Two tiers on a single key: `public` (instant) sees only ultra-abstract aggregates (total signups, total children, updated_at); `approved` (DROdio flips a per-key flag in `/admin`) adds richer **non-PII** reads (option taxonomies + count breakdowns). **Raw PII is never exposed at any tier** — honors the signup spec's privacy note.
+- **v1 is read-only.** Write/ingest (`POST /api/v1/signups`) is explicitly deferred.
+- **Endpoints:** `GET /api/v1/stats` (public), `GET /api/v1/me` (public), `GET /api/v1/options` (approved), `GET /api/v1/breakdowns` (approved). Plus `POST /api/developers/keys` to self-serve a `public` key (returns raw once, emails DROdio the request). Auth = `Authorization: Bearer sk_pixelparents_live_…`; 401 unknown/revoked, 403 `approval_required` on tier mismatch.
+- **New `api_keys` table** in its own schema file (`lib/db/schema/api-keys.ts`) to avoid colliding with the signup agent. Stores SHA-256 hash + display prefix + name/email/intended_use + tier + approved/revoked/last_used timestamps. Raw key shown once.
+- **`/developers` page** (`app/developers/page.tsx`): Pixel Parents look-and-feel (black bg, mascot), festival-style sections — header + privacy promise, tiers, endpoints table, example responses, and an **open** "get a key" console (no login needed since Tier 1 is self-serve).
+- **`/admin`** gets a small "API keys" section (approve/revoke) reusing the signup feature's Basic Auth gate.
+
+### Potential concerns to address:
+- **Parallel-build coordination is the #1 risk.** A second agent is concurrently building `/signup` (Neon + Drizzle + Zod). This feature only *adds* files and *shares* the DB client (`lib/db`), `DATABASE_URL`, `lib/options.ts`, and `lib/email.ts`. Plan must reconcile shared files (prefer a `lib/db/schema/` directory + barrel + drizzle-kit glob so both agents' tables compose without editing the same file).
+- **DB may not exist yet when the API ships.** Aggregate endpoints must guard on table existence (`to_regclass('public.signups')`) and degrade to zeroed counts + `database: "pending"` (200, not 500).
+- **No rate limiting in v1** — public self-serve keys return only low-risk aggregate counts; noted as a future hardening item.
+- **Next step:** writing-plans skill to produce the implementation plan; then build (TDD for key mechanics + tier gating + zod). Implementation lands in subsequent commits.
+
 ## Progress Update as of June 15, 2026 — 6:05 PM Pacific
 
 ### Summary of changes since last update
