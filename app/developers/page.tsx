@@ -56,7 +56,10 @@ export default function DevelopersPage() {
             Build with the Pixel Parents API
           </h1>
           <p className="text-base font-semibold text-red-500">
-            This API is limited use by OHS families only
+            This API is limited to use by OHS families only
+          </p>
+          <p className="text-base font-normal text-red-500">
+            Encourage your child(ren) to code (or vibe code!) something fun with this API!
           </p>
           <p className="max-w-xl text-base leading-relaxed text-white/60">
             A free, instant key gives you high-level community stats. We only ever return{" "}

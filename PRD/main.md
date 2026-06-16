@@ -1,6 +1,17 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 16, 2026 — 4:41 AM Pacific
+
+### Summary of changes since last update
+`/developers` red-notice copy tweaks only: reworded line 1 to "This API is
+limited to use by OHS families only" and added a non-bold red second line
+"Encourage your child(ren) to code (or vibe code!) something fun with this API!".
+Shipped to prod.
+
+### Detail of changes made:
+- **`app/developers/page.tsx`:** header now has two red `<p>` lines — bold line 1
+  (reworded), and a `font-normal text-red-500` line 2. No behavior change.
 ## Progress Update as of June 16, 2026 — 4:36 AM Pacific
 
 ### Summary of changes since last update
