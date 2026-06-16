@@ -6,6 +6,7 @@ import {
   type Tier,
 } from "@/lib/api-keys";
 import { getDb } from "./index";
+import { ensureApiKeysTable } from "./ensure";
 import { apiKeys } from "./schema/api-keys";
 
 export type IssuedKey = {
@@ -24,6 +25,7 @@ export async function issueApiKey(input: {
   intendedUse: string;
   label?: string | null;
 }): Promise<IssuedKey> {
+  await ensureApiKeysTable();
   const { raw, hash, prefix } = generateApiKey();
   const [row] = await getDb()
     .insert(apiKeys)
@@ -66,6 +68,7 @@ export async function verifyApiKey(
 ): Promise<VerifiedKey | null> {
   const raw = parseBearer(authHeader);
   if (!raw) return null;
+  await ensureApiKeysTable();
   const hash = hashApiKey(raw);
   const [row] = await getDb()
     .select({
@@ -99,6 +102,7 @@ export async function verifyApiKey(
 // --- Admin operations (called from the Basic-Auth/Clerk-gated /admin page) ---
 
 export async function listApiKeys() {
+  await ensureApiKeysTable();
   return getDb()
     .select({
       id: apiKeys.id,
