@@ -1,6 +1,31 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 15, 2026 — 10:25 PM Pacific
+
+### Summary of changes since last update
+Scrubbed "children" from the public Developer API surface per DROdio: removed
+`total_children` from `/api/v1/stats`, renamed `children_by_grade` →
+`signups_by_grade` in `/api/v1/breakdowns` (grade still counted from child rows,
+just relabeled), and reworded the `/developers` privacy copy to "never any PII
+like names, emails, phones, or photos." Shipped to prod.
+
+### Detail of changes made:
+- **`lib/db/aggregates.ts`:** `Stats` no longer has `total_children`; `getStats`
+  dropped the children count. `Breakdowns.children_by_grade` → `signups_by_grade`
+  (query still reads `children.grade`, aggregated counts only — comment added).
+- **`app/developers/page.tsx`:** metadata + header privacy line → "never any PII
+  like names, emails, phones, or photos"; tier copy drops "total children";
+  endpoints table stats desc → "(signups, updated_at)"; EXAMPLE_STATS drops
+  `total_children`; EXAMPLE_BREAKDOWNS `children_by_grade` → `signups_by_grade`.
+- **`app/developers/key-console.tsx`:** footer privacy line reworded to match.
+- Verified: `next build` + TypeScript clean; no leftover `total_children` /
+  `children_by_grade` references in `app`/`lib`.
+
+### Potential concerns to address:
+- `signups_by_grade` is slightly a misnomer — counts are over child rows (a family
+  can have multiple children in different grades), surfaced under a signups-named
+  key per request. Still aggregate-only, no PII.
 ## Progress Update as of June 15, 2026 — 9:27 PM Pacific
 
 ### Summary of changes since last update

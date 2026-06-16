@@ -128,8 +128,8 @@ export function KeyConsole() {
         {submitting ? "Generating…" : "Get a free API key"}
       </button>
       <p className="text-xs text-white/40">
-        Instant, no approval needed. We only ever return counts and taxonomies — never names, emails,
-        phones, children, or photos.
+        Instant, no approval needed. We only ever return counts and taxonomies — never any PII like
+        names, emails, phones, or photos.
       </p>
     </form>
   );

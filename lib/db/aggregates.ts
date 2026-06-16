@@ -32,7 +32,6 @@ async function safeCountMap(run: () => Promise<Array<{ k: string | null; c: numb
 
 export type Stats = {
   total_signups: number;
-  total_children: number;
   updated_at: string;
   database: DbState;
 };
@@ -40,18 +39,12 @@ export type Stats = {
 export async function getStats(): Promise<Stats> {
   const updated_at = new Date().toISOString();
   if (!hasDatabase() || !(await tableExists("signups"))) {
-    return { total_signups: 0, total_children: 0, updated_at, database: "pending" };
+    return { total_signups: 0, updated_at, database: "pending" };
   }
   const sql = getSql();
   const signupRows = (await sql`SELECT count(*)::int AS c FROM signups`) as Array<{ c: number }>;
-  let total_children = 0;
-  if (await tableExists("children")) {
-    const childRows = (await sql`SELECT count(*)::int AS c FROM children`) as Array<{ c: number }>;
-    total_children = childRows[0]?.c ?? 0;
-  }
   return {
     total_signups: signupRows[0]?.c ?? 0,
-    total_children,
     updated_at,
     database: "ready",
   };
@@ -91,7 +84,7 @@ export type Breakdowns = {
   signups_by_affiliation: CountMap;
   signups_by_tech_depth: CountMap;
   signups_by_skillset: CountMap;
-  children_by_grade: CountMap;
+  signups_by_grade: CountMap;
   top_interests: Array<{ interest: string; count: number }>;
   updated_at: string;
   database: DbState;
@@ -104,7 +97,7 @@ export async function getBreakdowns(): Promise<Breakdowns> {
     signups_by_affiliation: {},
     signups_by_tech_depth: {},
     signups_by_skillset: {},
-    children_by_grade: {},
+    signups_by_grade: {},
     top_interests: [],
     updated_at,
     database: "pending",
@@ -119,7 +112,7 @@ export async function getBreakdowns(): Promise<Breakdowns> {
     signups_by_affiliation,
     signups_by_tech_depth,
     signups_by_skillset,
-    children_by_grade,
+    signups_by_grade,
     top_interests,
   ] = await Promise.all([
     safeCountMap(
@@ -150,6 +143,8 @@ export async function getBreakdowns(): Promise<Breakdowns> {
           c: number;
         }>,
     ),
+    // Grade distribution. Surfaced as `signups_by_grade`; the underlying counts
+    // come from child rows (where grade lives), aggregated — never any child PII.
     hasChildren
       ? safeCountMap(
           async () =>
@@ -187,7 +182,7 @@ export async function getBreakdowns(): Promise<Breakdowns> {
     signups_by_affiliation,
     signups_by_tech_depth,
     signups_by_skillset,
-    children_by_grade,
+    signups_by_grade,
     top_interests,
     updated_at,
     database: "ready",

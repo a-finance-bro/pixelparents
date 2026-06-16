@@ -7,13 +7,12 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Developer API — Pixel Parents",
   description:
-    "Build with the Pixel Parents API. Get a free key instantly for high-level community stats; request approval for richer non-PII data. Never returns names, emails, phones, children, or photos.",
+    "Build with the Pixel Parents API. Get a free key instantly for high-level community stats; request approval for richer non-PII data. Never returns any PII like names, emails, phones, or photos.",
 };
 
 // Hand-trimmed illustrative payloads so the response shape is obvious at a glance.
 const EXAMPLE_STATS = `{
   "total_signups": 42,
-  "total_children": 37,
   "updated_at": "2026-06-15T18:30:00.000Z",
   "database": "ready"
 }`;
@@ -23,7 +22,7 @@ const EXAMPLE_BREAKDOWNS = `{
   "signups_by_affiliation": { "Existing parent (currently enrolled)": 22, "New parent …": 12 },
   "signups_by_tech_depth":  { "10x Developer": 9, "Vibe coder": 7 },
   "signups_by_skillset":    { "Frontend": 14, "Backend": 11, "AI LLM Wrangler": 8 },
-  "children_by_grade":      { "9th": 11, "10th": 9, "11th": 8 },
+  "signups_by_grade":       { "9th": 11, "10th": 9, "11th": 8 },
   "top_interests": [ { "interest": "robotics", "count": 12 },
                      { "interest": "music", "count": 9 } ],
   "updated_at": "2026-06-15T18:30:00.000Z",
@@ -31,7 +30,7 @@ const EXAMPLE_BREAKDOWNS = `{
 }`;
 
 const ENDPOINTS: Array<[string, string, string, "Public" | "Approved"]> = [
-  ["GET", "/api/v1/stats", "High-level totals (signups, children, updated_at)", "Public"],
+  ["GET", "/api/v1/stats", "High-level totals (signups, updated_at)", "Public"],
   ["GET", "/api/v1/me", "Your key's tier + approval status", "Public"],
   ["GET", "/api/v1/options", "Option taxonomies + interests pool (non-PII)", "Approved"],
   ["GET", "/api/v1/breakdowns", "Aggregate counts by state / affiliation / skillset / grade …", "Approved"],
@@ -58,8 +57,8 @@ export default function DevelopersPage() {
           </h1>
           <p className="max-w-xl text-base leading-relaxed text-white/60">
             A free, instant key gives you high-level community stats. We only ever return{" "}
-            <span className="font-semibold text-white/80">counts and taxonomies</span> — never names,
-            emails, phones, children, or photos.
+            <span className="font-semibold text-white/80">counts and taxonomies</span> — never any PII
+            like names, emails, phones, or photos.
           </p>
         </header>
 
@@ -72,7 +71,7 @@ export default function DevelopersPage() {
               <p className="font-display text-2xl font-bold">Free &amp; instant</p>
               <p className="text-sm text-white/60">
                 Self-serve below — no approval. Returns ultra-high-level aggregates only: total
-                signups, total children, and a last-updated timestamp.
+                signups and a last-updated timestamp.
               </p>
             </div>
             <div className="flex flex-col gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-5">
