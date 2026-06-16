@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { checkBotId } from "botid/server";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { signups, children, type Photo } from "@/lib/db/schema/signups";
 import { familySchema, childSchema } from "@/lib/validation";
 
@@ -99,6 +99,7 @@ export async function saveFamily(
 
   const photos = parsePhotos(formData.get("photos"));
 
+  const db = getDb();
   try {
     await db
       .update(signups)

@@ -1,3 +1,19 @@
+CREATE TABLE "api_keys" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"key_hash" text NOT NULL,
+	"key_prefix" text NOT NULL,
+	"label" text,
+	"name" text NOT NULL,
+	"email" text NOT NULL,
+	"intended_use" text NOT NULL,
+	"tier" text DEFAULT 'public' NOT NULL,
+	"approved_at" timestamp with time zone,
+	"revoked_at" timestamp with time zone,
+	"last_used_at" timestamp with time zone,
+	CONSTRAINT "api_keys_key_hash_unique" UNIQUE("key_hash")
+);
+--> statement-breakpoint
 CREATE TABLE "children" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"signup_id" uuid NOT NULL,

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { eq } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { signups } from "@/lib/db/schema/signups";
 import { getInterestPool } from "@/lib/interests";
 import FamilyForm from "./family-form";
@@ -18,7 +18,7 @@ const DRODIO_SUBMISSION_URL = process.env.NEXT_PUBLIC_DRODIO_SUBMISSION_URL;
 async function getFirstName(id?: string): Promise<string | null> {
   if (!id || !UUID_RE.test(id)) return null;
   try {
-    const [row] = await db
+    const [row] = await getDb()
       .select({ firstName: signups.firstName })
       .from(signups)
       .where(eq(signups.id, id))

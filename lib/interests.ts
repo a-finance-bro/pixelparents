@@ -1,11 +1,11 @@
 import { sql } from "drizzle-orm";
-import { db } from "./db";
+import { getDb } from "./db";
 
 // Distinct union of all interests entered so far (parents + children),
 // used to seed the pill picker. Degrades to [] if the table doesn't exist yet.
 export async function getInterestPool(): Promise<string[]> {
   try {
-    const result = await db.execute(sql`
+    const result = await getDb().execute(sql`
       SELECT DISTINCT t.i AS interest
       FROM (
         SELECT unnest(parent_interests) AS i FROM signups

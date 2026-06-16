@@ -58,3 +58,18 @@ export function linkedinUrlFromHandle(handle?: string | null): string | null {
   const h = (handle ?? "").trim();
   return h ? `https://linkedin.com/in/${h}` : null;
 }
+
+// --- Developer API: self-serve key request (from /developers) ---
+// Free-text fields are length-capped; email is format-checked.
+export const keyRequestSchema = z.object({
+  name: z.string().trim().min(1, "Your name is required").max(120),
+  email: z.email("Enter a valid email").max(200),
+  intended_use: z
+    .string()
+    .trim()
+    .min(1, "Tell us what you're building")
+    .max(2000),
+  label: z.string().trim().max(60).optional(),
+});
+
+export type KeyRequest = z.infer<typeof keyRequestSchema>;

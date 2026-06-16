@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { checkBotId } from "botid/server";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { signups } from "@/lib/db/schema/signups";
 import { signupSchema, linkedinUrlFromHandle } from "@/lib/validation";
 import { notifyNewSignup } from "@/lib/email";
@@ -51,7 +51,7 @@ export async function submitSignup(
 
   let id: string;
   try {
-    const [row] = await db
+    const [row] = await getDb()
       .insert(signups)
       .values({
         firstName: data.firstName,

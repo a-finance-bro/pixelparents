@@ -1,6 +1,36 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 15, 2026 — 7:07 PM Pacific
+
+### Summary of changes since last update
+Implemented the full `/signup` + family-profile feature on the `signup` branch (separate git worktree at `../pixelparents-signup`), then merged `origin/main` (the Developer API) into it and reconciled all shared-file conflicts. Build + all 16 tests pass with both features composed. Provisioned Neon + a private Blob store under the personal account. Shipping to production next.
+
+### Detail of changes made:
+- **Feature built:** public `/signup` (req: first/last/email/phone/**GitHub username**; optional skills/availability) → `/signup/thanks?id=` (personalized DROdio intro, full-width `banner.webp`, optional family/child profile with interest pills, client-optimized **private** photo uploads to Vercel Blob, repeatable children) → `/signup/welcome`. Server actions + Zod + Vercel BotID. Email via Resend (no-ops until `RESEND_API_KEY` set).
+- **Provisioning (personal account `drodio1s-projects`):** Neon `neon-rose-planet` (`DATABASE_URL` etc., live + verified via smoke test), private Blob store `pixelparents-photos` (`BLOB_READ_WRITE_TOKEN`). Project was moved from `storytell` → `drodio1s-projects` mid-build.
+- **Merge reconciliation (shared files):** `lib/options.ts` is now one canonical source — long user-facing labels, with `AFFILIATIONS`/`TECH_DEPTH`/`OPTIONS` aliases the API uses. `lib/db/index.ts` uses the API agent's lazy `getDb()`; my code updated to call it. `lib/email.ts` holds both `notifyNewSignup` (SDK) and `notifyKeyRequest` (REST). `lib/validation.ts` holds both schemas. `lib/db/schema/index.ts` barrel exports `api-keys` + `signups`. `package.json` unions both dep sets. `next.config.ts` keeps www-redirect + adds `withBotId`.
+- **DB:** `signups`/`children` synced to Neon. NOTE: did **not** push the regenerated migration's `api_keys` unique-constraint change — that table is the API agent's and holds a real key row; `drizzle-kit push` wanted an interactive truncate, which I declined. Their table is untouched.
+
+### Potential concerns to address:
+- **Two agents → one production.** Deploying my branch to prod must include the API agent's already-merged work; I'm merging to `main` (not a raw worktree deploy) so both ship together.
+- **Pending on DROdio (away):** Clerk browser setup (admin gate) + `RESEND_API_KEY` (email). Until then, `/admin` isn't built and signup emails no-op — signups still save to Neon.
+- **Kids' photos are private** (private Blob); admin viewing (deferred) will need `getDownloadUrl()` signed URLs.
+- **`api_keys` unique constraint** may be missing on the live shared DB (the API agent's concern) — flagged, not modified.
+
+## Progress Update as of June 15, 2026 — 6:48 PM Pacific
+
+### Summary of changes since last update
+Replaced the default create-next-app boilerplate in `README.md` with a short, parent-facing welcome message inviting Stanford OHS parents to contribute. Done on an isolated worktree branch (`worktree-readme-ohs-welcome`) to avoid an in-flight Clerk-auth merge that was occupying the main checkout, then pushed straight to `main`.
+
+### Detail of changes made:
+- **`README.md`:** now a "Hello Stanford OHS parent!" welcome — explains this is an OSS project for parents to build software supporting kids at OHS, directs interested parents to DM DROdio on the Tech Pixel Parents WhatsApp group, and gives a fallback email (DROdio+OHS@Gmail.com) for parents not yet in the group. Dropped the Next.js/Vercel getting-started scaffolding.
+- **Workflow note:** committed from a git worktree because the main checkout had an uncommitted parallel-agent merge (Clerk auth + Developer API). This commit only touches `README.md` + this log, so it merges cleanly with that work.
+
+### Potential concerns to address:
+- README no longer documents local dev setup. If/when external contributors arrive, consider adding a CONTRIBUTING.md or a "Local development" section.
+- The parallel Clerk-auth merge in the main checkout will need to reconcile with this `README.md` change when it lands — content is identical to what was staged there, so it should auto-resolve.
+
 ## Progress Update as of June 15, 2026 — 6:18 PM Pacific
 
 ### Summary of changes since last update

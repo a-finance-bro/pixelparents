@@ -52,3 +52,47 @@ export async function notifyNewSignup(s: SignupNotification): Promise<void> {
     console.error("Resend notification failed:", err);
   }
 }
+
+// --- Developer API: notify DROdio of a self-serve API-key request ---
+// Uses the Resend REST API directly so it stays dependency-light. Best-effort:
+// absence of RESEND_API_KEY or any failure is swallowed.
+export type KeyRequestNotice = {
+  name: string;
+  email: string;
+  intendedUse: string;
+  prefix: string;
+};
+
+export async function notifyKeyRequest(notice: KeyRequestNotice): Promise<void> {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return;
+  const to = process.env.NOTIFY_TO ?? "DROdio@chief.bot";
+  const from = process.env.RESEND_FROM ?? "onboarding@resend.dev";
+  const text = [
+    `A new Pixel Parents API key was just issued (tier: public).`,
+    ``,
+    `Name:         ${notice.name}`,
+    `Email:        ${notice.email}`,
+    `Key prefix:   ${notice.prefix}`,
+    `Intended use: ${notice.intendedUse}`,
+    ``,
+    `Approve in /admin to unlock the 'approved' (non-PII detail) tier.`,
+  ].join("\n");
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to,
+        subject: `New Pixel Parents API key request: ${notice.name}`,
+        text,
+      }),
+    });
+  } catch {
+    // ignore — notification is non-critical and must not block issuance
+  }
+}
