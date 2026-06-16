@@ -1,6 +1,18 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 16, 2026 — 4:43 AM Pacific
+
+### Summary of changes since last update
+Key-console copy: added a caption under the Email field — "Must be an email
+address registered to an OHS student or parent". Kept as a persistent caption
+(not an input placeholder, which would truncate/vanish on typing). Shipped.
+
+### Detail of changes made:
+- **`app/developers/key-console.tsx`:** `<span className="text-xs text-white/40">`
+  helper under the Email input; and a textarea `placeholder` on "What are you
+  building?" — "Tell us what you think you want to build. It's also totally okay
+  if you're not sure yet." Still honor-system — no server-side OHS check.
 ## Progress Update as of June 16, 2026 — 4:42 AM Pacific
 
 ### Summary of changes since last update

@@ -104,6 +104,9 @@ export function KeyConsole() {
             maxLength={200}
             className="rounded-md border border-white/15 bg-black/40 px-3 py-2 text-white outline-none focus:border-emerald-400/60"
           />
+          <span className="text-xs text-white/40">
+            Must be an email address registered to an OHS student or parent
+          </span>
         </label>
       </div>
       <label className="flex flex-col gap-1.5 text-sm">
@@ -114,7 +117,8 @@ export function KeyConsole() {
           required
           maxLength={2000}
           rows={3}
-          className="rounded-md border border-white/15 bg-black/40 px-3 py-2 text-white outline-none focus:border-emerald-400/60"
+          placeholder="Tell us what you think you want to build. It's also totally okay if you're not sure yet."
+          className="rounded-md border border-white/15 bg-black/40 px-3 py-2 text-white outline-none placeholder:text-white/35 focus:border-emerald-400/60"
         />
       </label>
 
