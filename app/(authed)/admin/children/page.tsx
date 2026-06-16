@@ -4,7 +4,8 @@ import { desc } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/lib/db";
 import { signups, children } from "@/lib/db/schema/signups";
 import { isAdminEmail } from "@/lib/admin";
-import { Pills, TableWrap, thCls, tdCls } from "../ui";
+import { Pills } from "../pills";
+import { TableWrap, thCls, tdCls } from "../ui";
 
 export const dynamic = "force-dynamic";
 

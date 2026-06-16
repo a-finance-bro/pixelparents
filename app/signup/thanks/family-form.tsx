@@ -48,7 +48,7 @@ function TagPicker({
               type="button"
               key={t}
               onClick={() => remove(t)}
-              className="rounded-full bg-white px-3 py-1 text-sm font-medium text-black"
+              className="rounded-md bg-white px-3 py-1 text-sm font-medium text-black"
             >
               {t} ✕
             </button>
@@ -75,7 +75,7 @@ function TagPicker({
               type="button"
               key={s}
               onClick={() => add(s)}
-              className="rounded-full border border-white/20 px-3 py-1 text-sm text-white/70 transition-colors hover:bg-white/10"
+              className="rounded-md border border-white/20 px-3 py-1 text-sm text-white/70 transition-colors hover:bg-white/10"
             >
               + {s}
             </button>

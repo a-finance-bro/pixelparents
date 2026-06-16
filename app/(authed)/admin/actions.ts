@@ -1,7 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { eq } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
+import { getDb } from "@/lib/db";
+import { signups } from "@/lib/db/schema/signups";
 import { addAdmin, removeAdmin, isAdminEmail, isEnvAdmin } from "@/lib/admin";
 
 async function callerEmail(): Promise<string | null> {
@@ -30,4 +33,17 @@ export async function setAdmin(formData: FormData): Promise<void> {
     await removeAdmin(email);
   }
   revalidatePath("/admin");
+}
+
+// Delete a signup (children cascade via the FK). Admin-only.
+export async function deleteSignup(formData: FormData): Promise<void> {
+  const caller = await callerEmail();
+  if (!(await isAdminEmail(caller))) {
+    throw new Error("Forbidden: not an admin");
+  }
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return;
+  await getDb().delete(signups).where(eq(signups.id, id));
+  revalidatePath("/admin");
+  revalidatePath("/admin/children");
 }

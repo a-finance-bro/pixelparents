@@ -5,7 +5,10 @@ import { getDb, hasDatabase } from "@/lib/db";
 import { signups, children, type ChildRow } from "@/lib/db/schema/signups";
 import { isAdminEmail, isEnvAdmin, dbAdminEmails } from "@/lib/admin";
 import { setAdmin } from "./actions";
-import { Pills, TableWrap, thCls, tdCls } from "./ui";
+import { Pills } from "./pills";
+import { TableWrap, thCls, tdCls } from "./ui";
+import { PencilIcon } from "./icons";
+import { DeleteButton } from "./delete-button";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +21,7 @@ function shortAffiliation(s?: string | null): string | null {
 export default async function ParentsPage() {
   const user = await currentUser();
   const email = user?.primaryEmailAddress?.emailAddress ?? undefined;
-  if (!(await isAdminEmail(email))) return null; // layout shows the gate message
+  if (!(await isAdminEmail(email))) return null;
 
   if (!hasDatabase()) {
     return (
@@ -58,8 +61,10 @@ export default async function ParentsPage() {
         <TableWrap>
           <thead>
             <tr>
-              <th className={thCls}>Submitted</th>
+              <th className={thCls}>Status</th>
               <th className={thCls}>Name</th>
+              <th className={thCls}>Children</th>
+              <th className={thCls}>Submitted</th>
               <th className={thCls}>Contact</th>
               <th className={thCls}>GitHub</th>
               <th className={thCls}>Affiliation</th>
@@ -68,10 +73,8 @@ export default async function ParentsPage() {
               <th className={thCls}>Skillsets</th>
               <th className={thCls}>Location</th>
               <th className={thCls}>Parent interests</th>
-              <th className={thCls}>Children</th>
               <th className={thCls}>Photos</th>
-              <th className={thCls}>Status</th>
-              <th className={thCls}>Edit</th>
+              <th className={thCls}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -85,12 +88,28 @@ export default async function ParentsPage() {
                   id={`p-${r.id}`}
                   className="border-t border-white/10 odd:bg-white/[0.02] hover:bg-white/[0.05] target:bg-emerald-500/10"
                 >
-                  <td className={`${tdCls} whitespace-nowrap text-white/50`}>
-                    {new Date(r.createdAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+                  <td className={`${tdCls} whitespace-nowrap`}>
+                    {envAdmin ? (
+                      <span className="rounded-md bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300">
+                        Superadmin
+                      </span>
+                    ) : (
+                      <form action={setAdmin}>
+                        <input type="hidden" name="email" value={r.email} />
+                        <input type="hidden" name="make" value={dbAdmin ? "false" : "true"} />
+                        <button
+                          type="submit"
+                          title="Click to toggle Admin / User"
+                          className={`rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
+                            dbAdmin
+                              ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
+                              : "border-white/20 bg-white/5 text-white/70 hover:bg-white/10"
+                          }`}
+                        >
+                          {dbAdmin ? "Admin" : "User"}
+                        </button>
+                      </form>
+                    )}
                   </td>
                   <th
                     scope="row"
@@ -98,6 +117,31 @@ export default async function ParentsPage() {
                   >
                     {r.firstName} {r.lastName}
                   </th>
+                  <td className={tdCls}>
+                    {myKids.length === 0 ? (
+                      <span className="text-white/30">—</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {myKids.map((k) => (
+                          <Link
+                            key={k.id}
+                            href={`/admin/children?parent=${r.id}#c-${k.id}`}
+                            className="rounded-md border border-white/15 bg-white/5 px-2 py-0.5 text-xs text-white/80 hover:bg-white/15"
+                          >
+                            {k.firstName}
+                            {k.grade ? ` (${k.grade})` : ""}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                  <td className={`${tdCls} whitespace-nowrap text-white/50`}>
+                    {new Date(r.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </td>
                   <td className={tdCls}>
                     <a className="underline decoration-white/30 hover:decoration-white" href={`mailto:${r.email}`}>
                       {r.email}
@@ -130,57 +174,20 @@ export default async function ParentsPage() {
                   <td className={tdCls}>
                     <Pills values={r.parentInterests} />
                   </td>
-                  <td className={tdCls}>
-                    {myKids.length === 0 ? (
-                      <span className="text-white/30">—</span>
-                    ) : (
-                      <div className="flex flex-wrap gap-1">
-                        {myKids.map((k) => (
-                          <Link
-                            key={k.id}
-                            href={`/admin/children?parent=${r.id}#c-${k.id}`}
-                            className="rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-xs text-white/80 hover:bg-white/15"
-                          >
-                            {k.firstName}
-                            {k.grade ? ` (${k.grade})` : ""}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </td>
                   <td className={`${tdCls} whitespace-nowrap text-white/50`}>
                     {r.photos?.length ? `📷 ${r.photos.length}` : "—"}
                   </td>
                   <td className={`${tdCls} whitespace-nowrap`}>
-                    {envAdmin ? (
-                      <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300">
-                        Superadmin
-                      </span>
-                    ) : (
-                      <form action={setAdmin}>
-                        <input type="hidden" name="email" value={r.email} />
-                        <input type="hidden" name="make" value={dbAdmin ? "false" : "true"} />
-                        <button
-                          type="submit"
-                          title="Click to toggle Admin / User"
-                          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                            dbAdmin
-                              ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
-                              : "border-white/20 bg-white/5 text-white/70 hover:bg-white/10"
-                          }`}
-                        >
-                          {dbAdmin ? "Admin" : "User"}
-                        </button>
-                      </form>
-                    )}
-                  </td>
-                  <td className={`${tdCls} whitespace-nowrap`}>
-                    <Link
-                      href={`/admin/parents/${r.id}/edit`}
-                      className="rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-medium text-white/80 hover:bg-white/10"
-                    >
-                      Edit
-                    </Link>
+                    <div className="flex items-center gap-1">
+                      <Link
+                        href={`/admin/parents/${r.id}/edit`}
+                        title="Edit"
+                        className="rounded-md p-1.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+                      >
+                        <PencilIcon />
+                      </Link>
+                      <DeleteButton id={r.id} name={`${r.firstName} ${r.lastName}`} />
+                    </div>
                   </td>
                 </tr>
               );
