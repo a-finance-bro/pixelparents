@@ -1,6 +1,25 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 16, 2026 — 4:36 AM Pacific
+
+### Summary of changes since last update
+`/developers` copy/label changes only (no behavior change): added a red
+"This API is limited use by OHS families only" notice under the headline, and
+relabeled the two tiers on the page — "Public" → "Test", "Approved" → "OHS
+Families". Shipped to prod.
+
+### Detail of changes made:
+- **`app/developers/page.tsx`:** red notice `<p className="text-base font-semibold
+  text-red-500">` below the H1; ENDPOINTS tuple type + values relabeled
+  (`"Public"|"Approved"` → `"Test"|"OHS Families"`); both tier card titles
+  relabeled; the endpoints-table tier-color conditional updated to
+  `tier === "OHS Families"`.
+- **Display-only:** the underlying API tier values are unchanged — keys are still
+  stored/checked as `public` / `approved` in the DB and `lib/api-keys.ts`. Only
+  the page wording changed. (If we want the API's own tier names + error copy to
+  match "Test"/"OHS Families", that's a separate behavior change.)
+- Verified `next build` + TypeScript clean.
 ## Progress Update as of June 15, 2026 — 10:25 PM Pacific
 
 ### Summary of changes since last update

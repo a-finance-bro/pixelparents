@@ -29,11 +29,11 @@ const EXAMPLE_BREAKDOWNS = `{
   "database": "ready"
 }`;
 
-const ENDPOINTS: Array<[string, string, string, "Public" | "Approved"]> = [
-  ["GET", "/api/v1/stats", "High-level totals (signups, updated_at)", "Public"],
-  ["GET", "/api/v1/me", "Your key's tier + approval status", "Public"],
-  ["GET", "/api/v1/options", "Option taxonomies + interests pool (non-PII)", "Approved"],
-  ["GET", "/api/v1/breakdowns", "Aggregate counts by state / affiliation / skillset / grade …", "Approved"],
+const ENDPOINTS: Array<[string, string, string, "Test" | "OHS Families"]> = [
+  ["GET", "/api/v1/stats", "High-level totals (signups, updated_at)", "Test"],
+  ["GET", "/api/v1/me", "Your key's tier + approval status", "Test"],
+  ["GET", "/api/v1/options", "Option taxonomies + interests pool (non-PII)", "OHS Families"],
+  ["GET", "/api/v1/breakdowns", "Aggregate counts by state / affiliation / skillset / grade …", "OHS Families"],
 ];
 
 export default function DevelopersPage() {
@@ -55,6 +55,9 @@ export default function DevelopersPage() {
           <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
             Build with the Pixel Parents API
           </h1>
+          <p className="text-base font-semibold text-red-500">
+            This API is limited use by OHS families only
+          </p>
           <p className="max-w-xl text-base leading-relaxed text-white/60">
             A free, instant key gives you high-level community stats. We only ever return{" "}
             <span className="font-semibold text-white/80">counts and taxonomies</span> — never any PII
@@ -67,7 +70,7 @@ export default function DevelopersPage() {
           <h2 className="text-2xl font-bold">Two tiers, one key</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">Public</p>
+              <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">Test</p>
               <p className="font-display text-2xl font-bold">Free &amp; instant</p>
               <p className="text-sm text-white/60">
                 Self-serve below — no approval. Returns ultra-high-level aggregates only: total
@@ -75,7 +78,7 @@ export default function DevelopersPage() {
               </p>
             </div>
             <div className="flex flex-col gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-sm font-semibold uppercase tracking-wide text-white/70">Approved</p>
+              <p className="text-sm font-semibold uppercase tracking-wide text-white/70">OHS Families</p>
               <p className="font-display text-2xl font-bold">Request access</p>
               <p className="text-sm text-white/60">
                 We manually upgrade your key. Unlocks richer <span className="text-white/80">non-PII</span>{" "}
@@ -98,7 +101,7 @@ export default function DevelopersPage() {
                 <span className="w-10 shrink-0 font-mono text-xs font-semibold text-emerald-300">{method}</span>
                 <span className="break-all font-mono text-xs text-white/90">{path}</span>
                 <span className="text-white/50 sm:ml-auto">{desc}</span>
-                <span className={`text-xs ${tier === "Approved" ? "text-white/70" : "text-emerald-300/80"}`}>{tier}</span>
+                <span className={`text-xs ${tier === "OHS Families" ? "text-white/70" : "text-emerald-300/80"}`}>{tier}</span>
               </div>
             ))}
           </div>
