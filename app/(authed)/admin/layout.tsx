@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { UserButton } from "@clerk/nextjs";
 import { isAdminEmail } from "@/lib/admin";
@@ -19,7 +20,10 @@ export default async function AdminLayout({
   return (
     <div className="min-h-dvh bg-black text-white">
       <header className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-        <div className="flex items-center gap-3">
+        <Link
+          href="/admin"
+          className="flex items-center gap-3 transition-opacity hover:opacity-80"
+        >
           <Image
             src="/images/pixel-mascot.png"
             alt="Pixel Parents"
@@ -30,7 +34,7 @@ export default async function AdminLayout({
           <span className="text-lg font-semibold tracking-tight">
             Pixel Parents Admin
           </span>
-        </div>
+        </Link>
         <UserButton />
       </header>
 
