@@ -1,54 +1,30 @@
+import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
-import { UserButton } from "@clerk/nextjs";
 import { desc } from "drizzle-orm";
 import { getDb, hasDatabase } from "@/lib/db";
 import { signups, children, type ChildRow } from "@/lib/db/schema/signups";
 import { isAdminEmail, isEnvAdmin, dbAdminEmails } from "@/lib/admin";
 import { setAdmin } from "./actions";
+import { Pills, TableWrap, thCls, tdCls } from "./ui";
 
-// Reads live auth + DB on every request — never statically cached.
 export const dynamic = "force-dynamic";
 
-function Shell({ children: c }: { children: React.ReactNode }) {
-  return (
-    <main className="mx-auto flex min-h-full max-w-[1400px] flex-col gap-6 p-6 sm:p-8">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Admin</h1>
-        <UserButton />
-      </header>
-      {c}
-    </main>
-  );
+// "Existing parent (child(ren) currently enrolled at OHS)" -> "Existing parent"
+function shortAffiliation(s?: string | null): string | null {
+  if (!s) return null;
+  return s.split(" (")[0];
 }
 
-function list(values?: string[] | null): string {
-  return values && values.length ? values.join(", ") : "—";
-}
-
-export default async function AdminPage() {
+export default async function ParentsPage() {
   const user = await currentUser();
   const email = user?.primaryEmailAddress?.emailAddress ?? undefined;
-
-  if (!(await isAdminEmail(email))) {
-    return (
-      <Shell>
-        <section className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-6 text-sm">
-          You&rsquo;re signed in as <strong>{email ?? "unknown"}</strong>, but
-          this account isn&rsquo;t an admin. Ask an existing admin to add your
-          email.
-        </section>
-      </Shell>
-    );
-  }
+  if (!(await isAdminEmail(email))) return null; // layout shows the gate message
 
   if (!hasDatabase()) {
     return (
-      <Shell>
-        <section className="rounded-lg border border-white/10 p-6 text-sm">
-          <code>DATABASE_URL</code> isn&rsquo;t configured, so there are no
-          submissions to show yet.
-        </section>
-      </Shell>
+      <section className="rounded-lg border border-white/10 p-6 text-sm">
+        <code>DATABASE_URL</code> isn&rsquo;t configured yet.
+      </section>
     );
   }
 
@@ -66,15 +42,12 @@ export default async function AdminPage() {
     else kidsBySignup.set(k.signupId, [k]);
   }
 
-  const th = "px-3 py-2 text-left font-medium text-white/60 whitespace-nowrap";
-  const td = "px-3 py-2 align-top border-t border-white/10";
-
   return (
-    <Shell>
+    <div className="flex flex-col gap-4">
+      <h2 className="text-xl font-semibold">Parents</h2>
       <p className="text-sm text-white/60">
         {rows.length} submission{rows.length === 1 ? "" : "s"} · {kids.length}{" "}
-        child{kids.length === 1 ? "" : "ren"} · {adminSet.size} DB admin
-        {adminSet.size === 1 ? "" : "s"}
+        child{kids.length === 1 ? "" : "ren"}
       </p>
 
       {rows.length === 0 ? (
@@ -82,123 +55,139 @@ export default async function AdminPage() {
           No submissions yet.
         </section>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-white/10">
-          <table className="w-full border-collapse text-sm">
-            <thead className="bg-white/5">
-              <tr>
-                <th className={th}>Submitted</th>
-                <th className={th}>Name</th>
-                <th className={th}>Contact</th>
-                <th className={th}>GitHub</th>
-                <th className={th}>Affiliation</th>
-                <th className={th}>Tech depth</th>
-                <th className={th}>Time</th>
-                <th className={th}>Skillsets</th>
-                <th className={th}>Location</th>
-                <th className={th}>Parent interests</th>
-                <th className={th}>Children</th>
-                <th className={th}>Photos</th>
-                <th className={th}>Admin</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => {
-                const lower = r.email.toLowerCase();
-                const envAdmin = isEnvAdmin(r.email);
-                const dbAdmin = adminSet.has(lower);
-                const myKids = kidsBySignup.get(r.id) ?? [];
-                return (
-                  <tr key={r.id} className="hover:bg-white/[0.03]">
-                    <td className={`${td} whitespace-nowrap text-white/60`}>
-                      {new Date(r.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </td>
-                    <td className={`${td} whitespace-nowrap font-medium`}>
-                      {r.firstName} {r.lastName}
-                    </td>
-                    <td className={td}>
-                      <a className="underline" href={`mailto:${r.email}`}>
-                        {r.email}
-                      </a>
-                      <div className="text-white/60">{r.phone}</div>
-                    </td>
-                    <td className={`${td} whitespace-nowrap`}>
-                      <a
-                        className="underline"
-                        href={`https://github.com/${r.githubUsername}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        @{r.githubUsername}
-                      </a>
-                    </td>
-                    <td className={td}>{r.ohsAffiliation ?? "—"}</td>
-                    <td className={td}>{r.technicalDepth ?? "—"}</td>
-                    <td className={`${td} whitespace-nowrap`}>
-                      {r.timeCommitment ?? "—"}
-                    </td>
-                    <td className={td}>{list(r.skillsets)}</td>
-                    <td className={`${td} whitespace-nowrap`}>
-                      {[r.city, r.state].filter(Boolean).join(", ") || "—"}
-                    </td>
-                    <td className={td}>{list(r.parentInterests)}</td>
-                    <td className={td}>
-                      {myKids.length === 0
-                        ? "—"
-                        : myKids.map((k) => (
-                            <div key={k.id}>
-                              {k.firstName}
-                              {k.grade ? ` (${k.grade})` : ""}
-                              {k.interests?.length
-                                ? ` — ${k.interests.join(", ")}`
-                                : ""}
-                            </div>
-                          ))}
-                    </td>
-                    <td className={`${td} whitespace-nowrap text-white/60`}>
-                      {r.photos?.length ? `📷 ${r.photos.length}` : "—"}
-                    </td>
-                    <td className={`${td} whitespace-nowrap`}>
-                      {envAdmin ? (
-                        <span className="rounded bg-emerald-500/15 px-2 py-1 text-xs text-emerald-300">
-                          Superadmin
-                        </span>
-                      ) : (
-                        <form action={setAdmin} className="flex items-center gap-2">
-                          <input type="hidden" name="email" value={r.email} />
-                          <input
-                            type="hidden"
-                            name="make"
-                            value={dbAdmin ? "false" : "true"}
-                          />
-                          {dbAdmin && (
-                            <span className="rounded bg-emerald-500/15 px-2 py-1 text-xs text-emerald-300">
-                              Admin
-                            </span>
-                          )}
-                          <button
-                            type="submit"
-                            className={`rounded border px-2 py-1 text-xs transition-colors ${
-                              dbAdmin
-                                ? "border-red-500/30 text-red-300 hover:bg-red-500/10"
-                                : "border-white/20 text-white/80 hover:bg-white/10"
-                            }`}
+        <TableWrap>
+          <thead>
+            <tr>
+              <th className={thCls}>Submitted</th>
+              <th className={thCls}>Name</th>
+              <th className={thCls}>Contact</th>
+              <th className={thCls}>GitHub</th>
+              <th className={thCls}>Affiliation</th>
+              <th className={thCls}>Tech depth</th>
+              <th className={thCls}>Time</th>
+              <th className={thCls}>Skillsets</th>
+              <th className={thCls}>Location</th>
+              <th className={thCls}>Parent interests</th>
+              <th className={thCls}>Children</th>
+              <th className={thCls}>Photos</th>
+              <th className={thCls}>Status</th>
+              <th className={thCls}>Edit</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              const dbAdmin = adminSet.has(r.email.toLowerCase());
+              const envAdmin = isEnvAdmin(r.email);
+              const myKids = kidsBySignup.get(r.id) ?? [];
+              return (
+                <tr
+                  key={r.id}
+                  id={`p-${r.id}`}
+                  className="border-t border-white/10 odd:bg-white/[0.02] hover:bg-white/[0.05] target:bg-emerald-500/10"
+                >
+                  <td className={`${tdCls} whitespace-nowrap text-white/50`}>
+                    {new Date(r.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </td>
+                  <th
+                    scope="row"
+                    className={`${tdCls} whitespace-nowrap text-left font-bold text-white`}
+                  >
+                    {r.firstName} {r.lastName}
+                  </th>
+                  <td className={tdCls}>
+                    <a className="underline decoration-white/30 hover:decoration-white" href={`mailto:${r.email}`}>
+                      {r.email}
+                    </a>
+                    <div className="text-white/50">{r.phone}</div>
+                  </td>
+                  <td className={`${tdCls} whitespace-nowrap`}>
+                    <a
+                      className="underline decoration-white/30 hover:decoration-white"
+                      href={`https://github.com/${r.githubUsername}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      @{r.githubUsername}
+                    </a>
+                  </td>
+                  <td className={tdCls}>
+                    <Pills values={r.ohsAffiliation ? [shortAffiliation(r.ohsAffiliation)!] : null} />
+                  </td>
+                  <td className={`${tdCls} text-white/80`}>{r.technicalDepth ?? "—"}</td>
+                  <td className={`${tdCls} whitespace-nowrap text-white/80`}>
+                    {r.timeCommitment ?? "—"}
+                  </td>
+                  <td className={tdCls}>
+                    <Pills values={r.skillsets} />
+                  </td>
+                  <td className={`${tdCls} whitespace-nowrap text-white/80`}>
+                    {[r.city, r.state].filter(Boolean).join(", ") || "—"}
+                  </td>
+                  <td className={tdCls}>
+                    <Pills values={r.parentInterests} />
+                  </td>
+                  <td className={tdCls}>
+                    {myKids.length === 0 ? (
+                      <span className="text-white/30">—</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {myKids.map((k) => (
+                          <Link
+                            key={k.id}
+                            href={`/admin/children?parent=${r.id}#c-${k.id}`}
+                            className="rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-xs text-white/80 hover:bg-white/15"
                           >
-                            {dbAdmin ? "Revoke" : "Make admin"}
-                          </button>
-                        </form>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                            {k.firstName}
+                            {k.grade ? ` (${k.grade})` : ""}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                  <td className={`${tdCls} whitespace-nowrap text-white/50`}>
+                    {r.photos?.length ? `📷 ${r.photos.length}` : "—"}
+                  </td>
+                  <td className={`${tdCls} whitespace-nowrap`}>
+                    {envAdmin ? (
+                      <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300">
+                        Superadmin
+                      </span>
+                    ) : (
+                      <form action={setAdmin}>
+                        <input type="hidden" name="email" value={r.email} />
+                        <input type="hidden" name="make" value={dbAdmin ? "false" : "true"} />
+                        <button
+                          type="submit"
+                          title="Click to toggle Admin / User"
+                          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                            dbAdmin
+                              ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
+                              : "border-white/20 bg-white/5 text-white/70 hover:bg-white/10"
+                          }`}
+                        >
+                          {dbAdmin ? "Admin" : "User"}
+                        </button>
+                      </form>
+                    )}
+                  </td>
+                  <td className={`${tdCls} whitespace-nowrap`}>
+                    <Link
+                      href={`/admin/parents/${r.id}/edit`}
+                      className="rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs font-medium text-white/80 hover:bg-white/10"
+                    >
+                      Edit
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </TableWrap>
       )}
-    </Shell>
+    </div>
   );
 }
