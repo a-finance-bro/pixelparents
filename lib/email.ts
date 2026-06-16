@@ -45,6 +45,7 @@ export async function notifyNewSignup(s: SignupNotification): Promise<void> {
     await resend.emails.send({
       from: FROM,
       to: TO,
+      cc: s.email ? [s.email] : undefined,
       subject: `New Pixel Parents signup: ${s.firstName} ${s.lastName}`,
       text: lines.join("\n"),
     });

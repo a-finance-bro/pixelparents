@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { BotIdClient } from "botid/client";
-import { GRADES } from "@/lib/options";
+import { GRADES, US_STATES } from "@/lib/options";
 import { optimizeImage } from "@/lib/image";
 import type { Photo } from "@/lib/db/schema/signups";
 import { saveFamily, type FamilyState } from "./actions";
@@ -96,6 +96,7 @@ export default function FamilyForm({
   const [state, formAction, pending] = useActionState(saveFamily, initialState);
 
   // Family-level (persists across "add another child")
+  const [notInUS, setNotInUS] = useState(false);
   const [parentInterests, setParentInterests] = useState<string[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [previews, setPreviews] = useState<Record<string, string>>({});
@@ -177,19 +178,49 @@ export default function FamilyForm({
         )}
 
         {/* Family-level */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className={labelCls} htmlFor="city">City</label>
-            <input id="city" name="city" className={inputCls} autoComplete="address-level2" />
+        <div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={labelCls} htmlFor="city">City</label>
+              <input
+                id="city"
+                name="city"
+                disabled={notInUS}
+                className={`${inputCls} disabled:cursor-not-allowed disabled:opacity-40`}
+                autoComplete="address-level2"
+              />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="state">State</label>
+              <select
+                id="state"
+                name="state"
+                disabled={notInUS}
+                defaultValue=""
+                className={`${inputCls} disabled:cursor-not-allowed disabled:opacity-40`}
+              >
+                <option value="">Select…</option>
+                {US_STATES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div>
-            <label className={labelCls} htmlFor="state">State</label>
-            <input id="state" name="state" className={inputCls} autoComplete="address-level1" />
-          </div>
+          <label className="mt-2 flex items-center gap-2 text-sm text-white/80">
+            <input
+              type="checkbox"
+              checked={notInUS}
+              onChange={(e) => setNotInUS(e.target.checked)}
+              className="accent-white"
+            />
+            Not in the US
+          </label>
         </div>
 
         <div>
-          <label className={labelCls}>Your + your spouse&apos;s interests</label>
+          <label className={labelCls}>
+            Your + your spouse&apos;s interests (select existing or add new ones)
+          </label>
           <TagPicker
             value={parentInterests}
             onChange={setParentInterests}
@@ -273,7 +304,9 @@ export default function FamilyForm({
         </div>
 
         <div>
-          <label className={labelCls}>Your child&apos;s interests</label>
+          <label className={labelCls}>
+            Your child&apos;s interests (select existing or add new ones)
+          </label>
           <TagPicker
             value={childInterests}
             onChange={setChildInterests}

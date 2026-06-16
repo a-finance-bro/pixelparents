@@ -41,7 +41,26 @@ export const TIME_COMMITMENT = [
   "Full time or more!",
 ] as const;
 
-export const GRADES = ["7th", "8th", "9th", "10th", "11th"] as const;
+export const GRADES = [
+  "7th",
+  "8th",
+  "9th",
+  "10th",
+  "11th",
+  "Not an OHS child",
+] as const;
+
+export const US_STATES = [
+  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+  "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho",
+  "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine",
+  "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+  "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey",
+  "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
+  "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+  "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia",
+  "Washington", "West Virginia", "Wisconsin", "Wyoming",
+] as const;
 
 // Full non-PII option surface returned by GET /api/v1/options.
 export const OPTIONS = {
