@@ -55,12 +55,14 @@ export default function DevelopersPage() {
           <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
             Build with the Pixel Parents API
           </h1>
-          <p className="text-base font-semibold text-red-500">
-            This API is limited to use by OHS families only
-          </p>
-          <p className="text-base font-normal text-red-500">
-            Encourage your child(ren) to code (or vibe code!) something fun with this API!
-          </p>
+          <div className="text-red-500">
+            <p className="text-base font-semibold">
+              This API is limited to use by OHS families only
+            </p>
+            <p className="text-base font-normal">
+              Encourage your child(ren) to code (or vibe code!) something fun with this API!
+            </p>
+          </div>
           <p className="max-w-xl text-base leading-relaxed text-white/60">
             A free, instant key gives you high-level community stats. We only ever return{" "}
             <span className="font-semibold text-white/80">counts and taxonomies</span> — never any PII

@@ -1,6 +1,17 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 16, 2026 — 4:44 AM Pacific
+
+### Summary of changes since last update
+`/developers` layout tweak: the two red OHS notice lines were each direct
+children of the `gap-6` header, so they had a big gap between them. Wrapped both
+in a single `text-red-500` div (no gap) so they sit tight as one block. Shipped.
+
+### Detail of changes made:
+- **`app/developers/page.tsx`:** wrapped the two red `<p>` lines in a
+  `<div className="text-red-500">` (color hoisted to the wrapper) to remove the
+  inter-line gap while preserving the header's spacing to the H1 and body copy.
 ## Progress Update as of June 16, 2026 — 4:43 AM Pacific
 
 ### Summary of changes since last update
