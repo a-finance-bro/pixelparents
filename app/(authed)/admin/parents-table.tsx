@@ -10,7 +10,7 @@ import { TableWrap, thCls, tdCls } from "./ui";
 import { PencilIcon } from "./icons";
 import { DeleteButton } from "./delete-button";
 import { compare, SortHeader, type Dir } from "./sortable";
-import { PhotoGallery, type GalleryPhoto } from "./photo-gallery";
+import { PhotoGallery, type GalleryPhoto, type Person } from "./photo-gallery";
 
 export type ParentRow = {
   id: string;
@@ -39,7 +39,7 @@ function shortAffiliation(s: string | null): string | null {
   return s ? s.split(" (")[0] : null;
 }
 
-export function ParentsTable({ rows }: { rows: ParentRow[] }) {
+export function ParentsTable({ rows, people }: { rows: ParentRow[]; people: Person[] }) {
   const [sortKey, setSortKey] = useState("submitted");
   const [dir, setDir] = useState<Dir>("desc");
   const onSort = (k: string) => {
@@ -217,7 +217,7 @@ export function ParentsTable({ rows }: { rows: ParentRow[] }) {
           {expanded.has(r.id) && r.photos.length > 0 && (
             <tr className="border-t border-white/10 bg-black/40">
               <td colSpan={14} className="px-4 py-4">
-                <PhotoGallery photos={r.photos} />
+                <PhotoGallery photos={r.photos} people={people} signupId={r.id} />
               </td>
             </tr>
           )}
