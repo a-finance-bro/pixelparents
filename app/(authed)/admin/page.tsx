@@ -45,7 +45,13 @@ export default async function ParentsPage() {
 
   const data: ParentRow[] = rows.map((r) => {
     const photos = (r.photos ?? [])
-      .map((p) => ({ url: urlByPath.get(p.pathname) ?? "", width: p.width, height: p.height }))
+      .map((p) => ({
+        url: urlByPath.get(p.pathname) ?? "",
+        pathname: p.pathname,
+        caption: p.caption ?? null,
+        width: p.width,
+        height: p.height,
+      }))
       .filter((p) => p.url);
     return {
       id: r.id,

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Fragment, useMemo, useState } from "react";
 import { abbrState } from "@/lib/options";
-import { setAdmin } from "./actions";
+import { setAdmin, setPhotoCaption } from "./actions";
 import { Pills } from "./pills";
 import { TableWrap, thCls, tdCls } from "./ui";
 import { PencilIcon } from "./icons";
@@ -216,7 +216,11 @@ export function ParentsTable({ rows }: { rows: ParentRow[] }) {
           {expanded.has(r.id) && r.photos.length > 0 && (
             <tr className="border-t border-white/10 bg-black/40">
               <td colSpan={14} className="px-4 py-4">
-                <PhotoGallery photos={r.photos} />
+                <PhotoGallery
+                  photos={r.photos}
+                  candidates={r.kids.map((k) => ({ id: k.id, name: k.firstName }))}
+                  onSaveCaption={(pathname, caption) => setPhotoCaption(r.id, pathname, caption)}
+                />
               </td>
             </tr>
           )}

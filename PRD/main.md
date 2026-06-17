@@ -1,6 +1,37 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 17, 2026 — 4:06 PM Pacific (branch: `worktree-photo-gallery`, PR #12)
+
+### Summary of changes since last update
+**Reworked PR #12** after discovering the admin photo gallery (Stage 1) was
+*already merged to main* via another agent's `feat/admin-photo-gallery` (not
+abandoned — it shipped). My original branch had independently re-built Stage 1 +
+added Stage 2. Reset the branch onto current `main` and kept only the net-new
+**Stage 2: @-mention photo captions**, layered onto main's existing gallery — no
+duplicated gallery component.
+
+### Detail of changes made:
+- **Reusable (new):** `lib/mentions.ts` (+ 7 tests) — `@[Name](childId)` markers,
+  `renderCaption`/`extractMentionIds`/`serializeMention`. `components/mention-text.tsx`
+  (amber @-chips), `components/mention-caption-input.tsx` (dependency-free textarea +
+  `@`-dropdown → markers).
+- **`Photo` type:** added optional `caption` (covers both `signups.photos` and the
+  now-merged `children.photos`). `parsePhotos` normalizes + caps caption (2000).
+- **Admin gallery (`app/(authed)/admin/photo-gallery.tsx`):** extended main's view-only
+  gallery in place — `GalleryPhoto` gains `pathname`+`caption`; optional `candidates` +
+  `onSaveCaption` add caption display (chips) + inline edit; lightbox shows the caption.
+  `page.tsx` passes pathname+caption; `parents-table.tsx` passes candidates (the family's
+  kids) + `setPhotoCaption`; `actions.ts` adds admin-only `setPhotoCaption`.
+- **Parent flow (`family-form.tsx`):** caption input on **both** the family-photo grid and
+  the per-child-photo grid (candidates = already-saved children); rides existing photos JSON.
+- Verified: vitest 27/27, `next build` + TS clean, eslint clean. Force-pushed to PR #12.
+
+### Potential concerns to address:
+- **Not browser-verified** (Clerk-gated + needs a signup with photos).
+- The stale local `origin/feat/admin-photo-gallery` ref is cosmetic (branch deleted on origin
+  after merge) — nothing to clean up there; the work is live in `main`.
+- Follow-up beads filed earlier: captions on the public `/p/<token>` page + festival carousel.
 ## Progress Update as of June 17, 2026 — 3:42 PM Pacific
 
 ### Summary of changes since last update

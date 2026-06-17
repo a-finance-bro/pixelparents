@@ -1,16 +1,39 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MentionCaptionInput, type MentionCandidate } from "@/components/mention-caption-input";
+import { MentionText } from "@/components/mention-text";
 
-export type GalleryPhoto = { url: string; width?: number; height?: number };
+export type GalleryPhoto = {
+  url: string;
+  pathname: string;
+  caption: string | null;
+  width?: number;
+  height?: number;
+};
 
 // Thumbnail strip that opens a fullscreen, click-through lightbox (prev/next via
 // arrows or ← → keys; close via ✕, backdrop, or Esc). Photo URLs are short-lived
 // presigned GET URLs for the private Blob store, generated server-side.
-export function PhotoGallery({ photos }: { photos: GalleryPhoto[] }) {
+//
+// When `candidates` + `onSaveCaption` are supplied, each photo also shows its
+// caption (with @-mention chips) and can be captioned/tagged inline.
+export function PhotoGallery({
+  photos,
+  candidates = [],
+  onSaveCaption,
+}: {
+  photos: GalleryPhoto[];
+  candidates?: MentionCandidate[];
+  onSaveCaption?: (pathname: string, caption: string) => Promise<void>;
+}) {
+  const [items, setItems] = useState(photos);
   const [idx, setIdx] = useState<number | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
   const open = idx !== null;
-  const n = photos.length;
+  const n = items.length;
 
   useEffect(() => {
     if (!open) return;
@@ -27,24 +50,89 @@ export function PhotoGallery({ photos }: { photos: GalleryPhoto[] }) {
 
   const go = (delta: number) => setIdx((i) => (i === null ? i : (i + delta + n) % n));
 
+  async function save(pathname: string) {
+    if (!onSaveCaption) return;
+    setSaving(true);
+    try {
+      await onSaveCaption(pathname, draft);
+      setItems((xs) =>
+        xs.map((p) => (p.pathname === pathname ? { ...p, caption: draft || null } : p)),
+      );
+      setEditing(null);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <>
-      <div className="flex flex-wrap gap-2">
-        {photos.map((p, i) => (
-          <button
-            key={p.url || i}
-            type="button"
-            onClick={() => setIdx(i)}
-            className="overflow-hidden rounded-md ring-1 ring-white/10 transition hover:ring-white/40"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={p.url}
-              alt=""
-              referrerPolicy="no-referrer"
-              className="h-24 w-24 cursor-zoom-in object-cover"
-            />
-          </button>
+      <div className="flex flex-wrap gap-3">
+        {items.map((p, i) => (
+          <div key={p.pathname || i} className="flex w-24 flex-col gap-1">
+            <button
+              type="button"
+              onClick={() => setIdx(i)}
+              className="overflow-hidden rounded-md ring-1 ring-white/10 transition hover:ring-white/40"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={p.url}
+                alt={p.caption ?? ""}
+                referrerPolicy="no-referrer"
+                className="h-24 w-24 cursor-zoom-in object-cover"
+              />
+            </button>
+            {onSaveCaption ? (
+              editing === p.pathname ? (
+                <div className="flex w-48 flex-col gap-1">
+                  <MentionCaptionInput
+                    value={draft}
+                    onChange={setDraft}
+                    candidates={candidates}
+                    placeholder="Caption — @ to tag a child"
+                  />
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => save(p.pathname)}
+                      className="rounded bg-white px-2 py-0.5 text-xs font-semibold text-black disabled:opacity-50"
+                    >
+                      {saving ? "…" : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditing(null)}
+                      className="rounded border border-white/20 px-2 py-0.5 text-xs text-white/70 hover:bg-white/10"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing(p.pathname);
+                    setDraft(p.caption ?? "");
+                  }}
+                  className="text-left text-xs leading-tight text-white/60 hover:text-white"
+                >
+                  {p.caption ? (
+                    <MentionText caption={p.caption} />
+                  ) : (
+                    <span className="text-white/30">+ caption / tag</span>
+                  )}
+                </button>
+              )
+            ) : (
+              p.caption && (
+                <span className="text-xs leading-tight text-white/60">
+                  <MentionText caption={p.caption} />
+                </span>
+              )
+            )}
+          </div>
         ))}
       </div>
 
@@ -53,14 +141,23 @@ export function PhotoGallery({ photos }: { photos: GalleryPhoto[] }) {
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
           onClick={() => setIdx(null)}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={photos[idx!].url}
-            alt=""
-            referrerPolicy="no-referrer"
+          <figure
+            className="flex max-h-full max-w-full flex-col items-center gap-3"
             onClick={(e) => e.stopPropagation()}
-            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
-          />
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={items[idx!]!.url}
+              alt={items[idx!]!.caption ?? ""}
+              referrerPolicy="no-referrer"
+              className="max-h-[82vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+            />
+            {items[idx!]!.caption && (
+              <figcaption className="max-w-xl text-center text-sm text-white/80">
+                <MentionText caption={items[idx!]!.caption} />
+              </figcaption>
+            )}
+          </figure>
 
           <button
             type="button"
