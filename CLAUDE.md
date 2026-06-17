@@ -8,6 +8,24 @@ this, but treat the discipline as the real protection, not the hook.
 
 Enable the hooks once per clone: `git config core.hooksPath .githooks`
 
+# Git workflow: ALWAYS branch → commit → push → PR (do this without being asked)
+
+Never commit directly to `main`, and never leave commits sitting unpushed. Every
+piece of work follows this flow, end to end, without waiting to be asked:
+
+1. Before starting work, create a feature branch off `main`
+   (e.g. `feat/…`, `fix/…`, `chore/…`). Keep `main` clean — it should always
+   match `origin/main`.
+2. Commit in small increments (each commit still updates `PRD/<branch>.md` and
+   triggers the roborev review loop — drain `verdict=F` findings before pushing).
+3. `git push -u origin <branch>` and open a PR with `gh` (target `main`). Always
+   give the user the PR URL.
+4. The user merges when ready (do NOT auto-merge unless they ask). After merge,
+   sync local `main` (`git switch main && git pull`).
+
+A `Stop` hook in `.claude/settings.json` backstops this by warning when commits
+are unpushed — treat that warning as "open the PR now," not as optional.
+
 # Progress log: update on EVERY commit (do this without being asked)
 
 This project keeps a per-branch progress log under `PRD/<branch>.md`

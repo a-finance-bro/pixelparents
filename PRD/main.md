@@ -1,6 +1,32 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 17, 2026 — 2:33 PM Pacific
+
+### Summary of changes since last update
+Established a standing **git workflow: always branch → commit → push → open a
+PR; never commit to `main`; the user merges**. Moved the (already-deployed)
+secret-share work off local `main` onto branch `feat/secret-share-url` and reset
+local `main` to `origin/main`, then opened a PR for it.
+
+### Detail of changes made:
+- **`CLAUDE.md`:** new "Git workflow" section codifying branch+PR-always.
+- **`.claude/settings.json` + `.claude/hooks/warn-unpushed.sh`:** a `Stop` hook
+  that warns (non-blocking) when commits are unpushed — backstop for the policy.
+  (`.claude/settings.local.json` stays gitignored.)
+- **Memory:** saved `git-workflow-pr-always` feedback so the preference persists.
+- All pending work (secret-share commits `77c2bb5`+`a326c15` plus this workflow
+  commit) lives on `feat/secret-share-url` and is going up as one PR. NOTE: the
+  secret-share feature was already deployed to prod earlier today, so this PR is
+  retroactive for that code; future work gets its own branch/PR before deploy.
+
+### Potential concerns to address:
+- **Convention tension:** the older "Progress log" section says `PRD/<branch>.md`,
+  but to keep one coherent log this entry stays in `PRD/main.md` even though the
+  active branch is `feat/secret-share-url`. Revisit if per-branch logs are wanted.
+- Photos-carousel request (match festival.so style on `/p/<token>` + expand the
+  `/admin` "N photos" row) is NOT in this PR — it's the next branch.
+
 ## Progress Update as of June 17, 2026 — 2:22 PM Pacific
 
 ### Summary of changes since last update
