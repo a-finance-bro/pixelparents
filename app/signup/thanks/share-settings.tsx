@@ -34,17 +34,35 @@ export function ShareSettings({
   }
 
   function toggleEnabled() {
+    const prev = enabled;
     const next = !enabled;
     setEnabled(next); // optimistic
-    startTransition(async () => apply(await setShareEnabled(signupId, next)));
+    startTransition(async () => {
+      const r = await setShareEnabled(signupId, next);
+      if (r.error) {
+        setError(r.error);
+        setEnabled(prev); // revert — the DB wasn't updated
+        return;
+      }
+      apply(r);
+    });
   }
 
   function toggleField(key: ShareFieldKey) {
+    const prev = fields;
     const next = fields.includes(key)
       ? fields.filter((f) => f !== key)
       : [...fields, key];
     setFields(next); // optimistic
-    startTransition(async () => apply(await setShareFields(signupId, next)));
+    startTransition(async () => {
+      const r = await setShareFields(signupId, next);
+      if (r.error) {
+        setError(r.error);
+        setFields(prev); // revert — the DB wasn't updated
+        return;
+      }
+      apply(r);
+    });
   }
 
   async function copy() {

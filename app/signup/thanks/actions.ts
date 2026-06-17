@@ -70,7 +70,8 @@ export async function saveFamily(
 ): Promise<FamilyState> {
   const verification = await checkBotId();
   if (verification.isBot && !(await isAdminRequest())) {
-    console.warn("saveFamily bot-blocked:", JSON.stringify(verification));
+    const reason = (verification as { classificationReason?: string }).classificationReason;
+    console.warn("saveFamily bot-blocked:", reason ?? "(no reason)");
     return { ok: false, message: "Submission blocked — please try again." };
   }
 

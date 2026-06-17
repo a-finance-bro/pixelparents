@@ -1,41 +1,15 @@
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { signups, children, type SignupRow, type ChildRow } from "@/lib/db/schema/signups";
 
-// Share state for the management UI (thanks + account pages).
-export type ShareState = {
-  signupId: string;
-  enabled: boolean;
-  token: string | null;
-  fields: string[] | null;
-};
-
-export async function getShareState(signupId: string): Promise<ShareState | null> {
-  const [row] = await getDb()
-    .select({
-      id: signups.id,
-      shareEnabled: signups.shareEnabled,
-      shareToken: signups.shareToken,
-      shareFields: signups.shareFields,
-    })
-    .from(signups)
-    .where(eq(signups.id, signupId))
-    .limit(1);
-  if (!row) return null;
-  return {
-    signupId: row.id,
-    enabled: row.shareEnabled,
-    token: row.shareToken,
-    fields: row.shareFields,
-  };
-}
-
 // Map a signed-in user's email to their most recent signup (for /account).
+// Emails are stored as typed (not normalized), so match case-insensitively —
+// matching the lowercasing convention used throughout lib/admin.ts.
 export async function getSignupByEmail(email: string): Promise<SignupRow | null> {
   const [row] = await getDb()
     .select()
     .from(signups)
-    .where(eq(signups.email, email))
+    .where(sql`lower(${signups.email}) = ${email.toLowerCase()}`)
     .orderBy(desc(signups.createdAt))
     .limit(1);
   return row ?? null;

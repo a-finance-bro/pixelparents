@@ -1,6 +1,31 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 17, 2026 — 2:22 PM Pacific
+
+### Summary of changes since last update
+Addressed the roborev review of the secret-share-URL commit (`77c2bb5`). All
+five findings fixed in this follow-up.
+
+### Detail of changes made:
+- **`getSignupByEmail` (`lib/db/signups.ts`):** now matches case-insensitively
+  (`lower(email)`), so the `/account` share panel shows even when the Clerk
+  email's case differs from the stored signup email.
+- **`share-settings.tsx`:** optimistic toggle/checkbox state now **reverts** on a
+  server-action error instead of staying out of sync with the DB.
+- **`thanks/actions.ts`:** bot-block log now records only `classificationReason`,
+  not the whole verification object.
+- **Removed dead code:** `getShareState` + `ShareState` (unused after the editor
+  switched to `getSignupForEdit`).
+- **Tests:** added `lib/share.test.ts` (shareFieldsOrDefault null→defaults /
+  []→honored / drops unknowns; sanitizeShareFields; token shape). Full suite
+  17/17 green; `tsc`, eslint, `next build` clean.
+
+### Potential concerns to address:
+- Still **not deployed** at the time of this entry — deploy is the next action.
+- Deferred: an integration test that a disabled/unknown share token 404s (needs
+  DB mocking; the pure-logic paths are now covered by unit tests).
+
 ## Progress Update as of June 17, 2026 — 2:16 PM Pacific
 
 ### Summary of changes since last update
