@@ -10,8 +10,19 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "A Pixel Parents profile",
+  description:
+    "A family in the Pixel Parents community — OHS parents building software for our kids.",
   // A secret link should never be indexed.
   robots: { index: false, follow: false },
+  openGraph: {
+    title: "A Pixel Parents profile",
+    description:
+      "A family in the Pixel Parents community — OHS parents building software for our kids.",
+    type: "profile",
+    // A page-level openGraph doesn't inherit the root file-based image, so set it.
+    images: ["/opengraph-image.png"],
+  },
+  twitter: { card: "summary_large_image", images: ["/opengraph-image.png"] },
 };
 
 function Pills({ items }: { items: string[] }) {
