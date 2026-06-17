@@ -4,7 +4,9 @@ import { getDb, hasDatabase } from "@/lib/db";
 import { signups, children, type ChildRow } from "@/lib/db/schema/signups";
 import { isAdminEmail, isEnvAdmin, dbAdminEmails } from "@/lib/admin";
 import { signedPhotoUrls } from "@/lib/blob";
+import { listPhotoTags } from "@/lib/db/photo-tags";
 import { ParentsTable, type ParentRow } from "./parents-table";
+import { type Person, type PhotoTag } from "./photo-gallery";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +24,11 @@ export default async function ParentsPage() {
   }
 
   const db = getDb();
-  const [rows, kids, adminSet] = await Promise.all([
+  const [rows, kids, adminSet, allTags] = await Promise.all([
     db.select().from(signups).orderBy(desc(signups.createdAt)),
     db.select().from(children),
     dbAdminEmails(),
+    listPhotoTags(),
   ]);
 
   const kidsBySignup = new Map<string, ChildRow[]>();
@@ -34,6 +37,37 @@ export default async function ParentsPage() {
     if (arr) arr.push(k);
     else kidsBySignup.set(k.signupId, [k]);
   }
+
+  // Photo tags grouped by photo pathname.
+  const tagsByPath = new Map<string, PhotoTag[]>();
+  for (const t of allTags) {
+    const arr = tagsByPath.get(t.photoPathname) ?? [];
+    arr.push({
+      id: t.id,
+      taggedType: t.taggedType as "parent" | "child",
+      taggedId: t.taggedId,
+      taggedName: t.taggedName,
+    });
+    tagsByPath.set(t.photoPathname, arr);
+  }
+
+  // Everyone taggable in a photo: all parents + all children (with parent context).
+  const signupById = new Map(rows.map((r) => [r.id, r]));
+  const people: Person[] = [
+    ...rows.map((r) => ({
+      type: "parent" as const,
+      id: r.id,
+      label: `${r.firstName} ${r.lastName}`,
+    })),
+    ...kids.map((k) => {
+      const parent = signupById.get(k.signupId);
+      return {
+        type: "child" as const,
+        id: k.id,
+        label: parent ? `${k.firstName} (${parent.lastName})` : k.firstName,
+      };
+    }),
+  ];
 
   // Presign every family's private photos in one batch, then map back by pathname.
   const allPathnames = rows.flatMap((r) => (r.photos ?? []).map((p) => p.pathname));
@@ -45,7 +79,13 @@ export default async function ParentsPage() {
 
   const data: ParentRow[] = rows.map((r) => {
     const photos = (r.photos ?? [])
-      .map((p) => ({ url: urlByPath.get(p.pathname) ?? "", width: p.width, height: p.height }))
+      .map((p) => ({
+        url: urlByPath.get(p.pathname) ?? "",
+        pathname: p.pathname,
+        width: p.width,
+        height: p.height,
+        tags: tagsByPath.get(p.pathname) ?? [],
+      }))
       .filter((p) => p.url);
     return {
       id: r.id,
@@ -91,7 +131,7 @@ export default async function ParentsPage() {
           No submissions yet.
         </section>
       ) : (
-        <ParentsTable rows={data} />
+        <ParentsTable rows={data} people={people} />
       )}
     </div>
   );
