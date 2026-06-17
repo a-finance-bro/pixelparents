@@ -153,6 +153,49 @@ URLs. Schema columns were applied to the prod Neon DB. Next step: deploy to prod
   one-off test script (since removed). Needs a `notifyApplicantWelcome()` in
   `lib/email.ts` + a call from the step-1 signup action.
 
+## Progress Update as of June 17, 2026 — 2:59 PM Pacific
+
+### Summary of changes since last update
+Redacted personal contact info (a child's first name + grade and a personal phone number) from an earlier progress-log entry, since this repo is public. Scope was deliberately limited to `PRD/main.md` per DROdio.
+
+### Detail of changes made:
+- **`PRD/main.md`:** the email-signature entry no longer quotes the literal signature string; it now just describes it (name + family intro + contact phone) without the values.
+- **Note — superseded by the secret-share PR (#3):** this said the contact details were kept in `lib/email.ts` and the thanks-page intro, but the later (more thorough) scrub moved the signature to env (`EMAIL_SIGNATURE`) and removed the child name from the page.
+- **Git history left as-is:** the phone number is still present in historical commits (introduced in `2146d28`); no history rewrite was done. Treat the number as already-public.
+
+### Potential concerns to address:
+- **Public repo + PII discipline:** future progress-log entries (and code) must avoid quoting personal phone numbers / minors' names verbatim — describe, don't transcribe. The `.githooks/pre-commit` secret guard does not catch PII like this.
+- If the phone number ever needs to be truly removed from GitHub, it requires a history rewrite + force-push (currently blocked by `main` branch protection) and should be treated as already-exposed regardless.
+
+## Progress Update as of June 17, 2026 — 2:34 PM Pacific
+
+### Summary of changes since last update
+Linked the words "open source" in `builders.md` to the GitHub repo (https://github.com/drodio/pixelparents). First change made under the new branch → PR workflow (see CLAUDE.md): committed on branch `worktree-builders-page` and opened as a PR rather than pushed straight to `main`. Also diagnosed why pixelparents.org/builders was 404ing in production (see concerns).
+
+### Detail of changes made:
+- **`builders.md`:** "it's open source" in the "How we work" bullet now links to `https://github.com/drodio/pixelparents`. Verified the rendered link in the build output.
+- Build + lint clean; `/builders` still statically prerendered.
+
+### Potential concerns to address:
+- **Production 404 on /builders is a DEPLOY problem, not a code problem.** The page is correct on `origin/main` (commit `e0ed561`) and in the GitHub repo. But pixelparents.org is served by **manual `vercel --prod` CLI deploys** (the live production deployment has `gitSource: null` / no git metadata / CLI user `drodio-storytell`). The GitHub repo *is* connected to the Vercel project, but pushes appear to only produce Preview deployments — production is updated by hand. A manual prod deploy ~7m ago (by a parallel agent, from a local checkout that predates `/builders`) became the live alias, so the page 404s even though it's on main. "It was working before" was likely a Preview URL or an earlier prod deploy that a later manual deploy clobbered.
+- **Recommended durable fix:** stop manual `vercel --prod` deploys (parallel agents keep clobbering each other from divergent local states) and let Vercel's Git integration auto-deploy `main` to Production on merge. Until then, production must be redeployed from latest `main` by hand to pick up `/builders`.
+
+## Progress Update as of June 17, 2026 — 1:37 PM Pacific
+
+### Summary of changes since last update
+Added a public `/builders` page that renders the Pixel Parent Builder Guidelines from an open-source Markdown file (`builders.md` at the repo root). Built on an isolated worktree branch (`worktree-builders-page`) off latest `origin/main`, verified via `npm run build` + `npm run lint`, and pushed to `main`.
+
+### Detail of changes made:
+- **`builders.md` (repo root):** the canonical, editable source for the guidelines — "Pixel Parent Builder Guidelines v0.1" (proposed, to be ratified). Sections: Who we are, How we work (×2), What we protect. Editing this file + redeploying is all it takes to update the page.
+- **`app/builders/page.tsx`:** server component, statically prerendered (`○ /builders` in build output). Reads `builders.md` at **build time** via `fs.readFileSync(join(process.cwd(), "builders.md"))` — no runtime fs dependency, so the root file doesn't need bundle tracing. Matches the `/developers` look: black bg, centered mascot header, `max-w-3xl`. Footer points readers to `builders.md` in the OSS repo and links to `/developers`.
+- **`app/builders/markdown.tsx`:** `"use client"` renderer using `react-markdown` + `remark-gfm`, with a `components` map styling h1/h2/p/ul/li/strong/em/a to the dark theme (bullets render as bordered cards). All element styling is here so editing `builders.md` never requires CSS changes.
+- **Deps added:** `react-markdown@^9` and `remark-gfm@^4` (first markdown libs in the repo).
+
+### Potential concerns to address:
+- **Build-time read means content updates require a redeploy.** If we later want live editing without a deploy, move the source to a DB/CMS or switch the page to `force-dynamic` (and ensure the file is bundle-traced). Build-time is the right call for v0.1.
+- **Guidelines are v0.1 / "proposed."** Once the builders ratify them, bump the version in `builders.md` (page updates automatically on next deploy).
+- **No nav link yet.** `/builders` is reachable by URL and from the `/developers` footer, but the homepage doesn't link to it — add to site nav when there is one.
+
 ## Progress Update as of June 16, 2026 — 12:50 PM Pacific
 
 ### Summary of changes since last update
@@ -167,8 +210,8 @@ the new address to confirm.
   DROdio@pixelparents.org (Resend id 011804c4…).
 - **`lib/email.ts`:** refactored to a single `sendEmail()` helper that all
   notifications route through. New default `FROM = "DROdio <DROdio@pixelparents.org>"`.
-  Every email now appends a signature block:
-  `— / DROdio / [name + phone redacted — see EMAIL_SIGNATURE env]`.
+  Every email appends DROdio's signature block (name, family intro, contact
+  phone) — the literal value lives in env `EMAIL_SIGNATURE`, not in the repo.
 - **Vercel env:** updated `RESEND_FROM` (Production) to
   `DROdio <DROdio@pixelparents.org>` (code default matches as a safety net).
 - Verified `next build` + TypeScript clean.
