@@ -1,6 +1,22 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 17, 2026 — 4:03 PM Pacific
+
+### Summary of changes since last update
+Admin parents table now formats phone numbers for display (e.g. 202-250-3846).
+
+### Detail of changes made:
+- **`lib/format.ts`:** `formatPhone()` — 10-digit → `XXX-XXX-XXXX`, 11-digit
+  leading-1 → `1-XXX-XXX-XXXX`, else returned unchanged. Unit-tested
+  (`lib/format.test.ts`).
+- **`app/(authed)/admin/parents-table.tsx`:** renders `formatPhone(r.phone)`.
+
+### Potential concerns to address:
+- Formatting is display-only; stored values are unchanged. Other surfaces (the
+  `/p` share page) still render the raw stored phone — apply `formatPhone` there
+  too if desired.
+
 ## Progress Update as of June 17, 2026 — 3:42 PM Pacific
 
 ### Summary of changes since last update
