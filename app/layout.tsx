@@ -18,14 +18,17 @@ export const metadata: Metadata = {
   description:
     "Parents building software to improve the experience for Stanford OHS students.",
   openGraph: {
-    title: "Pixel Parents",
+    title: "Pixel Parent Tech: Join our Builder Community",
     description:
       "Parents building software to improve the experience for Stanford OHS students.",
     siteName: "Pixel Parents",
     url: "https://pixelparents.org",
     type: "website",
   },
-  twitter: { card: "summary_large_image" },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pixel Parent Tech: Join our Builder Community",
+  },
 };
 
 export default function RootLayout({
