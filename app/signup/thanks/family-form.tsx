@@ -126,6 +126,8 @@ export default function FamilyForm({
   // Family-level (persists across "add another child"), pre-filled from any
   // existing submission so a returning parent doesn't blank out their own data.
   const [notInUS, setNotInUS] = useState(false);
+  const [city, setCity] = useState(initialCity);
+  const [usState, setUsState] = useState(initialUsState);
   const [parentInterests, setParentInterests] = useState<string[]>(initialParentInterests);
   const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
   const [previews, setPreviews] = useState<Record<string, string>>(initialPhotoPreviews);
@@ -307,7 +309,8 @@ export default function FamilyForm({
               <input
                 id="city"
                 name="city"
-                defaultValue={initialCity}
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
                 disabled={notInUS}
                 className={`${inputCls} disabled:cursor-not-allowed disabled:opacity-40`}
                 autoComplete="address-level2"
@@ -319,7 +322,8 @@ export default function FamilyForm({
                 id="state"
                 name="state"
                 disabled={notInUS}
-                defaultValue={initialUsState}
+                value={usState}
+                onChange={(e) => setUsState(e.target.value)}
                 className={`${inputCls} disabled:cursor-not-allowed disabled:opacity-40`}
               >
                 <option value="">Select…</option>
@@ -427,11 +431,11 @@ export default function FamilyForm({
                         : "border-white/10 bg-white/[0.03] hover:bg-white/10"
                     }`}
                   >
-                    <span className="font-medium text-white/90">{c.firstName}</span>
+                    <span className="font-bold text-amber-400">{c.firstName}</span>
                     <span className="text-white/50">
                       {c.grade ||
                         (c.birthYear ? `age ${currentYear - c.birthYear}` : "")}{" "}
-                      <span aria-hidden>✎</span>
+                      <span aria-hidden className="text-amber-400">✎</span>
                     </span>
                   </button>
                 </li>
