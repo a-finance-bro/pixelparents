@@ -1,6 +1,34 @@
 # Pixel Parents — Progress Log (branch: `main`)
 *(Most recent updates at top)*
 
+## Progress Update as of June 17, 2026 — 5:12 PM Pacific
+
+### Summary of changes since last update
+Built a public **/changelog** (festival.so-style): timeline with type + area
+filters, open email subscribe, Resend email-notify cron, and an LLM
+auto-generator from commits (no-PII prompt, dormant until an AI key is set).
+Seeded with today's ships. (beads: pixelparents-signup-enl)
+
+### Detail of changes made:
+- **Schema:** `changelog_entries` + `changelog_subscribers` (applied to Neon).
+- **`lib/changelog.ts`:** types, change-type/category constants + styles, queries
+  (`getChangelogEntries`, `subscribeEmail` upsert).
+- **`app/changelog/`:** public `page.tsx` (force-dynamic) + `timeline.tsx`
+  (client, Feature/Enhancement/Bug-Fix + area filters) + `subscribe.tsx` (email).
+- **`app/api/changelog/subscribe`:** POST email → upsert subscriber.
+- **`app/api/cron/changelog-notify`:** emails un-notified entries to active
+  subscribers (Resend), marks notified; CRON_SECRET-protected. `vercel.json` cron
+  every 6h.
+- **`scripts/build-changelog.mjs`:** commits → Anthropic (no-PII prompt) → entries,
+  idempotent on SHA, dormant until `ANTHROPIC_API_KEY`/`AI_GATEWAY_API_KEY`.
+- **`.env.example`:** ANTHROPIC_API_KEY / CHANGELOG_MODEL / CRON_SECRET.
+- tsc + eslint + build clean.
+
+### Potential concerns to address:
+- **Auto-gen + cron need keys:** add `ANTHROPIC_API_KEY` (or `AI_GATEWAY_API_KEY`)
+  for auto-posting and `CRON_SECRET` for the notify cron in Vercel. Until then the
+  page + subscribe work; auto-posting/emails are dormant.
+- No nav link to /changelog yet (URL-reachable); add to site nav when there is one.
 ## Progress Update as of June 17, 2026 — 4:06 PM Pacific (branch: `worktree-photo-gallery`, PR #12)
 
 ### Summary of changes since last update
