@@ -45,7 +45,14 @@ export default function BuildersPage() {
           <p>
             These guidelines live in{" "}
             <code className="font-mono text-xs text-white/70">builders.md</code>{" "}
-            in our open source repo — propose changes there.
+            in our{" "}
+            <a
+              href="https://github.com/drodio/pixelparents"
+              className="font-medium text-emerald-400 underline-offset-2 hover:underline"
+            >
+              open source
+            </a>{" "}
+            repo — propose changes there.
           </p>
           <Link
             href="/developers"
