@@ -3,23 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { iconForInterest } from "@/lib/interest-icons";
+import type { DirectoryCard } from "@/lib/directory";
 
-// One card's worth of data, already gated server-side: every field present here
-// is one the parent opted into sharing. The client never sees a hidden field.
-export type DirectoryCard = {
-  token: string;
-  name: string;
-  firstName: string;
-  location: string | null;
-  // Children the parent chose to share (name/grade/interests). Empty when the
-  // "children" field wasn't shared.
-  children: { firstName: string; grade: string | null; interests: string[] }[];
-  // Deduped parent + child interests the parent chose to share — drives the
-  // chips and the interest filter. Empty when neither field was shared.
-  interests: string[];
-  heroUrl: string | null;
-  thumbUrls: string[];
-};
+export type { DirectoryCard };
 
 type SortKey = "name" | "child";
 type SortDir = "asc" | "desc";
@@ -148,7 +134,11 @@ export function DirectoryClient({ cards }: { cards: DirectoryCard[] }) {
   const [density, setDensity] = useState(2);
 
   const viewportWidth = useViewportWidth();
-  const effectiveCols = Math.min(density, maxColsForWidth(viewportWidth));
+  const maxCols = maxColsForWidth(viewportWidth);
+  // What the grid actually renders — the user's choice clamped to what fits the
+  // viewport. The "Per row" select shows THIS (not the raw stored density) so the
+  // control never claims more columns than are drawn.
+  const effectiveCols = Math.min(density, maxCols);
 
   // Distinct interests across all visible cards, deduped case-insensitively but
   // keeping the first-seen display label.
@@ -249,11 +239,11 @@ export function DirectoryClient({ cards }: { cards: DirectoryCard[] }) {
           <label className="flex items-center gap-2 text-sm text-white/60">
             Per row
             <select
-              value={density}
+              value={effectiveCols}
               onChange={(e) => setDensity(Number(e.target.value))}
               className={controlCls}
             >
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+              {Array.from({ length: maxCols }, (_, i) => i + 1).map((n) => (
                 <option key={n} value={n}>
                   {n}
                 </option>

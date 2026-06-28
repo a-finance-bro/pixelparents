@@ -7,10 +7,15 @@ import { primaryEmail } from "@/lib/clerk";
 import { getDb, hasDatabase } from "@/lib/db";
 import { signups, children, type ChildRow } from "@/lib/db/schema/signups";
 import { getSignupByEmail } from "@/lib/db/signups";
-import { coerceShareVisibility, shareFieldsOrDefault } from "@/lib/share";
+import {
+  buildDirectoryCard,
+  directoryPhotoPaths,
+  isDirectoryVisible,
+  type DirectoryCard,
+} from "@/lib/directory";
 import { signedPhotoUrls } from "@/lib/blob";
 import { PixelMascot } from "@/components/pixel-mascot";
-import { DirectoryClient, type DirectoryCard } from "./directory-client";
+import { DirectoryClient } from "./directory-client";
 
 export const dynamic = "force-dynamic";
 
@@ -86,24 +91,18 @@ export default async function DirectoryPage() {
     );
   }
 
-  // 3) Load all signups + children, then keep ONLY OHS-visible profiles. This is
-  //    exactly the set for which canViewProfile("ohs", {isOwner:false,
-  //    isOhsFamily:true}) === true: visibility resolves to "ohs", sharing is on,
-  //    and a share token exists.
+  // 3) Load all signups + children, then keep ONLY OHS-visible profiles via the
+  //    shared isDirectoryVisible gate (which routes the visibility decision
+  //    through the same canViewProfile the /p page uses). Children are ordered
+  //    deterministically (createdAt) so the displayed/first-child name and the
+  //    "sort by child" key are stable across loads.
   const db = getDb();
   const [allRows, kids] = await Promise.all([
     db.select().from(signups).orderBy(desc(signups.createdAt)),
-    db.select().from(children),
+    db.select().from(children).orderBy(children.createdAt),
   ]);
 
-  const included = allRows.filter(
-    (r) =>
-      r.shareEnabled === true &&
-      Boolean(r.shareToken) &&
-      coerceShareVisibility(r.shareVisibility) === "ohs" &&
-      // Skip blank auto-save drafts (a real shared profile always has a name).
-      Boolean(r.firstName?.trim()),
-  );
+  const included = allRows.filter(isDirectoryVisible);
 
   // Children are shared per-family; group so each card shows its family's kids.
   const kidsByFamily = new Map<string, ChildRow[]>();
@@ -113,85 +112,25 @@ export default async function DirectoryPage() {
     else kidsByFamily.set(k.familyId, [k]);
   }
 
-  // 4) Per included signup, expose ONLY the opted-in fields. Collect the photo
-  //    pathnames to presign (hero = first family photo; thumbs fill from family
-  //    then child photos — all gated behind the "photos" field, matching /p).
-  type Pending = {
-    row: (typeof included)[number];
-    fields: Set<string>;
-    photoPaths: string[];
-  };
-  const pending: Pending[] = included.map((r) => {
-    const fields = new Set(shareFieldsOrDefault(r.shareFields));
-    const familyKids = kidsByFamily.get(r.familyId) ?? [];
-    const photoPaths = fields.has("photos")
-      ? [
-          ...(r.photos ?? []).map((p) => p.pathname),
-          ...familyKids.flatMap((k) => (k.photos ?? []).map((p) => p.pathname)),
-        ].slice(0, 1 + MAX_THUMBS)
-      : [];
-    return { row: r, fields, photoPaths };
-  });
-
-  // Presign every needed photo in one batch (deduped), then map back by path.
-  const allPaths = Array.from(new Set(pending.flatMap((p) => p.photoPaths)));
+  // 4) Presign every needed photo (hero + up to MAX_THUMBS per card) in one
+  //    deduped batch, then map back by path. Per-field exposure lives in the
+  //    pure buildDirectoryCard helper.
+  const allPaths = Array.from(
+    new Set(
+      included.flatMap((r) =>
+        directoryPhotoPaths(r, kidsByFamily.get(r.familyId) ?? []).slice(0, 1 + MAX_THUMBS),
+      ),
+    ),
+  );
   const signed = allPaths.length > 0 ? await signedPhotoUrls(allPaths) : [];
   const urlByPath = new Map<string, string>();
   allPaths.forEach((p, i) => {
     if (signed[i]) urlByPath.set(p, signed[i]);
   });
 
-  const cards: DirectoryCard[] = pending.map(({ row, fields }) => {
-    const familyKids = kidsByFamily.get(row.familyId) ?? [];
-
-    const location = fields.has("location")
-      ? [row.city, row.state].filter(Boolean).join(", ") || null
-      : null;
-
-    const parentInterests = fields.has("interests") ? row.parentInterests ?? [] : [];
-
-    const sharedChildren = fields.has("children")
-      ? familyKids.map((k) => ({
-          firstName: k.firstName,
-          grade: k.grade ?? null,
-          interests: k.interests ?? [],
-        }))
-      : [];
-
-    // Combined interest set for chips + filtering: parent + child interests, but
-    // only those whose source field was shared. Deduped case-insensitively.
-    const childInterests = fields.has("children")
-      ? familyKids.flatMap((k) => k.interests ?? [])
-      : [];
-    const interestByKey = new Map<string, string>();
-    for (const i of [...parentInterests, ...childInterests]) {
-      const t = i?.trim();
-      if (!t) continue;
-      const key = t.toLowerCase();
-      if (!interestByKey.has(key)) interestByKey.set(key, t);
-    }
-
-    // Photos (gated by "photos"): hero first, remaining as thumbnails.
-    const photoUrls = fields.has("photos")
-      ? [
-          ...(row.photos ?? []).map((p) => p.pathname),
-          ...familyKids.flatMap((k) => (k.photos ?? []).map((p) => p.pathname)),
-        ]
-          .map((path) => urlByPath.get(path))
-          .filter((u): u is string => Boolean(u))
-      : [];
-
-    return {
-      token: row.shareToken!,
-      name: [row.firstName, row.lastName].filter(Boolean).join(" "),
-      firstName: row.firstName,
-      location,
-      children: sharedChildren,
-      interests: Array.from(interestByKey.values()),
-      heroUrl: photoUrls[0] ?? null,
-      thumbUrls: photoUrls.slice(1, 1 + MAX_THUMBS),
-    };
-  });
+  const cards: DirectoryCard[] = included.map((row) =>
+    buildDirectoryCard(row, kidsByFamily.get(row.familyId) ?? [], urlByPath, MAX_THUMBS),
+  );
 
   return (
     <Shell>

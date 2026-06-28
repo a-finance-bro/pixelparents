@@ -1,5 +1,36 @@
 # feat/ohs-directory
 
+## Progress Update as of June 28, 2026 — 4:15 PM Pacific
+
+### Summary of changes since last update
+Addressed roborev review findings (#14391/#14392) on the initial directory commit:
+extracted the security-critical gating + field projection into a pure, unit-tested
+helper that routes the visibility decision through the canonical `canViewProfile`,
+made the children query deterministic, and fixed the density control to reflect
+the columns actually rendered.
+
+### Detail of changes made:
+- New `lib/directory.ts` (pure, no I/O): `isDirectoryVisible(row)`,
+  `directoryPhotoPaths(row, kids)`, `buildDirectoryCard(...)`, and the
+  `DirectoryCard` type (now imported by both the page and the client).
+  - `isDirectoryVisible` now calls `canViewProfile(coerceShareVisibility(...),
+    {isOwner:false, isOhsFamily:true})` for the visibility decision — single
+    source of truth with `/p`, so it can't silently diverge if the gate changes.
+    Sharing preconditions (`shareEnabled`, `shareToken`, non-blank name) wrap it.
+- `app/(authed)/directory/page.tsx` now consumes those helpers (removed the inline
+  duplicated gate + field-mapping) and orders the children query by `createdAt`
+  so the displayed/first child name and the "sort by child" key are stable.
+- `directory-client.tsx`: the "Per row" select is now bound to `effectiveCols`
+  (the clamped value actually rendered) with options capped at
+  `maxColsForWidth(viewport)`, so it never claims more columns than are drawn.
+- New `lib/directory.test.ts` — 16 vitest cases over the gate + per-field
+  redaction (private/disabled/no-token/blank excluded; legacy "link" included;
+  phone/email/notes never on a card; location/children/interests/photos each
+  gated; case-insensitive interest dedup; hero/thumb url mapping). All pass.
+- Declined (YAGNI) the "push the filter into SQL / paginate / cache presigns"
+  finding: it mirrors the existing `/admin` full-table-load pattern and the
+  community is small; noted as a future concern below. tsc + eslint + vitest green.
+
 ## Progress Update as of June 28, 2026 — 4:09 PM Pacific
 
 ### Summary of changes since last update
