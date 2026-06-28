@@ -1,6 +1,6 @@
 # Pixel Parent Builder Guidelines
 
-*v0.2: Guidelines ratified by the OHS Pixel Parents Tech Builder Group on June 28, 2026 ([view past versions](https://github.com/drodio/pixelparents/tree/main/builders/versions))*
+*v0.2: Guidelines ratified by the OHS Pixel Parents Tech Builder Group on June 28, 2026 ([Past versions](https://github.com/drodio/pixelparents/tree/main/builders/versions))*
 
 - **Who we are:** An informal group of parents working to build software exclusively for current Stanford Online High School (OHS) families.
 

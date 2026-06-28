@@ -1,3 +1,17 @@
+## Progress Update as of June 28, 2026 — 11:14 AM Pacific
+
+### Summary of changes since last update
+Prepping PR #43 for production merge. Changed the page subtitle link text from
+"view past versions" to "Past versions". Fixed the failing `pii-gate` CI check:
+it was dying at `npm ci` because `package-lock.json` was out of sync with
+`package.json` (pre-existing drift on `main` — tailwindcss-oxide / lightningcss /
+sharp 4.3.1 platform binaries missing from the lock). Regenerated the lock with
+`npm install --package-lock-only`; `npm ci --dry-run` now passes, so the actual
+PII scan can run. Production is reached by merging to `main` (GitHub→Vercel
+auto-deploys); manual `vercel --prod` is blocked by a shell guard.
+
+---
+
 ## Progress Update as of June 28, 2026 — 11:06 AM Pacific
 
 ### Summary of changes since last update
