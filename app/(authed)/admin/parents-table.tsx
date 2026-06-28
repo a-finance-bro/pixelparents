@@ -93,8 +93,11 @@ const shortAffil = (s: string) => s.split(" (")[0];
 export function ParentsTable({ rows }: { rows: ParentRow[] }) {
   const router = useRouter();
   // Persist one field then refresh so the table reflects the saved value.
+  // patchSignup never throws — it returns { ok: false } on a bad UUID or DB
+  // error — so throw here on failure to keep the inline editor open for retry.
   async function save(id: string, patch: SignupPatch) {
-    await patchSignup(id, patch);
+    const r = await patchSignup(id, patch);
+    if (!r.ok) throw new Error("save failed");
     router.refresh();
   }
 
@@ -240,6 +243,8 @@ export function ParentsTable({ rows }: { rows: ParentRow[] }) {
                   value={r.email}
                   label="Edit email"
                   placeholder="email"
+                  type="email"
+                  inputMode="email"
                   display={
                     <a className="text-amber-400 hover:underline" href={`mailto:${r.email}`}>
                       {r.email}
@@ -251,6 +256,8 @@ export function ParentsTable({ rows }: { rows: ParentRow[] }) {
                   value={r.phone}
                   label="Edit phone"
                   placeholder="phone"
+                  type="tel"
+                  inputMode="tel"
                   display={<span className="text-white/50">{r.phone || "—"}</span>}
                   onSave={(phone) => save(r.id, { phone })}
                 />

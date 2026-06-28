@@ -1,3 +1,24 @@
+## Progress Update as of June 28, 2026 — 4:48 PM Pacific
+
+### Summary of changes since last update
+Drained the roborev reviews (#14409, #14410) on the first commit. Fixed the
+Medium finding both flagged: `parents-table.tsx` `save()` was ignoring
+`patchSignup`'s `{ ok }`, so a failed persist closed the editor and silently
+reverted. It now throws on `!ok`, keeping the inline editor open for retry
+(mirrors `edit-form.tsx`). Addressed the Low findings too: email/phone inline
+inputs got `type`/`inputMode` (`email`/`tel`), and `useEditing.save` documents
+the `override` constraint.
+
+### Detail of changes made:
+- `parents-table.tsx` — `save()` now `const r = await patchSignup(...); if (!r.ok) throw`.
+- `inline-edit.tsx` — `TextCell` accepts `type` + `inputMode`; doc comment on `save(override)`.
+
+### Potential concerns to address:
+- Empty email still saves as `""` (not blocked with a confirm) — accepted; admins
+  rarely clear it and server-side sanitation is unchanged.
+
+---
+
 ## Progress Update as of June 28, 2026 — 4:40 PM Pacific
 
 ### Summary of changes since last update

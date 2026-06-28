@@ -105,6 +105,9 @@ function useEditing<T>(
   const cancel = () => {
     if (!saving) setEditing(false);
   };
+  // `override` (when passed) must be a DEFINED value — callers use it to commit a
+  // freshly-computed result instead of `draft` (e.g. the tag editor folding in
+  // pending input). `undefined` always falls through to `draft`.
   const save = async (override?: T) => {
     const value = override !== undefined ? override : draft;
     setSaving(true);
@@ -147,6 +150,8 @@ export function TextCell({
   display,
   placeholder,
   prefix,
+  type = "text",
+  inputMode,
   onSave,
 }: {
   value: string;
@@ -154,6 +159,8 @@ export function TextCell({
   display: React.ReactNode;
   placeholder?: string;
   prefix?: string;
+  type?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   onSave: (v: string) => Promise<void> | void;
 }) {
   const ed = useEditing(value, onSave);
@@ -179,6 +186,8 @@ export function TextCell({
       {prefix && <span className="select-none text-xs text-white/40">{prefix}</span>}
       <input
         ref={ref}
+        type={type}
+        inputMode={inputMode}
         value={ed.draft}
         placeholder={placeholder}
         onChange={(e) => ed.setDraft(e.target.value)}
