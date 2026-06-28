@@ -16,8 +16,6 @@ export const metadata: Metadata = {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const DRODIO_SUBMISSION_URL = process.env.NEXT_PUBLIC_DRODIO_SUBMISSION_URL;
-
 export default async function ThanksPage({
   searchParams,
 }: {
@@ -34,16 +32,9 @@ export default async function ThanksPage({
   const firstName = signup?.firstName ?? null;
   const kids = editData?.kids ?? [];
 
-  // Presign already-saved (private) family photos so the editor can show them
-  // and resubmitting keeps them instead of wiping them.
+  // Family-level photos are now collected on the first signup form; the thanks
+  // page only needs whether any exist (to vary the heading), not their URLs.
   const initialPhotos = signup?.photos ?? [];
-  const photoUrls = initialPhotos.length
-    ? await signedPhotoUrls(initialPhotos.map((p) => p.pathname))
-    : [];
-  const initialPhotoPreviews: Record<string, string> = {};
-  initialPhotos.forEach((p, i) => {
-    if (photoUrls[i]) initialPhotoPreviews[p.pathname] = photoUrls[i]!;
-  });
 
   // Presign each child's photos too, keyed by child id — all children in
   // parallel so render latency doesn't grow with the number of children.
@@ -91,7 +82,7 @@ export default async function ThanksPage({
 
   const subheading = (
     <h2 className="text-xl font-semibold text-white/90 sm:text-2xl">
-      Please tell us about your interests + child(ren), below.
+      Tell us about your child(ren)
     </h2>
   );
 
@@ -124,99 +115,13 @@ export default async function ThanksPage({
             <div className="mt-8">{subheading}</div>
           </>
         ) : (
-          <>
-            <div className="mt-2">{subheading}</div>
-            <div className="mt-6 space-y-4 text-white/70">
-              <p>
-                I&apos;m{" "}
-                <a
-                  href="https://festival.so/profile/founder/drodio"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-amber-400 hover:underline"
-                >
-                  DROdio
-                </a>
-                , dad to Devina, just entering OHS as a 7th grader. I&apos;m the
-                CEO of{" "}
-                <a
-                  href="https://chief.bot"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-amber-400 hover:underline"
-                >
-                  Chief
-                </a>
-                , an AI Chief of Staff startup in the SF Bay area. I love to build
-                impactful software.
-              </p>
-              <p>
-                My objective with this website is to build software that will
-                transform the experiences of parents and students at OHS. I aim to
-                not run afoul of any OHS rules &amp; regs, but also to stay
-                independent as parents who want to make a difference and move fast
-                with no politics.
-              </p>
-              <p>
-                I hope to make everything we do{" "}
-                <a
-                  href="https://github.com/drodio/pixelparents"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-amber-400 hover:underline"
-                >
-                  open source
-                </a>{" "}
-                so others can benefit from it. Ensuring our kids&apos; safety and
-                privacy is top-of-mind, and within that safe space I want to be as
-                fully inclusive as possible.
-              </p>
-              <p>
-                I have no idea (yet) what we&apos;ll build, but I want it to be
-                impactful — and I want us to be proud of having enabled an
-                incredible educational experience for our kids.
-              </p>
-              <p>
-                I&apos;d also like a small data set to start with. If you&apos;re
-                willing to fill out the info below about your child(ren) at OHS, we
-                can use it as our initial seed data set before bringing other
-                parents in.
-                {DRODIO_SUBMISSION_URL ? (
-                  <>
-                    {" "}
-                    For reference, here are{" "}
-                    <a
-                      href={DRODIO_SUBMISSION_URL}
-                      className="text-amber-400 hover:underline"
-                    >
-                      my answers
-                    </a>
-                    .
-                  </>
-                ) : null}
-              </p>
-              <h2 className="pt-2 text-xl font-semibold text-white sm:text-2xl">
-                Your location, interests &amp; child(ren)
-              </h2>
-              <p className="text-white/50">
-                This information is optional — feel free to hold off until later if
-                you prefer. It&apos;s stored in a Neon serverless Postgres
-                database, and as a parent you maintain full control over your data.
-                Only authenticated OHS families will ever see your answers.
-              </p>
-            </div>
-          </>
+          <div className="mt-2">{subheading}</div>
         )}
 
         <div className="mt-10">
           <FamilyForm
             signupId={id ?? ""}
             suggestedInterests={interestPool}
-            initialCity={signup?.city ?? ""}
-            initialUsState={signup?.state ?? ""}
-            initialParentInterests={signup?.parentInterests ?? []}
-            initialPhotos={initialPhotos}
-            initialPhotoPreviews={initialPhotoPreviews}
             existingChildren={kids.map((k) => ({
               id: k.id,
               firstName: k.firstName,

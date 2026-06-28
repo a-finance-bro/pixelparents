@@ -107,6 +107,8 @@ export type SignupPatch = Partial<{
   parentInterests: string[];
   photos: Photo[];
   builderInterest: string;
+  // Opt-in to being a resource for OHS students (shown when LinkedIn is filled).
+  studentResourceOptIn: boolean;
 }>;
 
 // Patch only the provided columns on an existing (draft or saved) signup row.
@@ -142,14 +144,23 @@ export async function patchSignup(id: string, patch: SignupPatch): Promise<{ ok:
       .filter((p) => p && typeof p.url === "string" && typeof p.pathname === "string")
       .slice(0, 200);
   }
+  // Keys stored in the reserved `extra` jsonb blob. Merge via read-modify-write
+  // so we don't clobber other keys (e.g. `notified`).
+  const extraPatch: Record<string, unknown> = {};
   if ("builderInterest" in patch) {
+    extraPatch.builderInterest = oneOf(BUILDER_INTEREST, patch.builderInterest);
+  }
+  if ("studentResourceOptIn" in patch) {
+    extraPatch.studentResourceOptIn = patch.studentResourceOptIn === true;
+  }
+  if (Object.keys(extraPatch).length > 0) {
     const [cur] = await getDb()
       .select({ extra: signups.extra })
       .from(signups)
       .where(eq(signups.id, id))
       .limit(1);
     const extra = (cur?.extra ?? {}) as Record<string, unknown>;
-    set.extra = { ...extra, builderInterest: oneOf(BUILDER_INTEREST, patch.builderInterest) };
+    set.extra = { ...extra, ...extraPatch };
   }
   if (Object.keys(set).length === 0) return { ok: true };
   try {

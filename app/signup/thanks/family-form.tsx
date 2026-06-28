@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GRADES, US_STATES } from "@/lib/options";
+import { GRADES } from "@/lib/options";
 import { optimizeImage } from "@/lib/image";
 import type { Photo } from "@/lib/db/schema/signups";
 import { MentionCaptionInput, type MentionCandidate } from "@/components/mention-caption-input";
+import { iconForInterest } from "@/lib/interest-icons";
 import { useAutoSave } from "@/lib/use-auto-save";
 import { SaveStatus } from "@/components/save-status";
-import { patchSignup, type SignupPatch } from "../actions";
 import { addChild, patchChild, removeChild, type ChildPatch } from "./actions";
 
 const MAX_PHOTOS = 200;
@@ -17,7 +17,7 @@ const inputCls =
   "mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-white/30 outline-none focus:border-white/40 focus:ring-1 focus:ring-white/40";
 const h3Cls = "text-base font-semibold text-white";
 
-function TagPicker({
+export function TagPicker({
   value,
   onChange,
   suggestions,
@@ -41,16 +41,20 @@ function TagPicker({
     <div className="mt-1">
       {value.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-2">
-          {value.map((t) => (
-            <button
-              type="button"
-              key={t}
-              onClick={() => remove(t)}
-              className="rounded-md bg-white px-3 py-1 text-sm font-medium text-black"
-            >
-              {t} ✕
-            </button>
-          ))}
+          {value.map((t) => {
+            const Icon = iconForInterest(t);
+            return (
+              <button
+                type="button"
+                key={t}
+                onClick={() => remove(t)}
+                className="inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-1 text-sm font-medium text-black"
+              >
+                <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+                {t} ✕
+              </button>
+            );
+          })}
         </div>
       )}
       <input
@@ -68,16 +72,20 @@ function TagPicker({
       />
       {available.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">
-          {available.map((s) => (
-            <button
-              type="button"
-              key={s}
-              onClick={() => add(s)}
-              className="rounded-md border border-white/20 px-3 py-1 text-sm text-white/70 transition-colors hover:bg-white/10"
-            >
-              + {s}
-            </button>
-          ))}
+          {available.map((s) => {
+            const Icon = iconForInterest(s);
+            return (
+              <button
+                type="button"
+                key={s}
+                onClick={() => add(s)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-white/20 px-3 py-1 text-sm text-white/70 transition-colors hover:bg-white/10"
+              >
+                <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+                {s}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -86,7 +94,7 @@ function TagPicker({
 
 // Self-contained photo editor: handles upload, remove, and captions, and calls
 // onSave(photos) with the full array whenever it changes (the parent auto-saves).
-function PhotoUploader({
+export function PhotoUploader({
   initialPhotos,
   initialPreviews,
   onSave,
@@ -424,35 +432,12 @@ function ChildCard({
 export default function FamilyForm({
   signupId,
   suggestedInterests,
-  initialCity = "",
-  initialUsState = "",
-  initialParentInterests = [],
-  initialPhotos = [],
-  initialPhotoPreviews = {},
   existingChildren = [],
 }: {
   signupId: string;
   suggestedInterests: string[];
-  initialCity?: string;
-  initialUsState?: string;
-  initialParentInterests?: string[];
-  initialPhotos?: Photo[];
-  initialPhotoPreviews?: Record<string, string>;
   existingChildren?: ExistingChild[];
 }) {
-  const saveFamily = useCallback(
-    async (patch: SignupPatch) => {
-      const r = await patchSignup(signupId, patch);
-      if (!r.ok) throw new Error("save failed");
-    },
-    [signupId],
-  );
-  const { queue, status } = useAutoSave<SignupPatch>(saveFamily);
-
-  const [notInUS, setNotInUS] = useState(false);
-  const [city, setCity] = useState(initialCity);
-  const [usState, setUsState] = useState(initialUsState);
-  const [parentInterests, setParentInterests] = useState<string[]>(initialParentInterests);
   const [children, setChildren] = useState<ExistingChild[]>(existingChildren);
   const [adding, setAdding] = useState(false);
 
@@ -477,97 +462,9 @@ export default function FamilyForm({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-center justify-end">
-        <SaveStatus status={status} />
-      </div>
-
-      {/* Family-level */}
-      <section className="flex flex-col gap-6">
-        <div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className={labelCls} htmlFor="city">City</label>
-              <input
-                id="city"
-                value={city}
-                onChange={(e) => {
-                  setCity(e.target.value);
-                  queue({ city: e.target.value });
-                }}
-                disabled={notInUS}
-                className={`${inputCls} disabled:cursor-not-allowed disabled:opacity-40`}
-                autoComplete="address-level2"
-              />
-            </div>
-            <div>
-              <label className={labelCls} htmlFor="state">State</label>
-              <select
-                id="state"
-                disabled={notInUS}
-                value={usState}
-                onChange={(e) => {
-                  setUsState(e.target.value);
-                  queue({ state: e.target.value }, true);
-                }}
-                className={`${inputCls} disabled:cursor-not-allowed disabled:opacity-40`}
-              >
-                <option value="">Select…</option>
-                {US_STATES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <label className="mt-2 flex items-center gap-2 text-sm text-white/80">
-            <input
-              type="checkbox"
-              checked={notInUS}
-              onChange={(e) => {
-                setNotInUS(e.target.checked);
-                if (e.target.checked) {
-                  setCity("");
-                  setUsState("");
-                  queue({ city: "", state: "" }, true);
-                }
-              }}
-              className="h-4 w-4 accent-amber-500"
-            />
-            Not in the US
-          </label>
-        </div>
-
-        <div>
-          <h3 className={h3Cls}>Your + your spouse&apos;s interests (select existing or add new ones)</h3>
-          <TagPicker
-            value={parentInterests}
-            onChange={(next) => {
-              setParentInterests(next);
-              queue({ parentInterests: next }, true);
-            }}
-            suggestions={suggestedInterests}
-            placeholder="Type an interest and press Enter"
-          />
-        </div>
-
-        <div>
-          <h3 className={h3Cls}>Would you like to share any photos of your family?</h3>
-          <p className="mt-1 text-xs text-white/40">Resized &amp; optimized in your browser before upload. Add as many as you&rsquo;d like.</p>
-          <PhotoUploader
-            initialPhotos={initialPhotos}
-            initialPreviews={initialPhotoPreviews}
-            onSave={(photos) => queue({ photos }, true)}
-            candidates={candidates}
-            showMainPill
-          />
-        </div>
-      </section>
-
-      <hr className="border-white/10" />
-
       {/* Children */}
       <section className="flex flex-col gap-4">
         <div>
-          <h2 className="text-lg font-semibold">Your children</h2>
           <p className="text-sm text-white/50">(Feel free to add non-OHS children as well)</p>
         </div>
 
