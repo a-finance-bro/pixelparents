@@ -1,5 +1,31 @@
 # feat/co-parent-invites — Co-parent invites + shared family
 
+## Progress Update as of June 28, 2026 — 2:56 PM Pacific
+
+### Summary of changes since last update
+Addressed roborev review findings (#14366, #14367). Hardened the new
+`sendCoParentInvites` action against email-relay abuse, deduped admin photo
+presigning, and added unit tests for the invite-email parser.
+
+### Detail of changes made
+- **`sendCoParentInvites` lifetime cap**: a signup may send at most 20 invite
+  emails over its lifetime, tracked in the signup's `extra` jsonb (no schema
+  change). Bounds the unauthenticated outbound-email primitive. Each send is now
+  wrapped in try/catch so one bad recipient can't abort the batch.
+- **Admin presign dedupe**: `allPathnames` is now `Set`-deduped — shared child
+  photos appearing on every parent row in a family are presigned once.
+- **Tests**: new `lib/invite.test.ts` covers `parseInviteEmails` (split, lower,
+  trim, dedupe, invalid-drop, empty, MAX_INVITES cap). 44 tests pass.
+
+### Declined (intended design, per task spec)
+- signupId-as-bearer-secret + family-scoped child edits: the app has no auth;
+  editing is gated by possession of the secret `?id=` link, and the task
+  explicitly requires children editable from any family member's link.
+- Per-parent share consent exposing family children on `/p`: children are shared
+  by design; documented as a follow-up product note, not a code bug.
+- Orphan `families` on abandoned drafts: same lifecycle as the pre-existing
+  orphan-draft-`signups` behavior (admin already filters blank rows).
+
 ## Progress Update as of June 28, 2026 — 2:50 PM Pacific
 
 ### Summary of changes since last update

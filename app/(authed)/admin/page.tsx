@@ -46,12 +46,18 @@ export default async function ParentsPage() {
 
   // Presign every family's private photos — family-level AND per-child — in one
   // batch, then map back by pathname.
-  const allPathnames = rows.flatMap((r) => [
-    ...(r.photos ?? []).map((p) => p.pathname),
-    ...(kidsByFamily.get(r.familyId) ?? []).flatMap((k) =>
-      (k.photos ?? []).map((p) => p.pathname),
+  // Dedupe: in a multi-parent family the same shared child photos appear under
+  // every parent row, so the same pathname would otherwise be presigned N times.
+  const allPathnames = Array.from(
+    new Set(
+      rows.flatMap((r) => [
+        ...(r.photos ?? []).map((p) => p.pathname),
+        ...(kidsByFamily.get(r.familyId) ?? []).flatMap((k) =>
+          (k.photos ?? []).map((p) => p.pathname),
+        ),
+      ]),
     ),
-  ]);
+  );
   const signed = await signedPhotoUrls(allPathnames);
   const urlByPath = new Map<string, string>();
   allPathnames.forEach((p, i) => {

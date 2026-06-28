@@ -289,6 +289,13 @@ export async function submitSignup(
 
 // --- Co-parent invites --------------------------------------------------------
 
+// A signup may send at most this many co-parent invite emails over its lifetime.
+// `sendCoParentInvites` is an unauthenticated outbound-email primitive (gated
+// only by knowing the secret signup id, like every other edit action here), so
+// this lifetime cap bounds it as an email-relay / spam vector. A real family
+// needs only a couple of invites; 20 leaves generous headroom.
+const INVITE_LIFETIME_CAP = 20;
+
 // Invite one or more co-parents (spouse / other parent[s]) to this signup's
 // family. Each gets a secret join link tied to the family's invite token; on
 // open they create their OWN parent row attached to the same family (and thus
@@ -309,6 +316,7 @@ export async function sendCoParentInvites(
       firstName: signups.firstName,
       lastName: signups.lastName,
       familyId: signups.familyId,
+      extra: signups.extra,
       inviteToken: families.inviteToken,
     })
     .from(signups)
@@ -317,13 +325,37 @@ export async function sendCoParentInvites(
     .limit(1);
   if (!row) return { ok: false, sent: 0, error: "not-found" };
 
+  // Enforce the lifetime cap (tracked in the signup's `extra` jsonb — no schema
+  // change). Trim this batch to whatever room is left.
+  const extra = (row.extra ?? {}) as Record<string, unknown>;
+  const already = typeof extra.coParentInvitesSent === "number" ? extra.coParentInvitesSent : 0;
+  const room = INVITE_LIFETIME_CAP - already;
+  if (room <= 0) return { ok: false, sent: 0, error: "limit" };
+  const toSend = emails.slice(0, room);
+
   const inviterName = `${row.firstName} ${row.lastName}`.trim();
   const joinUrl = joinUrlFor(row.inviteToken);
 
   let sent = 0;
-  for (const to of emails) {
-    const ok = await notifyCoParentInvite({ to, inviterName, joinUrl });
-    if (ok) sent += 1;
+  for (const to of toSend) {
+    // notifyCoParentInvite is best-effort (never throws), but guard anyway so one
+    // bad recipient can't abort the batch.
+    try {
+      if (await notifyCoParentInvite({ to, inviterName, joinUrl })) sent += 1;
+    } catch (err) {
+      console.error("notifyCoParentInvite failed:", err);
+    }
+  }
+
+  if (sent > 0) {
+    try {
+      await getDb()
+        .update(signups)
+        .set({ extra: { ...extra, coParentInvitesSent: already + sent } })
+        .where(eq(signups.id, signupId));
+    } catch (err) {
+      console.error("failed to record invite count:", err);
+    }
   }
   return { ok: true, sent };
 }
