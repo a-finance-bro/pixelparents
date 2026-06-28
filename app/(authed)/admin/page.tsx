@@ -35,21 +35,29 @@ export default async function ParentsPage() {
     (r) => (r.firstName?.trim() || r.lastName?.trim() || r.email?.trim()),
   );
 
-  const kidsBySignup = new Map<string, ChildRow[]>();
+  // Children are shared per-family, so group by familyId and attach the same
+  // kids to every parent row in that family (co-parents show the same children).
+  const kidsByFamily = new Map<string, ChildRow[]>();
   for (const k of kids) {
-    const arr = kidsBySignup.get(k.signupId);
+    const arr = kidsByFamily.get(k.familyId);
     if (arr) arr.push(k);
-    else kidsBySignup.set(k.signupId, [k]);
+    else kidsByFamily.set(k.familyId, [k]);
   }
 
   // Presign every family's private photos — family-level AND per-child — in one
   // batch, then map back by pathname.
-  const allPathnames = rows.flatMap((r) => [
-    ...(r.photos ?? []).map((p) => p.pathname),
-    ...(kidsBySignup.get(r.id) ?? []).flatMap((k) =>
-      (k.photos ?? []).map((p) => p.pathname),
+  // Dedupe: in a multi-parent family the same shared child photos appear under
+  // every parent row, so the same pathname would otherwise be presigned N times.
+  const allPathnames = Array.from(
+    new Set(
+      rows.flatMap((r) => [
+        ...(r.photos ?? []).map((p) => p.pathname),
+        ...(kidsByFamily.get(r.familyId) ?? []).flatMap((k) =>
+          (k.photos ?? []).map((p) => p.pathname),
+        ),
+      ]),
     ),
-  ]);
+  );
   const signed = await signedPhotoUrls(allPathnames);
   const urlByPath = new Map<string, string>();
   allPathnames.forEach((p, i) => {
@@ -65,7 +73,7 @@ export default async function ParentsPage() {
       height: p.height,
       label: null as string | null,
     }));
-    const childPhotos = (kidsBySignup.get(r.id) ?? []).flatMap((k) =>
+    const childPhotos = (kidsByFamily.get(r.familyId) ?? []).flatMap((k) =>
       (k.photos ?? []).map((p) => ({
         url: urlByPath.get(p.pathname) ?? "",
         pathname: p.pathname,
@@ -96,7 +104,7 @@ export default async function ParentsPage() {
       photos,
       dbAdmin: adminSet.has(r.email.toLowerCase()),
       envAdmin: isEnvAdmin(r.email),
-      kids: (kidsBySignup.get(r.id) ?? []).map((k) => ({
+      kids: (kidsByFamily.get(r.familyId) ?? []).map((k) => ({
         id: k.id,
         firstName: k.firstName,
         grade: k.grade,

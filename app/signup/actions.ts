@@ -3,8 +3,8 @@
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { checkBotId } from "botid/server";
-import { getDb } from "@/lib/db";
-import { signups, type Photo } from "@/lib/db/schema/signups";
+import { getDb, getSql } from "@/lib/db";
+import { signups, families, type Photo } from "@/lib/db/schema/signups";
 import {
   OHS_AFFILIATIONS,
   TECHNICAL_DEPTH,
@@ -14,7 +14,9 @@ import {
   BUILDER_INTEREST,
 } from "@/lib/options";
 import { signupSchema, linkedinUrlFromHandle } from "@/lib/validation";
-import { notifyNewSignup, notifyApplicantWelcome } from "@/lib/email";
+import { notifyNewSignup, notifyApplicantWelcome, notifyCoParentInvite } from "@/lib/email";
+import { createFamily, getFamilyByInviteToken, joinUrlFor } from "@/lib/family";
+import { parseInviteEmails, INVITE_LIFETIME_CAP } from "@/lib/invite";
 
 export type SignupState = {
   ok: boolean;
@@ -29,17 +31,57 @@ const UUID_RE =
 
 // Create the draft row on first interaction. BotID runs here once; subsequent
 // patches skip it. Required columns are NOT NULL, so we seed empty strings.
+// Every signup gets its own brand-new family (a co-parent joining via an invite
+// link uses createCoParentDraft instead, which reuses an existing family).
 export async function createDraftSignup(): Promise<{ id: string } | { error: string }> {
   const v = await checkBotId();
   if (v.isBot) return { error: "blocked" };
   try {
+    const family = await createFamily();
     const [row] = await getDb()
       .insert(signups)
-      .values({ firstName: "", lastName: "", email: "", phone: "", githubUsername: "" })
+      .values({
+        familyId: family.id,
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        githubUsername: "",
+      })
       .returning({ id: signups.id });
     return { id: row.id };
   } catch (err) {
     console.error("createDraftSignup failed:", err);
+    return { error: "failed" };
+  }
+}
+
+// Co-parent join flow: given a family invite token, create a NEW draft signup
+// attached to that EXISTING family (rather than minting a fresh family). The
+// invitee then fills out their own step-1 form and lands on their own thanks
+// page, where the family's shared children already appear.
+export async function createCoParentDraft(
+  inviteToken: string,
+): Promise<{ id: string } | { error: string }> {
+  const v = await checkBotId();
+  if (v.isBot) return { error: "blocked" };
+  try {
+    const family = await getFamilyByInviteToken(inviteToken);
+    if (!family) return { error: "invalid-token" };
+    const [row] = await getDb()
+      .insert(signups)
+      .values({
+        familyId: family.id,
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        githubUsername: "",
+      })
+      .returning({ id: signups.id });
+    return { id: row.id };
+  } catch (err) {
+    console.error("createCoParentDraft failed:", err);
     return { error: "failed" };
   }
 }
@@ -214,9 +256,11 @@ export async function submitSignup(
 
   let id: string;
   try {
+    const family = await createFamily();
     const [row] = await getDb()
       .insert(signups)
       .values({
+        familyId: family.id,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -256,4 +300,99 @@ export async function submitSignup(
   await notifyApplicantWelcome({ to: data.email, firstName: data.firstName, id });
 
   redirect(`/signup/thanks?id=${id}`);
+}
+
+// --- Co-parent invites --------------------------------------------------------
+
+// Atomically reserve up to `want` invites against a signup's lifetime cap and
+// return how many were granted (0 if already at the cap). The reserve is a
+// single UPDATE with a `FOR UPDATE` row lock, so concurrent calls serialize on
+// the row and cannot race past the cap. We count ATTEMPTS (not just successful
+// sends) toward the cap — that's what actually bounds outbound relay volume.
+//
+// The granted count is `LEAST(cap, used+want) - used`. That clamp is the
+// canonical spec captured by the pure, unit-tested `grantedQuota()` in
+// lib/invite.ts — keep the SQL below and that helper in lockstep (they must
+// agree for the same inputs).
+async function reserveInviteQuota(signupId: string, want: number): Promise<number> {
+  const sql = getSql();
+  const rows = (await sql`
+    WITH locked AS (
+      SELECT id, COALESCE((extra->>'coParentInvitesSent')::int, 0) AS used
+      FROM signups WHERE id = ${signupId} FOR UPDATE
+    )
+    UPDATE signups s
+    SET extra = jsonb_set(
+          COALESCE(s.extra, '{}'::jsonb),
+          '{coParentInvitesSent}',
+          to_jsonb(LEAST(${INVITE_LIFETIME_CAP}, locked.used + ${want}))
+        )
+    FROM locked
+    WHERE s.id = locked.id
+    RETURNING locked.used AS used_before,
+              LEAST(${INVITE_LIFETIME_CAP}, locked.used + ${want}) AS used_after
+  `) as Array<{ used_before: number; used_after: number }>;
+  if (rows.length === 0) return 0;
+  // Mirrors grantedQuota(used_before, want): used_after - used_before.
+  return Math.max(0, Number(rows[0].used_after) - Number(rows[0].used_before));
+}
+
+// Invite one or more co-parents (spouse / other parent[s]) to this signup's
+// family. Each gets a secret join link tied to the family's invite token; on
+// open they create their OWN parent row attached to the same family (and thus
+// the same shared children). Best-effort emails: never throws to the caller.
+// `requested` lets the UI message a partial send when the lifetime cap trims it.
+export async function sendCoParentInvites(
+  signupId: string,
+  emailsInput: string[] | string,
+): Promise<{ ok: boolean; sent: number; requested: number; reserved?: number; error?: string }> {
+  if (!UUID_RE.test(signupId)) return { ok: false, sent: 0, requested: 0, error: "bad-id" };
+
+  const raw = Array.isArray(emailsInput) ? emailsInput.join(", ") : emailsInput;
+  const emails = parseInviteEmails(raw);
+  if (emails.length === 0) return { ok: false, sent: 0, requested: 0, error: "no-emails" };
+
+  // Resolve the inviting parent + their family's invite token.
+  const [row] = await getDb()
+    .select({
+      firstName: signups.firstName,
+      lastName: signups.lastName,
+      inviteToken: families.inviteToken,
+    })
+    .from(signups)
+    .innerJoin(families, eq(signups.familyId, families.id))
+    .where(eq(signups.id, signupId))
+    .limit(1);
+  if (!row) return { ok: false, sent: 0, requested: emails.length, error: "not-found" };
+
+  // Atomically reserve quota up front (counting attempts), then send only what
+  // we were granted — race-safe against the spam/relay vector the cap bounds.
+  const reserved = await reserveInviteQuota(signupId, emails.length);
+  if (reserved <= 0)
+    return { ok: false, sent: 0, requested: emails.length, reserved: 0, error: "limit" };
+  const toSend = emails.slice(0, reserved);
+
+  const inviterName = `${row.firstName} ${row.lastName}`.trim();
+  const joinUrl = joinUrlFor(row.inviteToken);
+
+  let sent = 0;
+  for (const to of toSend) {
+    // notifyCoParentInvite is best-effort (never throws), but guard anyway so one
+    // bad recipient can't abort the batch.
+    try {
+      if (await notifyCoParentInvite({ to, inviterName, joinUrl })) sent += 1;
+    } catch (err) {
+      console.error("notifyCoParentInvite failed:", err);
+    }
+  }
+
+  // Quota is reserved by attempt and not refunded — so flag the case where a
+  // signup burned cap with zero deliveries (e.g. provider outage) for support.
+  if (sent === 0) {
+    console.error(
+      `sendCoParentInvites: reserved ${reserved} invite(s) for signup ${signupId} but 0 sent`,
+    );
+  }
+
+  return { ok: true, sent, requested: emails.length, reserved };
 }
