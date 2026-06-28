@@ -46,12 +46,14 @@ export function canViewProfile(
 
 const VALID_KEYS = new Set<string>(SHARE_FIELDS.map((f) => f.key));
 
-// Sensible default when a parent first enables sharing: profile yes, contact no.
+// Default when a parent first enables sharing: everything selected.
 export const DEFAULT_SHARE_FIELDS: ShareFieldKey[] = [
   "location",
   "interests",
   "photos",
   "children",
+  "phone",
+  "email",
 ];
 
 // 32 url-safe chars — same unguessable-token recipe as the developer API keys.

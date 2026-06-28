@@ -8,6 +8,7 @@ import {
   TECHNICAL_DEPTH,
   SKILLSETS,
   TIME_COMMITMENT,
+  US_STATES,
 } from "@/lib/options";
 import { useAutoSave } from "@/lib/use-auto-save";
 import { SaveStatus } from "@/components/save-status";
@@ -20,6 +21,7 @@ import {
   type SignupPatch,
 } from "./actions";
 import { parseInviteEmails } from "@/lib/invite";
+import { TagPicker, PhotoUploader } from "./thanks/family-form";
 
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
@@ -27,6 +29,8 @@ function FieldError({ msg }: { msg?: string }) {
 }
 
 const labelCls = "block text-sm font-medium text-white/80";
+// Section headers (fieldset legends) are bold to stand out from field labels.
+const legendCls = "block text-sm font-bold text-white/80";
 const inputCls =
   "mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-white/30 outline-none focus:border-white/40 focus:ring-1 focus:ring-white/40";
 
@@ -41,13 +45,26 @@ const empty = {
   technicalDepth: "",
   timeCommitment: "",
   skillsets: [] as string[],
+  parentInterests: [] as string[],
+  city: "",
+  state: "",
+  // Resource-for-students opt-in (only surfaced once LinkedIn is filled).
+  // Defaults to "yes" to match the pre-checked option in the prompt.
+  studentResource: "yes" as "yes" | "no",
+  // Interest in helping build Pixel Parents software (no default selection).
   builderInterest: "" as "" | "builder" | "aspiring" | "no",
 };
 
 // `joinToken`, when present, puts the form in co-parent "join mode": the draft
 // is attached to an EXISTING family (via createCoParentDraft) instead of minting
 // a new one, so the invitee's children come from the shared family.
-export default function SignupForm({ joinToken }: { joinToken?: string } = {}) {
+export default function SignupForm({
+  suggestedInterests = [],
+  joinToken,
+}: {
+  suggestedInterests?: string[];
+  joinToken?: string;
+} = {}) {
   const router = useRouter();
   const [v, setV] = useState(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -134,6 +151,19 @@ export default function SignupForm({ joinToken }: { joinToken?: string } = {}) {
     setV((prev) => ({ ...prev, [key]: value }));
     queue({ [key]: value } as SignupPatch, immediate);
   }
+  // LinkedIn drives the student-resource pill box. When a handle is present we
+  // also persist the current opt-in choice (default "yes") so it isn't lost if
+  // the parent leaves the pre-checked option untouched.
+  function setLinkedin(value: string) {
+    setV((prev) => ({ ...prev, linkedinHandle: value }));
+    const patch: SignupPatch = { linkedinHandle: value };
+    if (value.trim() !== "") patch.studentResourceOptIn = v.studentResource === "yes";
+    queue(patch);
+  }
+  function setStudentResource(choice: "yes" | "no") {
+    setV((prev) => ({ ...prev, studentResource: choice }));
+    queue({ studentResourceOptIn: choice === "yes" }, true);
+  }
   function setBuilderInterest(choice: "builder" | "aspiring" | "no") {
     setV((prev) => ({ ...prev, builderInterest: choice }));
     queue({ builderInterest: choice }, true);
@@ -178,6 +208,8 @@ export default function SignupForm({ joinToken }: { joinToken?: string } = {}) {
             {message}
           </p>
         )}
+
+        <h2 className="text-xl font-semibold text-white">First Parent&apos;s Info:</h2>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -235,25 +267,131 @@ export default function SignupForm({ joinToken }: { joinToken?: string } = {}) {
             <FieldError msg={errors.phone} />
           </div>
           <div className="sm:col-span-2">
-            <label className={labelCls} htmlFor="githubUsername">
-              GitHub username
+            <label className={labelCls} htmlFor="linkedinHandle">
+              LinkedIn (this really helps other parents get to know you)
             </label>
             <div className="mt-1 flex items-center rounded-lg border border-white/15 bg-white/5 focus-within:border-white/40 focus-within:ring-1 focus-within:ring-white/40">
-              <span className="select-none px-3 py-2 text-sm text-white/40">github.com/</span>
+              <span className="select-none px-3 py-2 text-sm text-white/40">linkedin.com/in/</span>
               <input
-                id="githubUsername"
-                value={v.githubUsername}
-                onChange={(e) => set("githubUsername", e.target.value)}
-                placeholder="your-username"
+                id="linkedinHandle"
+                value={v.linkedinHandle}
+                onChange={(e) => setLinkedin(e.target.value)}
+                placeholder="your-handle"
                 className="w-full rounded-r-lg bg-transparent py-2 pr-3 text-white placeholder-white/30 outline-none"
               />
             </div>
-            <FieldError msg={errors.githubUsername} />
+            <FieldError msg={errors.linkedinHandle} />
+          </div>
+
+          {v.linkedinHandle.trim() !== "" && (
+            <div className="sm:col-span-2 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
+              <p className="text-sm font-bold text-white/80">
+                OHS Students&apos; <span className="text-amber-400">#1 ask</span> is
+                to connect with other parents (like you!) around your subject
+                matter expertise, so they can learn faster and with more variety.
+              </p>
+              <p className="mt-2 text-sm text-white/80">
+                Are you interested in being an available resource to OHS students?
+                (Examples: A 30 minute Zoom call to provide advice about your
+                career specialty. A small dinner with students and parents to
+                discuss a topic you have expertise in, etc.)
+              </p>
+              <p className="mt-2 text-sm text-white/80">
+                <strong>We are building some software to enable this.</strong> You
+                will be able to accept / decline any specific student requests.
+              </p>
+              <div className="mt-3 flex flex-col gap-3">
+                <label className="flex items-start gap-2 text-sm text-white/80">
+                  <input
+                    type="radio"
+                    name="studentResource"
+                    checked={v.studentResource === "yes"}
+                    onChange={() => setStudentResource("yes")}
+                    className="mt-1 h-4 w-4 accent-amber-500"
+                  />
+                  <span>
+                    Yes! Please use my LinkedIn profile to automatically build a
+                    profile out about me and my expertise that will be shared
+                    with students.{" "}
+                    <em>(you&apos;ll be able to edit it after the initial pass)</em>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm text-white/80">
+                  <input
+                    type="radio"
+                    name="studentResource"
+                    checked={v.studentResource === "no"}
+                    onChange={() => setStudentResource("no")}
+                    className="mt-1 h-4 w-4 accent-amber-500"
+                  />
+                  <span>
+                    No, I&apos;m not able to be available for OHS student requests
+                    right now
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className={labelCls} htmlFor="city">City</label>
+            <input
+              id="city"
+              value={v.city}
+              onChange={(e) => set("city", e.target.value)}
+              className={inputCls}
+              autoComplete="address-level2"
+            />
+          </div>
+          <div>
+            <label className={labelCls} htmlFor="state">State</label>
+            <select
+              id="state"
+              value={v.state}
+              onChange={(e) => set("state", e.target.value, true)}
+              className={inputCls}
+            >
+              <option value="">Select…</option>
+              {US_STATES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </div>
         </div>
 
+        <div>
+          <h3 className="text-base font-semibold text-white">
+            Your + your spouse&apos;s interests (select existing or add new ones)
+          </h3>
+          <TagPicker
+            value={v.parentInterests}
+            onChange={(next) => set("parentInterests", next, true)}
+            suggestions={suggestedInterests}
+            placeholder="Type an interest and press Enter"
+          />
+        </div>
+
+        <div>
+          <h3 className="text-base font-semibold text-white">
+            Would you like to share photos of you with your family?
+          </h3>
+          <p className="mt-1 text-xs text-white/40">
+            Resized &amp; optimized in your browser before upload. Add as many as
+            you&rsquo;d like.
+          </p>
+          <PhotoUploader
+            initialPhotos={[]}
+            initialPreviews={{}}
+            onSave={(photos) => queue({ photos }, true)}
+            candidates={[]}
+            showMainPill
+          />
+        </div>
+
         <fieldset>
-          <legend className={labelCls}>
+          <legend className={legendCls}>
             Stanford OHS affiliation <span className="text-red-400">*</span>
           </legend>
           <div className="mt-2 flex flex-col gap-2">
@@ -274,17 +412,30 @@ export default function SignupForm({ joinToken }: { joinToken?: string } = {}) {
         </fieldset>
 
         <fieldset>
-          <legend className={labelCls}>
+          <legend className={legendCls}>
             Are you interested in helping us build Pixel Parents software?{" "}
             <span className="text-red-400">*</span>
           </legend>
           <div className="mt-2 flex flex-col gap-2">
             {[
-              { value: "builder" as const, label: "Yes! I am a builder (technical / software developer / engineer / etc) and I'd like to contribute" },
-              { value: "aspiring" as const, label: "Yes! But I'm not a builder, although I'd like to become one" },
-              { value: "no" as const, label: "No, that's far from my interests or area of expertise" },
+              {
+                value: "builder" as const,
+                label:
+                  "Yes! I am a builder (technical / software developer / engineer / etc) and I'd like to contribute",
+              },
+              {
+                value: "aspiring" as const,
+                label: "Yes! But I'm not a builder, although I'd like to become one",
+              },
+              {
+                value: "no" as const,
+                label: "No, that's far from my interests or area of expertise",
+              },
             ].map((opt) => (
-              <label key={opt.value} className="flex items-start gap-2 text-sm text-white/80">
+              <label
+                key={opt.value}
+                className="flex items-start gap-2 text-sm text-white/80"
+              >
                 <input
                   type="radio"
                   name="builderInterest"
@@ -302,91 +453,117 @@ export default function SignupForm({ joinToken }: { joinToken?: string } = {}) {
             <div className="mt-3 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-white/80">
               <strong>Welcome, technical parent!</strong> We appreciate you. Read
               our{" "}
-              <a href="https://pixelparents.org/builders" target="_blank" rel="noopener noreferrer" className="text-amber-400 underline decoration-amber-400/60 underline-offset-2 hover:text-amber-300">builder guidelines page</a>{" "}
+              <a
+                href="https://pixelparents.org/builders"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-400 underline decoration-amber-400/60 underline-offset-2 hover:text-amber-300"
+              >
+                builder guidelines page
+              </a>{" "}
               to learn more about how we build together.
             </div>
           )}
+
           {v.builderInterest === "aspiring" && (
             <div className="mt-3 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-white/80">
-              <em>If you are not yet a builder, but want to become one, this parents tech builder group is the perfect place to start.</em>{" "}
+              <em>
+                If you are not yet a builder, but want to become one, this parents
+                tech builder group is the perfect place to start.
+              </em>{" "}
               Please read{" "}
-              <a href="https://pixelparents.org/builders#frequently-asked-questions" target="_blank" rel="noopener noreferrer" className="text-amber-400 underline decoration-amber-400/60 underline-offset-2 hover:text-amber-300">the FAQs on our builder guidelines page</a>{" "}
+              <a
+                href="https://pixelparents.org/builders#frequently-asked-questions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-400 underline decoration-amber-400/60 underline-offset-2 hover:text-amber-300"
+              >
+                the FAQs on our builder guidelines page
+              </a>{" "}
               to learn how to get started.
             </div>
           )}
         </fieldset>
 
-        <fieldset>
-          <legend className={labelCls}>Technical depth</legend>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
-            {TECHNICAL_DEPTH.map((opt) => (
-              <label key={opt} className="flex items-start gap-2 text-sm text-white/80">
-                <input
-                  type="radio"
-                  name="technicalDepth"
-                  checked={v.technicalDepth === opt}
-                  onChange={() => set("technicalDepth", opt, true)}
-                  className="mt-1 h-4 w-4 accent-amber-500"
-                />
-                <span>{opt}</span>
+        {/* Builders see GitHub, technical depth, and skillsets. */}
+        {v.builderInterest === "builder" && (
+          <>
+            <div>
+              <label className={labelCls} htmlFor="githubUsername">
+                GitHub username
               </label>
-            ))}
-          </div>
-        </fieldset>
-
-        <div>
-          <label className={labelCls} htmlFor="linkedinHandle">
-            LinkedIn
-          </label>
-          <div className="mt-1 flex items-center rounded-lg border border-white/15 bg-white/5 focus-within:border-white/40 focus-within:ring-1 focus-within:ring-white/40">
-            <span className="select-none px-3 py-2 text-sm text-white/40">linkedin.com/in/</span>
-            <input
-              id="linkedinHandle"
-              value={v.linkedinHandle}
-              onChange={(e) => set("linkedinHandle", e.target.value)}
-              placeholder="your-handle"
-              className="w-full rounded-r-lg bg-transparent py-2 pr-3 text-white placeholder-white/30 outline-none"
-            />
-          </div>
-          <FieldError msg={errors.linkedinHandle} />
-        </div>
-
-        <fieldset>
-          <legend className={labelCls}>Skillsets</legend>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
-            {SKILLSETS.map((opt) => (
-              <label key={opt} className="flex items-center gap-2 text-sm text-white/80">
+              <div className="mt-1 flex items-center rounded-lg border border-white/15 bg-white/5 focus-within:border-white/40 focus-within:ring-1 focus-within:ring-white/40">
+                <span className="select-none px-3 py-2 text-sm text-white/40">github.com/</span>
                 <input
-                  type="checkbox"
-                  checked={v.skillsets.includes(opt)}
-                  onChange={() => toggleSkill(opt)}
-                  className="h-4 w-4 accent-amber-500"
+                  id="githubUsername"
+                  value={v.githubUsername}
+                  onChange={(e) => set("githubUsername", e.target.value)}
+                  placeholder="your-username"
+                  className="w-full rounded-r-lg bg-transparent py-2 pr-3 text-white placeholder-white/30 outline-none"
                 />
-                <span>{opt}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+              </div>
+              <FieldError msg={errors.githubUsername} />
+            </div>
 
-        <fieldset>
-          <legend className={labelCls}>
-            How much time can you dedicate to building software for OHS parents?
-          </legend>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
-            {TIME_COMMITMENT.map((opt) => (
-              <label key={opt} className="flex items-center gap-2 text-sm text-white/80">
-                <input
-                  type="radio"
-                  name="timeCommitment"
-                  checked={v.timeCommitment === opt}
-                  onChange={() => set("timeCommitment", opt, true)}
-                  className="h-4 w-4 accent-amber-500"
-                />
-                <span>{opt}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+            <fieldset>
+              <legend className={legendCls}>Technical depth</legend>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {TECHNICAL_DEPTH.map((opt) => (
+                  <label key={opt} className="flex items-start gap-2 text-sm text-white/80">
+                    <input
+                      type="radio"
+                      name="technicalDepth"
+                      checked={v.technicalDepth === opt}
+                      onChange={() => set("technicalDepth", opt, true)}
+                      className="mt-1 h-4 w-4 accent-amber-500"
+                    />
+                    <span>{opt}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend className={legendCls}>Skillsets</legend>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {SKILLSETS.map((opt) => (
+                  <label key={opt} className="flex items-center gap-2 text-sm text-white/80">
+                    <input
+                      type="checkbox"
+                      checked={v.skillsets.includes(opt)}
+                      onChange={() => toggleSkill(opt)}
+                      className="h-4 w-4 accent-amber-500"
+                    />
+                    <span>{opt}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </>
+        )}
+
+        {/* Both builders and aspiring builders see the time-commitment question. */}
+        {(v.builderInterest === "builder" || v.builderInterest === "aspiring") && (
+          <fieldset>
+            <legend className={legendCls}>
+              How much time can you dedicate to building software for OHS parents?
+            </legend>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {TIME_COMMITMENT.map((opt) => (
+                <label key={opt} className="flex items-center gap-2 text-sm text-white/80">
+                  <input
+                    type="radio"
+                    name="timeCommitment"
+                    checked={v.timeCommitment === opt}
+                    onChange={() => set("timeCommitment", opt, true)}
+                    className="h-4 w-4 accent-amber-500"
+                  />
+                  <span>{opt}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
 
         {/* Invite a spouse / other parent(s) to fill out their own info. They
             join the same family and share these children. */}
@@ -432,11 +609,10 @@ export default function SignupForm({ joinToken }: { joinToken?: string } = {}) {
             disabled={submitting}
             className="rounded-full bg-white px-6 py-3 font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            {submitting ? "…" : "Continue →"}
+            {submitting ? "…" : "Add Your Child(ren) →"}
           </button>
           <SaveStatus status={status} />
         </div>
-        <p className="text-xs text-white/40">Your answers save automatically as you go.</p>
       </div>
 
       {/* Custom in-app confirmation dialog (not window.confirm). */}

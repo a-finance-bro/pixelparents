@@ -1,5 +1,5 @@
 import { eq, desc, sql } from "drizzle-orm";
-import { getDb } from "@/lib/db";
+import { getDb, getSql } from "@/lib/db";
 import { signups, children, type SignupRow, type ChildRow } from "@/lib/db/schema/signups";
 
 // Map a signed-in user's email to their most recent signup (for /account).
@@ -13,6 +13,50 @@ export async function getSignupByEmail(email: string): Promise<SignupRow | null>
     .orderBy(desc(signups.createdAt))
     .limit(1);
   return row ?? null;
+}
+
+// Total number of parents who have signed up. Used on /signup to show
+// "Join N other Pixel Parents" as social proof.
+export async function getSignupCount(): Promise<number> {
+  const [row] = await getDb()
+    .select({ c: sql<number>`count(*)::int` })
+    .from(signups);
+  return row?.c ?? 0;
+}
+
+// Total number of kids (children) registered across all signups. Used on
+// /signup ("Helping connect N OHS kids IRL").
+export async function getChildrenCount(): Promise<number> {
+  const [row] = await getDb()
+    .select({ c: sql<number>`count(*)::int` })
+    .from(children);
+  return row?.c ?? 0;
+}
+
+// Number of DISTINCT interests logged across all children (e.g. "K-pop",
+// "chess"). Used on /signup ("around N shared interests IRL"). Case-insensitive
+// and trimmed so "Chess" and "chess " count once.
+export async function getInterestsCount(): Promise<number> {
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT count(DISTINCT lower(trim(i)))::int AS c
+    FROM children, unnest(children.interests) AS i
+    WHERE trim(i) <> ''
+  `) as Array<{ c: number }>;
+  return rows[0]?.c ?? 0;
+}
+
+// Counts of parents by builder interest (stored in extra.builderInterest):
+// "builder" = technical, "aspiring" = non-technical learning to build.
+export async function getBuilderCounts(): Promise<{ technical: number; curious: number }> {
+  const sql = getSql();
+  const rows = (await sql`
+    SELECT
+      count(*) FILTER (WHERE extra->>'builderInterest' = 'builder')::int AS technical,
+      count(*) FILTER (WHERE extra->>'builderInterest' = 'aspiring')::int AS curious
+    FROM signups
+  `) as Array<{ technical: number; curious: number }>;
+  return { technical: rows[0]?.technical ?? 0, curious: rows[0]?.curious ?? 0 };
 }
 
 // Thanks-page editor: a signup + its children, used to pre-fill the family form
