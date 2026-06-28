@@ -68,7 +68,7 @@ describe("sanitizeRecapHtml", () => {
 
   it("preserves a profile mention anchor (class + data-mention-id + internal href)", () => {
     const html =
-      '<p>Great chat with <a href="/profile/founder/jensen-huang" data-mention-id="eval-1" class="mention">Jensen Huang</a>!</p>';
+      '<p>Great chat with <a href="/profile/founder/morgan-reyes" data-mention-id="eval-1" class="mention">Morgan Reyes</a>!</p>';
     expect(sanitizeRecapHtml(html)).toBe(html);
   });
 

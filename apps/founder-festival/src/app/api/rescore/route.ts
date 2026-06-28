@@ -7,7 +7,7 @@ import { isEvalOwner } from "@/lib/authz";
 import { isAdmin, isSuperAdmin } from "@/lib/admin";
 import { reportServerError } from "@/lib/report-server-error";
 
-// Heavy, high-presence profiles (e.g. Patrick Collison) that escalate to Opus
+// Heavy, high-presence profiles (e.g. a high-profile founder) that escalate to Opus
 // can exceed 60s end-to-end; past the limit Vercel kills the function and the
 // client fetch surfaces a bare "Network error". 180s gives headroom (Vercel
 // allows up to 300, which the scoring-tick cron already uses). The latency of

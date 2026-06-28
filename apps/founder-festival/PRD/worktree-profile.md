@@ -119,7 +119,7 @@ slider hit the same Claim-Your-Profile gate the rating buttons use.
   delete on public, admin-can-mutate. Mocks `auth()`, `isEvalOwner`, and
   `isAdmin` so the tests run without standing up real Clerk sessions or
   user-row claims.
-- Browser smoke-tested at `http://localhost:3000/profile/founder/wei-deng`:
+- Browser smoke-tested at `http://localhost:3000/profile/founder/jordan-lee`:
   unauthenticated render shows 8 sliders (default Public); after toggling
   one priority private via direct DB write, that row renders the blurred
   placeholder + blurred rating digits, the slider is hidden for the

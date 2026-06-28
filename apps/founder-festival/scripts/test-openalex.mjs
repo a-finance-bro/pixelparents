@@ -2,10 +2,10 @@
 //   npx tsx scripts/test-openalex.mjs
 //
 // Proves three things:
-//   1. Rich data on a prominent research founder (Fei-Fei Li, Andrew Ng).
+//   1. Rich data on a prominent research founder (heavily-cited academic).
 //   2. The identity guard: a bogus name returns 0 facts.
-//   3. The citation-threshold gate: a non-academic founder (Brian Chesky)
-//      is blocked even when nameOverlaps would accept the display_name.
+//   3. The citation-threshold gate: a non-academic founder is blocked even
+//      when nameOverlaps would accept the display_name.
 
 import { enrichWithOpenAlex } from "../src/lib/enrichers/openalex.ts";
 
@@ -21,13 +21,13 @@ function ctx(fullName, linkedinPageText = "") {
 
 const CASES = [
   {
-    label: "Fei-Fei Li (Stanford AI; huge citations) — expect RICH data",
-    ctx: ctx("Fei-Fei Li", "stanford university professor computer science"),
+    label: "Jordan Lee (academic; huge citations) — expect RICH data",
+    ctx: ctx("Jordan Lee", "university professor computer science"),
     expect: "rich",
   },
   {
-    label: "Andrew Ng (Coursera/DeepLearning.AI founder; huge citations) — expect RICH data",
-    ctx: ctx("Andrew Ng", "stanford deep learning coursera"),
+    label: "Alex Kim (academic founder; huge citations) — expect RICH data",
+    ctx: ctx("Alex Kim", "deep learning research"),
     expect: "rich",
   },
   {
@@ -36,8 +36,8 @@ const CASES = [
     expect: "empty",
   },
   {
-    label: "Brian Chesky (Airbnb; non-academic) — expect 0 facts (citation gate)",
-    ctx: ctx("Brian Chesky"),
+    label: "Taylor Rivera (non-academic founder) — expect 0 facts (citation gate)",
+    ctx: ctx("Taylor Rivera"),
     expect: "empty",
   },
 ];

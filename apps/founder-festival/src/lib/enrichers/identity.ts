@@ -6,8 +6,8 @@ import { domainHost } from "@/lib/domain-normalize";
 //
 // The risk these guard against: naively guessing a handle from a name and
 // attributing a stranger's reputation to the subject. Verified example — the
-// Hacker News handle `naval` has 113 karma and an empty bio; it is NOT Naval
-// Ravikant. On a credibility product, a false attribution is worse than a
+// Hacker News handle `jordan` has 113 karma and an empty bio; it is NOT the
+// well-known investor of the same name. On a credibility product, a false attribution is worse than a
 // missing one, so every helper here favors PRECISION over recall.
 //
 // This generalizes the confirmation logic that was inline in github.ts.

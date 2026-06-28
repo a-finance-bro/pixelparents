@@ -7,9 +7,8 @@ import { db } from "@/db";
 //   - owner_edits   : score_items an owner edited, awaiting review (pre-existing)
 //   - profile_conflict : ONE verified email mapped to ≥2 evaluations — either a
 //       duplicate profile OR (worse) two different same-named people wrongly sharing
-//       an email (the Patricia Liu case: investor pjlconsulting + accountant
-//       patricia-jiahui-liu both carry patriciajliu@gmail.com). The admin merges /
-//       re-links / detaches.
+//       an email (e.g. an investor and an accountant both carrying user@example.com).
+//       The admin merges / re-links / detaches.
 
 export type ConflictProfile = {
   id: string;

@@ -11,7 +11,8 @@ import { domainHost } from "@/lib/domain-normalize";
 //         deliberately hides per-COMMENT scores, so comment `points` is null.
 //
 // Matching: HN has no name->user lookup and usernames are arbitrary (verified:
-// the handle `naval` has 113 karma and an empty bio — NOT Naval Ravikant). So
+// the handle `jordan` has 113 karma and an empty bio — NOT the well-known
+// investor of the same name). So
 // we trust a handle only when (a) Exa already surfaced a HN profile URL for the
 // subject, or (b) a derived candidate's bio corroborates their identity.
 
@@ -98,7 +99,7 @@ export function subjectDomainsFromHighlights(ctx: EnricherContext, max = 4): str
 }
 
 // Discover a HN handle by CONTENT, not by guessing: HN usernames are
-// case-sensitive and arbitrary (Samuel Odio is "Sam_Odio"), so name-derivation
+// case-sensitive and arbitrary (Samuel Rivera is "Sam_Rivera"), so name-derivation
 // misses them. Instead, search HN for STORIES whose URL points at the subject's
 // own domains — people submit their own work — collect the authors, and accept
 // the most-frequent one whose HN bio corroborates the subject's identity. This
@@ -132,7 +133,7 @@ async function discoverHnHandleByContent(
   return null;
 }
 
-// Split a handle into name-ish tokens: "Sam_Odio" → ["sam","odio"], "DROdio"
+// Split a handle into name-ish tokens: "Sam_Rivera" → ["sam","rivera"], "DROdio"
 // → ["dr","odio"] (camelCase). Used for the prefix-tolerant name match below.
 export function handleNameTokens(h: string): string[] {
   return h
@@ -143,8 +144,8 @@ export function handleNameTokens(h: string): string[] {
 }
 
 // Loose name match for handle-derived names: the LAST name must match exactly,
-// the FIRST name only needs to be prefix-compatible — so "Samuel Odio" matches
-// a handle "Sam_Odio" (sam ⊂ samuel), but not an unrelated "Sam Altman".
+// the FIRST name only needs to be prefix-compatible — so "Samuel Lee" matches
+// a handle "Sam_Lee" (sam ⊂ samuel), but not an unrelated "Sam Rivera".
 export function looseNameMatch(subject: string[], entry: string[]): boolean {
   if (subject.length < 2 || entry.length < 2) return false;
   const sLast = subject[subject.length - 1]!;
@@ -160,7 +161,7 @@ type TkmxUserLite = { username?: string; hn_username?: string };
 
 // Tier 4: the subject is on the HN Tokenmaxxing leaderboard, which carries each
 // member's `hn_username`. Match the subject to a tkmx entry by a known handle OR
-// a prefix-tolerant name match ("Samuel Odio" ↔ hn_username "Sam_Odio"), then
+// a prefix-tolerant name match ("Samuel Rivera" ↔ hn_username "Sam_Rivera"), then
 // confirm that hn_username against HN with bio corroboration. This catches
 // arbitrary HN handles that content-discovery misses when the subject's own
 // domain isn't in the Exa highlights (exactly Sam Odio's case).
@@ -197,7 +198,7 @@ async function tkmxIdentityHandle(
 //   3. content  — the bio-corroborated author of stories linking the subject's
 //                 own domains.
 //   4. tkmx     — a bio-corroborated tkmx-leaderboard entry's hn_username
-//                 (catches arbitrary handles like "Sam_Odio" whose owner's
+//                 (catches arbitrary handles like "Sam_Rivera" whose owner's
 //                 domain isn't in the highlights).
 // Shared so BOTH the HN enricher and the HN-Tokenmaxxing enricher resolve the
 // same handle (Tokenmaxxing used to only read Exa URLs, so it silently missed

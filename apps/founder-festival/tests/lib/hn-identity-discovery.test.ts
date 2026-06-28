@@ -3,9 +3,9 @@ import { registrableDomain, subjectDomainsFromHighlights } from "@/lib/enrichers
 
 describe("registrableDomain", () => {
   it("strips scheme / www / path", () => {
-    expect(registrableDomain("http://sam.odio.com/2011/08/12/x")).toBe("sam.odio.com");
+    expect(registrableDomain("http://blog.rsloan.com/2011/08/12/x")).toBe("blog.rsloan.com");
     expect(registrableDomain("https://www.linkedin.com/in/foo")).toBe("linkedin.com");
-    expect(registrableDomain("https://odio.dev")).toBe("odio.dev");
+    expect(registrableDomain("https://rsloan.dev")).toBe("rsloan.dev");
   });
   it("returns null for junk", () => {
     expect(registrableDomain("not-a-url")).toBeNull();
@@ -19,22 +19,22 @@ describe("subjectDomainsFromHighlights", () => {
       linkedinUrl: "",
       linkedinHandle: "",
       linkedinPageText: "",
-      fullName: "Samuel Odio",
+      fullName: "Riley Sloan",
       searchHighlights: urls.map((url) => ({ url, highlights: [] as string[] })),
     }) as never;
 
   it("keeps the subject's own domains and drops big platforms, ranked by frequency", () => {
     const domains = subjectDomainsFromHighlights(
       ctx([
-        "http://sam.odio.com/a",
-        "http://sam.odio.com/b", // sam.odio.com x2 → ranks first
-        "https://odio.dev/x",
-        "https://www.linkedin.com/in/samodio", // denylisted
-        "https://github.com/samodio", // denylisted
-        "https://news.ycombinator.com/user?id=Sam_Odio", // denylisted
+        "http://blog.rsloan.com/a",
+        "http://blog.rsloan.com/b", // blog.rsloan.com x2 → ranks first
+        "https://rsloan.dev/x",
+        "https://www.linkedin.com/in/rsloan", // denylisted
+        "https://github.com/rsloan", // denylisted
+        "https://news.ycombinator.com/user?id=Riley_Sloan", // denylisted
       ]),
     );
-    expect(domains).toEqual(["sam.odio.com", "odio.dev"]);
+    expect(domains).toEqual(["blog.rsloan.com", "rsloan.dev"]);
   });
 
   it("returns [] when only platform domains are present", () => {

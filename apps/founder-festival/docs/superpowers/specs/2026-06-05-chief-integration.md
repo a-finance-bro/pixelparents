@@ -40,7 +40,7 @@ today (Exa + ~16 fixed enrichers + one Opus call in `src/lib/eval-pipeline.ts`).
    isolate *the person, not the company*: find their **own** commits (not the
    org's), their own HN comments' technical substance, their own talks/writing/
    papers, and rate **their personal** technical depth separately from credit for
-   founding a technical company. Solves the Collison-brothers / "founded Stripe ≠
+   founding a technical company. Solves the "founded a famous company ≠
    personally technical" fidelity problem the fixed pipeline can't.
 
 3. **Memories = profiles that compound, not re-research from scratch.** Write

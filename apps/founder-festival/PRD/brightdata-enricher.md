@@ -2,7 +2,7 @@
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Added BrightData as a Tier-1 enricher. Pulls a structured LinkedIn profile BY URL (identity is exact — no same-name risk) surfacing reach/activity/experience/education/certs/languages the Exa/EnrichLayer text path misses. LinkedIn follower count is now scored DETERMINISTICALLY at 1 point per 1,000 followers (DROdio: 27,680 → +27 founder points). New waterfall line "Enhancing your profile with Bright Data". Verified live against /drodio and Patrick Collison.
+Added BrightData as a Tier-1 enricher. Pulls a structured LinkedIn profile BY URL (identity is exact — no same-name risk) surfacing reach/activity/experience/education/certs/languages the Exa/EnrichLayer text path misses. LinkedIn follower count is now scored DETERMINISTICALLY at 1 point per 1,000 followers (DROdio: 27,680 → +27 founder points). New waterfall line "Enhancing your profile with Bright Data". Verified live against /drodio and Jordan Lee.
 
 ### Detail of changes made:
 - `src/lib/brightdata.ts` (new): BrightData Web Scraper API client — trigger→poll→download (datasets LinkedIn `gd_l1viktl72bvl7bjuj0`, Crunchbase `gd_l1vijqt9jfj7olije`). Best-effort, bounded wait.
@@ -13,7 +13,7 @@ Added BrightData as a Tier-1 enricher. Pulls a structured LinkedIn profile BY UR
 - `src/lib/scoring-rubric.ts`: instruct the model NOT to award follower points (system scores them) — avoids double-count.
 
 ### Fidelity findings (live test):
-- LinkedIn (BrightData) fidelity is profile-dependent: Patrick Collison returned full experience (CEO @ Stripe, Arc Institute, Auctomatic) + 734-char about; DROdio returned 0 experience roles + 83-char about (only the logged-out public view is scrapable). Both returned accurate followers/activity/languages.
+- LinkedIn (BrightData) fidelity is profile-dependent: Jordan Lee returned full experience (CEO + two prior founder/exec roles) + 734-char about; DROdio returned 0 experience roles + 83-char about (only the logged-out public view is scrapable). Both returned accurate followers/activity/languages.
 - Crunchbase (BrightData) is the high-value source: Socialcast → acquired_by VMware; Stripe → employee bands/founders/investors; Chief → seed funding + AI industries. Also web traffic, app downloads, exits, growth scores. NOT yet wired (needs company-URL discovery — follow-up).
 
 ### Potential concerns to address:

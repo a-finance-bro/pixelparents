@@ -65,11 +65,11 @@ import { mentionAnchorSpec, type MentionAttrs } from "@/lib/mention-anchor";
 
 describe("mentionAnchorSpec", () => {
   it("builds an <a class=mention data-mention-id href> spec with the label as text", () => {
-    const attrs: MentionAttrs = { id: "eval-1", label: "Jensen Huang", href: "/profile/founder/jensen-huang" };
+    const attrs: MentionAttrs = { id: "eval-1", label: "Jordan Lee", href: "/profile/founder/jordan-lee" };
     expect(mentionAnchorSpec(attrs)).toEqual([
       "a",
-      { class: "mention", "data-mention-id": "eval-1", href: "/profile/founder/jensen-huang" },
-      "Jensen Huang",
+      { class: "mention", "data-mention-id": "eval-1", href: "/profile/founder/jordan-lee" },
+      "Jordan Lee",
     ]);
   });
 
@@ -130,7 +130,7 @@ In `tests/lib/event-recap.test.ts`, inside the existing `describe("sanitizeRecap
 ```ts
   it("preserves a profile mention anchor (class + data-mention-id + internal href)", () => {
     const html =
-      '<p>Great chat with <a href="/profile/founder/jensen-huang" data-mention-id="eval-1" class="mention">Jensen Huang</a>!</p>';
+      '<p>Great chat with <a href="/profile/founder/jordan-lee" data-mention-id="eval-1" class="mention">Jordan Lee</a>!</p>';
     expect(sanitizeRecapHtml(html)).toBe(html);
   });
 

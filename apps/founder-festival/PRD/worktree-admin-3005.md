@@ -54,7 +54,7 @@ Batch of profile/leaderboard UI fixes + a leaderboard "YOU" correctness bug.
 - **"YOU" bug (important):** the leaderboard labeled a row "you" whenever
   `row.id === highlightEvalId` — but highlightEvalId is the `?e=` param ("the
   profile you navigated from"), so arriving from anyone's profile (e.g. an admin
-  on Patrick Collison's via "#N on Leaderboard") mislabeled THAT row as you.
+  on Alex Kim's via "#N on Leaderboard") mislabeled THAT row as you.
   Nothing to do with rescore/claiming. Fix: `getCurrentViewerContext` now returns
   `ownEvaluationId` (users.evaluationId); LeaderboardTable splits `isYou`
   (viewer's claimed eval → the "you" label) from `isHighlighted` (you OR ?e= →
@@ -79,20 +79,20 @@ Batch of profile/leaderboard UI fixes + a leaderboard "YOU" correctness bug.
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Diagnosed + fixed the "rescore failed" the user hit on Sam Odio. ROOT CAUSE was a
+Diagnosed + fixed the "rescore failed" the user hit on Jordan Lee. ROOT CAUSE was a
 prod-breaking scoring bug from recent main changes (NOT the waterfall PR):
 `founderStatus` (and, after syncing main's v0.0.9, `investorStatus`) were added to
 SCORING_SCHEMA as bare REQUIRED enums. When the model omits/mis-returns either,
 zod safeParse fails on that field (both retries) → scoreWithClaude throws →
 reEvaluate throws → /api/rescore returns "rescore failed". Reproduced
-deterministically for Sam Odio via computeFreshScore on dev.
+deterministically for Jordan Lee via computeFreshScore on dev.
 
 ### Detail of changes made:
 - src/lib/scoring.ts: `founderStatus` AND `investorStatus` → `.nullable().catch(null)`
   so a missing/invalid value degrades to null ("not yet determined") instead of
   nuking the whole eval. Columns are nullable; eval-pipeline writes them straight
   through. Mirrors the schema's existing `.catch([])` tolerance.
-- Verified: re-running computeFreshScore for Sam Odio now returns type=scored
+- Verified: re-running computeFreshScore for Jordan Lee now returns type=scored
   (founder 266, investor 0, founderStatus null), 13 findings, and the waterfall
   stepIndex mapping resolves correctly ($320M exit→deep-web-search, tkmx
   rank→Tokenmaxxing step, YC alum→YC step). Confirms BOTH the fix and that the

@@ -4,7 +4,7 @@
 EnrichLayer (formerly Proxycurl) LinkedIn fallback. Fixes the "not enough
 information" class: LinkedIn blocks Exa's content fetch for niche/investor profiles
 → low signal. EnrichLayer (structured LinkedIn API) fires only when Exa returns 0
-chars. DROdio added ENRICHLAYER_API_KEY (verified on Bill Gates).
+chars. DROdio added ENRICHLAYER_API_KEY (verified on a well-known public figure's profile).
 
 ### Detail
 - `src/lib/enrichlayer.ts` (NEW) — fetchEnrichLayerProfileText + pure buildProfileText
@@ -15,7 +15,7 @@ chars. DROdio added ENRICHLAYER_API_KEY (verified on Bill Gates).
 
 ### Notes
 - Cost ~$0.10/call, fires only on empty-Exa profiles. NOT cost-tracked in pricing yet.
-- Can't rescue PRIVATE profiles (e.g. pjlconsulting — her public visibility is off;
+- Can't rescue PRIVATE profiles (e.g. a private consulting profile — its public visibility is off;
   no public API can read it). Those need claim/admin-entry.
 
 ### Note (resolution)

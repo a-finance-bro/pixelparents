@@ -2,7 +2,7 @@
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Fixes a UI bug: superadmins / admins were getting prompted to claim a profile when clicking Re-Score on an unclaimed eval. The server-side `/api/rescore` route already allows admins (`if (!owner && !(await isAdmin())) return 403`), but the `ReScoreButton` component only checked `isOwner` and opened the ClaimProfileModal otherwise — so the UI bounced admins off before they ever hit the API. User report: tried to rescore https://festival.so/profile/founder/meruzhan-danielyan as a superadmin, got asked to claim.
+Fixes a UI bug: superadmins / admins were getting prompted to claim a profile when clicking Re-Score on an unclaimed eval. The server-side `/api/rescore` route already allows admins (`if (!owner && !(await isAdmin())) return 403`), but the `ReScoreButton` component only checked `isOwner` and opened the ClaimProfileModal otherwise — so the UI bounced admins off before they ever hit the API. User report: tried to rescore https://festival.so/profile/founder/jordan-lee as a superadmin, got asked to claim.
 
 ### Detail of changes made:
 - `src/components/ReScoreButton.tsx`: adds an optional `isAdmin?: boolean` prop (defaults `false`). The claim-gate now checks `if (!isOwner && !isAdmin)` so an admin viewer rescores directly without the claim modal. Matches the server-side gating exactly.

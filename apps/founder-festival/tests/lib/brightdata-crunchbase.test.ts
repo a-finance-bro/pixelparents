@@ -23,22 +23,22 @@ const REC = (over: Partial<BrightDataCrunchbaseCompany>): BrightDataCrunchbaseCo
 
 describe("corroborateCompany", () => {
   it("corroborates when a founder matches the subject", () => {
-    const rec = REC({ founders: [{ value: "Patrick Collison" }, { value: "John Collison" }] });
-    expect(corroborateCompany(rec, "Stripe", "Patrick Collison", new Set())).toBe(true);
+    const rec = REC({ founders: [{ value: "Sam Rivera" }, { value: "Alex Kim" }] });
+    expect(corroborateCompany(rec, "Stripe", "Sam Rivera", new Set())).toBe(true);
   });
   it("corroborates when the website domain is in the subject's footprint", () => {
     const rec = REC({ website: "https://stripe.com", founders: [] });
     expect(corroborateCompany(rec, "Stripe", "Nobody Match", new Set(["stripe.com"]))).toBe(true);
   });
   it("does NOT corroborate an employee of a big company (no founder + no domain)", () => {
-    const rec = REC({ founders: [{ value: "Patrick Collison" }] });
+    const rec = REC({ founders: [{ value: "Sam Rivera" }] });
     // a random engineer who lists Stripe but isn't a founder and whose footprint
     // doesn't include stripe.com
     expect(corroborateCompany(rec, "Stripe", "Some Engineer", new Set(["someengineer.dev"]))).toBe(false);
   });
   it("does NOT corroborate when the company name doesn't match", () => {
-    const rec = REC({ name: "Stripe", founders: [{ value: "Patrick Collison" }] });
-    expect(corroborateCompany(rec, "Plaid", "Patrick Collison", new Set())).toBe(false);
+    const rec = REC({ name: "Stripe", founders: [{ value: "Sam Rivera" }] });
+    expect(corroborateCompany(rec, "Plaid", "Sam Rivera", new Set())).toBe(false);
   });
 });
 

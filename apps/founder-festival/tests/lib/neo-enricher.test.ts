@@ -9,17 +9,17 @@ import {
 
 describe("linkedinHandleFor", () => {
   it("extracts the handle from canonical URLs", () => {
-    expect(linkedinHandleFor("https://www.linkedin.com/in/suzannexie/")).toBe("suzannexie");
+    expect(linkedinHandleFor("https://www.linkedin.com/in/danacole/")).toBe("danacole");
     expect(linkedinHandleFor("https://linkedin.com/in/drodio")).toBe("drodio");
   });
   it("is case-insensitive", () => {
-    expect(linkedinHandleFor("HTTPS://WWW.LINKEDIN.COM/IN/Suzanne-Xie/")).toBe("suzanne-xie");
+    expect(linkedinHandleFor("HTTPS://WWW.LINKEDIN.COM/IN/Dana-Cole/")).toBe("dana-cole");
   });
   it("ignores trailing slashes + query params", () => {
-    expect(linkedinHandleFor("https://linkedin.com/in/suzannexie/?utm=foo")).toBe("suzannexie");
+    expect(linkedinHandleFor("https://linkedin.com/in/danacole/?utm=foo")).toBe("danacole");
   });
   it("returns null for non-LinkedIn URLs", () => {
-    expect(linkedinHandleFor("https://twitter.com/suzannexie")).toBeNull();
+    expect(linkedinHandleFor("https://twitter.com/danacole")).toBeNull();
     expect(linkedinHandleFor(null)).toBeNull();
     expect(linkedinHandleFor(undefined)).toBeNull();
   });
@@ -69,19 +69,19 @@ describe("parseCheckSize", () => {
 // Mock the global fetch so we can assert the enricher hits Bubble correctly,
 // post-filters on exact handle, and projects the structured fields.
 
-const SUZANNE_PERSON = {
+const NEO_PERSON = {
   _id: "person-1",
   User: "user-1",
-  "Social LinkedIn": "https://www.linkedin.com/in/suzannexie/",
+  "Social LinkedIn": "https://www.linkedin.com/in/danacole/",
   invCheckSize: null,
   isAccredited: true,
   invStartups: null,
 };
-const SUZANNE_USER = {
+const NEO_USER = {
   _id: "user-1",
-  Slug: "02-suzanne-xie",
-  "Profile First Name": "Suzanne",
-  "Profile Last Name": "Xie",
+  Slug: "02-dana-cole",
+  "Profile First Name": "Dana",
+  "Profile Last Name": "Cole",
   "Profile Org": "Neo",
   "Profile Title": "Partner",
   "Public Title mod": "Neo Partner / 3x founder / Stripe / Twitter",
@@ -107,11 +107,11 @@ function mockBubble(responses: Record<string, unknown>) {
 }
 
 const ctx = {
-  linkedinUrl: "https://linkedin.com/in/suzannexie",
-  linkedinHandle: "suzannexie",
+  linkedinUrl: "https://linkedin.com/in/danacole",
+  linkedinHandle: "danacole",
   linkedinPageText: "",
   searchHighlights: [],
-  fullName: "Suzanne Xie",
+  fullName: "Dana Cole",
 };
 
 describe("enrichWithNeo", () => {
@@ -121,19 +121,19 @@ describe("enrichWithNeo", () => {
 
   it("returns the structured Neo record + facts when the person + user resolve", async () => {
     mockBubble({
-      "obj/person": { response: { results: [SUZANNE_PERSON] } },
-      "obj/user": { response: { results: [SUZANNE_USER] } },
+      "obj/person": { response: { results: [NEO_PERSON] } },
+      "obj/user": { response: { results: [NEO_USER] } },
     });
     const r = await enrichWithNeo(ctx);
     expect(r.source).toBe("neo");
     expect(r.facts.length).toBeGreaterThan(2);
-    expect(r.facts[0]).toMatch(/Listed on Neo as Suzanne Xie \(Partner at Neo\)/);
+    expect(r.facts[0]).toMatch(/Listed on Neo as Dana Cole \(Partner at Neo\)/);
     expect(r.facts.some((f) => f.toLowerCase().includes("leads rounds"))).toBe(true);
     expect(r.facts.some((f) => f.includes("Pre-seed, Seed, Series B"))).toBe(true);
     expect(r.facts.some((f) => f.includes("21 endorsements"))).toBe(true);
-    expect(r.citations).toEqual(["https://neo.com/investor/02-suzanne-xie"]);
+    expect(r.citations).toEqual(["https://neo.com/investor/02-dana-cole"]);
     const raw = r.raw as { slug: string; stages: string[]; leadsRounds: boolean };
-    expect(raw.slug).toBe("02-suzanne-xie");
+    expect(raw.slug).toBe("02-dana-cole");
     expect(raw.stages).toEqual(["Pre-seed", "Seed", "Series B"]);
     expect(raw.leadsRounds).toBe(true);
   });
@@ -146,10 +146,10 @@ describe("enrichWithNeo", () => {
   });
 
   it("post-filters to reject `/in/handlelong` false positives", async () => {
-    const decoy = { ...SUZANNE_PERSON, "Social LinkedIn": "https://www.linkedin.com/in/suzannexielong/" };
+    const decoy = { ...NEO_PERSON, "Social LinkedIn": "https://www.linkedin.com/in/danacolelong/" };
     mockBubble({
       "obj/person": { response: { results: [decoy] } },
-      "obj/user": { response: { results: [SUZANNE_USER] } },
+      "obj/user": { response: { results: [NEO_USER] } },
     });
     const r = await enrichWithNeo(ctx);
     expect(r.facts).toEqual([]);
@@ -157,8 +157,8 @@ describe("enrichWithNeo", () => {
 
   it("returns empty when the matched user is not flagged isVC", async () => {
     mockBubble({
-      "obj/person": { response: { results: [SUZANNE_PERSON] } },
-      "obj/user": { response: { results: [{ ...SUZANNE_USER, isVC: false }] } },
+      "obj/person": { response: { results: [NEO_PERSON] } },
+      "obj/user": { response: { results: [{ ...NEO_USER, isVC: false }] } },
     });
     const r = await enrichWithNeo(ctx);
     expect(r.facts).toEqual([]);

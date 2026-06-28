@@ -3,7 +3,7 @@ import { companyTokensFor, corroborateVideos, youtubeFacts } from "@/lib/enriche
 
 describe("companyTokensFor", () => {
   it("extracts distinctive company tokens, dropping generic words", () => {
-    const t = companyTokensFor("Jensen Huang is the Founder of NVIDIA Corp.");
+    const t = companyTokensFor("Morgan Reyes is the Founder of NVIDIA Corp.");
     expect(t.has("nvidia")).toBe(true);
     expect(t.has("corp")).toBe(false); // generic
   });
@@ -13,8 +13,8 @@ describe("corroborateVideos", () => {
   const tokens = new Set(["nvidia"]);
   const v = (title: string, channel = "x") => ({ id: { videoId: title }, snippet: { title, description: "", channelTitle: channel } });
   it("keeps only videos whose metadata mentions a company token", () => {
-    const out = corroborateVideos([v("NVIDIA CEO Jensen Huang keynote"), v("Random cooking video"), v("interview", "Nvidia")], tokens);
-    expect(out.map((o) => o.snippet?.title)).toEqual(["NVIDIA CEO Jensen Huang keynote", "interview"]);
+    const out = corroborateVideos([v("NVIDIA CEO Morgan Reyes keynote"), v("Random cooking video"), v("interview", "Nvidia")], tokens);
+    expect(out.map((o) => o.snippet?.title)).toEqual(["NVIDIA CEO Morgan Reyes keynote", "interview"]);
   });
   it("returns [] when there are no company tokens (skip, never guess)", () => {
     expect(corroborateVideos([v("NVIDIA keynote")], new Set())).toEqual([]);

@@ -121,7 +121,7 @@ describe("buildRecipientValues", () => {
 
   it("nickname falls back to first name when blank/whitespace", () => {
     const v = buildRecipientValues({
-      attendee: { fullName: "Alice Walker", nickname: "   ", profileHref: null, companyName: null },
+      attendee: { fullName: "Dana Brooks", nickname: "   ", profileHref: null, companyName: null },
       event,
       personalizedHtml: null,
       baseUrl: "https://festival.so",

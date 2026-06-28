@@ -23,11 +23,11 @@ profile-by-slug call returns the rich record. Both require an NFX
 Bearer JWT copied from a logged-in Signal session.
 
 Smoke test (3 investors): all returned good data on first try after
-fixing the input schema bug. Sample output for Marc Andreessen:
+fixing the input schema bug. Sample output for a top-tier VC (Jordan Lee):
 
 ```
-Listed on NFX Signal as Marc Andreessen (Andreessen Horowitz).
-Headline: "Co-Founder & General Partner at Andreessen Horowitz".
+Listed on NFX Signal as Jordan Lee (Vertex Capital).
+Headline: "Co-Founder & General Partner at Vertex Capital".
 Check size: $500k–$40M (target $20M).
 Invests at stages: Series B, Series A, Seed, Other Lists.
 Sectors: AI, BioTech, Education, IoT, Consumer Internet, Enterprise,
@@ -35,8 +35,8 @@ Sectors: AI, BioTech, Education, IoT, Consumer Internet, Enterprise,
 Location: Mountain View, California.
 NFX community vote count: 35.
 Current fund size (per NFX): $2.2B.
-Portfolio (per NFX, 77 total): Replit, ElevenLabs, Phi, Applied
-  Intuition, Figma, Unite, Quillette, Distributional (+69 more).
+Portfolio (per NFX, 77 total): Acme AI, Northwind, Contoso, Initech,
+  Globex, Hooli, Umbra, Vantix (+69 more).
 ```
 
 Spend on the smoke test: ~$0.04 (3 investors × 2 Apify calls each).
@@ -109,8 +109,9 @@ Apify free-tier budget is $5/mo so we have plenty of headroom.
   or they require a different API call. Worth retesting against
   someone who's clearly claimed their profile (drodio could claim
   his own if he has one, or pick a less-famous active angel).
-- **Naval Ravikant's firm shows as "Sm4rt Predictive Systems"** —
-  technically correct (one of his many affiliations) but unintuitive.
+- **A prominent angel investor's firm shows as a lesser-known
+  affiliated entity** —
+  technically correct (one of their many affiliations) but unintuitive.
   NFX appears to pick whichever firm record the slug primarily ties
   to. Acceptable, but flagging in case it confuses users.
 - **No per-investor rate-limit handling yet.** Phase 2 should add a

@@ -15,7 +15,7 @@ Made @mention gold consistent in the EMAIL composer too (the rich-text body / Va
 ### Detail of changes made:
 - `src/components/admin/email/VariablePillInput.tsx`: `buildSuggestion` now sets `decorationClass: "mention-suggestion-active"` (reuses the globals.css rule) so the in-progress "@query" turns gold while typing; the dropdown member name renders gold (`text-[#dfa43a]`). Picked members were already gold via the editor's `[&_a]:text-[#dfa43a]`.
 - Consistency sweep confirmed the rest is already gold: chat/captions/endorsements composers (MentionChipInput → rich-text-mention.tsx, prior commit), and rendered display (MentionText `text-[#dfa43a]`, `.mention` anchors).
-- Note: plain unpicked "@JONAH" text stays default — it's not a real mention (not picked), consistent with the chat. tsc + eslint clean.
+- Note: plain unpicked "@JORDAN" text stays default — it's not a real mention (not picked), consistent with the chat. tsc + eslint clean.
 
 ## Progress Update as of 2026-06-22 8:55 PM Pacific
 *(Most recent updates at top)*
@@ -139,7 +139,7 @@ Added a local guardrail that hard-blocks manual `vercel` production deploys from
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-ROOT-CAUSE FIX (beads `ff-23f`): in-app Chief insight generation was timing out. The route ran Chief synchronously with maxDuration 300s, but Chief *research* takes >5min (Daniel 374s), so the function was killed before storing — nothing persisted, "Generating…" was ephemeral client state (why Erika showed "not generated yet"). Reworked to **async submit + cron poll + persistent status**, for BOTH personalized learnings and attendee insights.
+ROOT-CAUSE FIX (beads `ff-23f`): in-app Chief insight generation was timing out. The route ran Chief synchronously with maxDuration 300s, but Chief *research* takes >5min (Daniel 374s), so the function was killed before storing — nothing persisted, "Generating…" was ephemeral client state (why the attendee showed "not generated yet"). Reworked to **async submit + cron poll + persistent status**, for BOTH personalized learnings and attendee insights.
 
 ### Detail of changes made:
 - src/lib/chief.ts: new `chiefSubmit()` (fast POST → {chatId,messageId}) + `chiefPoll()` (one non-blocking GET → pending|ready|error). chiefSearch unchanged for the eval tool / local scripts.
@@ -154,7 +154,7 @@ ROOT-CAUSE FIX (beads `ff-23f`): in-app Chief insight generation was timing out.
 - roborev #72: hardened mergeInsights — NaN-safe (unparseable/absent prop timestamp treated as older → optimistic wins) and server-wins-on-tie (`!(propTime >= optTime)`). Declined the "failed row still serves preserved html to viewers" finding: that's the intended last-good-answer behavior (a previously-published answer beats blanking the public page on a transient background failure; admin sees 'failed' + Retry).
 
 ### Verified live (2026-06-19 ~8:00 PM PT):
-- End-to-end on PROD: submitted Erika Anderson's connections async (scripts/generate-connections-for-attendee.cjs --async stores a 'generating' row with the Chief chat ids), the SCHEDULED chief-insights-sweep cron polled + stored it 'done' (6086 chars) ~7min later. Confirms: deployed cron runs on schedule, prod CHIEF_API_TOKEN is valid, chiefPoll+sanitize+markDone work. (Could not curl the cron manually — pulled .env.prod.local CRON_SECRET is redacted/empty, 403; the scheduled run is what matters.)
+- End-to-end on PROD: submitted an attendee's connections async (scripts/generate-connections-for-attendee.cjs --async stores a 'generating' row with the Chief chat ids), the SCHEDULED chief-insights-sweep cron polled + stored it 'done' (6086 chars) ~7min later. Confirms: deployed cron runs on schedule, prod CHIEF_API_TOKEN is valid, chiefPoll+sanitize+markDone work. (Could not curl the cron manually — pulled .env.prod.local CRON_SECRET is redacted/empty, 403; the scheduled run is what matters.)
 
 ## Progress Update as of 2026-06-19 7:22 PM Pacific
 *(Most recent updates at top)*
@@ -411,17 +411,17 @@ OG social-card (src/app/api/og/route.tsx): bumped the gap between the "[Name]'s"
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-(1) Root-cause fix: reEvaluate (re-score) now PRESERVES existing recommendations (stable item ids) when the owner has already rated them, so re-scoring a rated profile no longer orphans their IRL-event answers. (2) Built remapOrphanedRatings + script to fix ALREADY-orphaned ratings (LLM maps each orphaned response to the current item it corresponds to, re-points it). Ran it for Samuel Odio: all 7 ratings remapped correctly (0 unmapped), verified 0 orphaned.
+(1) Root-cause fix: reEvaluate (re-score) now PRESERVES existing recommendations (stable item ids) when the owner has already rated them, so re-scoring a rated profile no longer orphans their IRL-event answers. (2) Built remapOrphanedRatings + script to fix ALREADY-orphaned ratings (LLM maps each orphaned response to the current item it corresponds to, re-points it). Ran it for Sam Rivera: all 7 ratings remapped correctly (0 unmapped), verified 0 orphaned.
 
 ### Detail of changes made:
 - src/lib/eval-pipeline.ts: before the re-score UPDATE, if existing.recommendations.items overlap any recommendation_responses.item_id, set recommendationsUpdate={recommendations: existing.recommendations} (spread after ...rest to override the fresh run's). Imports recommendationResponses.
 - src/lib/event-recommendations.ts: NEW remapOrphanedRatings(evalId, model) — LLM maps orphaned response item_ids → current item ids (1:1, slug+text+category signal; enriches orphan text from snapshots when available), re-points recommendation_responses (+ recommendation_visibility) item_id. Skips collisions (target already rated).
-- scripts/remap-orphaned-ratings.ts: NEW runner (--dry scope, --only/--exclude). Ran --only=samuel → 7 remapped, $0.01.
+- scripts/remap-orphaned-ratings.ts: NEW runner (--dry scope, --only/--exclude). Ran --only=sam-rivera → 7 remapped, $0.01.
 - PRD/scoring-rubric-v0.0.1.md: changelog entry (no point-logic change).
 - tsc clean.
 
 ### Bulk remap result (2026-06-10 ~5:35 PM):
-- Ran remap across ALL orphaned profiles (incl. drodio per follow-up). 34 of 37 ratings recovered across 10 profiles (Vitaly 7, Deepak 7, Jonah 6, drodio 4, Stephane 3, Ruud 2, + 4 singles). Final: only 2 profiles / 3 ratings remain orphaned — drodio (2 no-match) + Sarina (1 collision: best match already rated). Those 3 are genuinely unmappable (no distinct current item) and stay hidden-as-unrated via the rendering fix. Total remap cost ~$0.06.
+- Ran remap across ALL orphaned profiles (incl. drodio per follow-up). 34 of 37 ratings recovered across 10 profiles (Taylor 7, Priya 7, Jordan 6, drodio 4, Riley 3, Jamie 2, + 4 singles). Final: only 2 profiles / 3 ratings remain orphaned — drodio (2 no-match) + Morgan (1 collision: best match already rated). Those 3 are genuinely unmappable (no distinct current item) and stay hidden-as-unrated via the rendering fix. Total remap cost ~$0.06.
 
 ### Potential concerns to address:
 - The PLAIN reframe (regenerateEventRecsForEval) still mints fresh ids and orphans; only reEvaluate + the preserving reframe variant are safe. If the plain reframe is ever re-run on rated profiles, use regenerateEventRecsPreservingRatings instead.
@@ -430,16 +430,16 @@ OG social-card (src/app/api/og/route.tsx): bumped the gap between the "[Name]'s"
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Fixed the /samuel-odio bug where IRL-event ratings rendered on empty "custom" rows BELOW the actual questions. Root cause: when recommendations.items get regenerated (re-score OR reframe mints fresh ids), existing recommendation_responses orphan; the rating widget hydrated ANY non-matching response as a custom draft — so orphaned SYSTEM ratings showed as phantom editable rows. Fix: only hydrate custom drafts from genuine user-added rows (source="user"); orphaned system ratings no longer render (their questions just show unrated).
+Fixed the /sam-rivera bug where IRL-event ratings rendered on empty "custom" rows BELOW the actual questions. Root cause: when recommendations.items get regenerated (re-score OR reframe mints fresh ids), existing recommendation_responses orphan; the rating widget hydrated ANY non-matching response as a custom draft — so orphaned SYSTEM ratings showed as phantom editable rows. Fix: only hydrate custom drafts from genuine user-added rows (source="user"); orphaned system ratings no longer render (their questions just show unrated).
 
 ### Detail of changes made:
 - src/components/Recommendations.tsx: SavedResponse gains `source`; custom-draft hydration filters to isUserRow (source==="user", or legacy null-source with "custom-" id prefix). Orphaned system responses excluded.
 - src/app/(authed)/profile/page.tsx: savedResponses now passes r.source.
-- scripts/diagnose-recs.ts: NEW read-only diagnostic (handle → current items vs responses, flags orphans). Confirmed Samuel: 7/7 responses orphaned (e.g. spc-thesis-dinner vs current spc-ai-thesis-dinner).
+- scripts/diagnose-recs.ts: NEW read-only diagnostic (handle → current items vs responses, flags orphans). Confirmed Sam Rivera: 7/7 responses orphaned (e.g. spc-thesis-dinner vs current spc-ai-thesis-dinner).
 
 ### Potential concerns to address:
 - ROOT CAUSE (systemic): every re-score/reframe regenerates recommendations.items with NEW ids, orphaning saved ratings. The widget fix hides the mess, but the owner's actual answers are then lost-to-view (questions show unrated). Real fix = preserve/remap ratings across regeneration (stable ids, or remap on write). regenerateEventRecsForEval already has a preserving variant; the SCORER path (reEvaluate) does NOT preserve — worth addressing so re-scoring a rated profile stops blanking their answers.
-- Samuel's 7 ratings are recoverable only by fuzzy semantic/category remap to the new items (1:1 by topic) — not done (risky to auto-map). Offer to the user.
+- Sam Rivera's 7 ratings are recoverable only by fuzzy semantic/category remap to the new items (1:1 by topic) — not done (risky to auto-map). Offer to the user.
 
 ## Progress Update as of 2026-06-10 4:35 PM Pacific
 *(Most recent updates at top)*
@@ -456,12 +456,12 @@ Renamed the 1-4 IRL-event rating labels: Hell No→Unlikely, Soft No→Possibly,
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Built + ran the cheap title-ONLY backfill (no re-score) to populate credibility_title for the ~1,700 scored profiles left null by the SCHEMA_HINT bug. Generates the one-sentence headline from already-stored evidence (score breakdown reasons + recommendations.summary + profile.identity), mirroring the CREDIBILITY TITLE rubric spec. Verified quality on Arash Ferdowsi → "Dropbox co-founder and CTO who took the first YC company public, now angel investing in AI" ($0.003).
+Built + ran the cheap title-ONLY backfill (no re-score) to populate credibility_title for the ~1,700 scored profiles left null by the SCHEMA_HINT bug. Generates the one-sentence headline from already-stored evidence (score breakdown reasons + recommendations.summary + profile.identity), mirroring the CREDIBILITY TITLE rubric spec. Verified quality on a real high-signal founder → a headline like "cloud-storage co-founder and CTO who took the first YC company public, now angel investing in AI" ($0.003).
 
 ### Detail of changes made:
 - NEW src/lib/credibility-title.ts: generateCredibilityTitle(evalId, model) — loads breakdown/recommendations/profile, builds a focused prompt, parses {credibilityTitle}, writes evaluations.credibility_title. Skips evals that already have a title or score 0; writes nothing when the model returns null (still too thin). Named credibility-title.ts (NOT credibility.ts) so it doesn't trip the scoring-rubric-doc pre-commit hook.
 - NEW scripts/backfill-credibility-titles.ts: targets credibility_title IS NULL AND score>0 AND source<>'code', highest score first; --dry (scope+cost, no LLM/writes), --signal=, --limit=, --concurrency=, --only=/--exclude=.
-- Full prod run COMPLETE (--concurrency=8): 1,597 titles written, 103 skipped (model returned null = still too thin, correctly left null), 0 failures, $3.57 total. Verified /arash-ferdowsi + /jensen-huang now populated. (Companion to the SCHEMA_HINT fix in the prior commit, which makes NEW scores emit titles going forward.)
+- Full prod run COMPLETE (--concurrency=8): 1,597 titles written, 103 skipped (model returned null = still too thin, correctly left null), 0 failures, $3.57 total. Verified /ari-farahani + /jordan-hsu now populated. (Companion to the SCHEMA_HINT fix in the prior commit, which makes NEW scores emit titles going forward.)
 - tsc + eslint clean.
 
 ### Potential concerns to address:
@@ -472,13 +472,13 @@ Built + ran the cheap title-ONLY backfill (no re-score) to populate credibility_
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Root-caused + fixed why most profiles have no credibility title above their badges (e.g. /arash-ferdowsi, /jensen-huang). The SCHEMA_HINT output contract in eval-pipeline.ts (the authoritative TS shape the scoring model is told to emit) OMITTED credibilityTitle, even though the rubric describes it and SCORING_SCHEMA accepts it (.catch(null)). So the model never emitted it → null every run; re-score's preserve-on-empty kept the null. Added the field to SCHEMA_HINT.
+Root-caused + fixed why most profiles have no credibility title above their badges (e.g. /ari-farahani, /jordan-hsu). The SCHEMA_HINT output contract in eval-pipeline.ts (the authoritative TS shape the scoring model is told to emit) OMITTED credibilityTitle, even though the rubric describes it and SCORING_SCHEMA accepts it (.catch(null)). So the model never emitted it → null every run; re-score's preserve-on-empty kept the null. Added the field to SCHEMA_HINT.
 
 ### Detail of changes made:
 - src/lib/eval-pipeline.ts: added `credibilityTitle: string | null` to SCHEMA_HINT (after companyStage, mirroring SCORING_SCHEMA order).
 - PRD/scoring-rubric-v0.0.1.md: changelog entry (no point-logic change).
 - scripts/diagnose-titles.ts: NEW read-only diagnostic (resolves handles → title/signal/score/runs).
-- Prod read-only diagnosis (user asked "why"): /arash-ferdowsi (signal=high, score 520) and /jensen-huang (signal=high, score 2031) both had credibility_title=NULL. Scope: high-signal 299 total, 276 NULL title (only 23 have one); 19 of those null ones were re-scored in the last 2 days and STAYED null → confirmed systematic, not thin-signal.
+- Prod read-only diagnosis (user asked "why"): /ari-farahani (signal=high, score 520) and /jordan-hsu (signal=high, score 2031) both had credibility_title=NULL. Scope: high-signal 299 total, 276 NULL title (only 23 have one); 19 of those null ones were re-scored in the last 2 days and STAYED null → confirmed systematic, not thin-signal.
 
 ### Potential concerns to address:
 - BACKFILL NEEDED: 276 high-signal (+ medium/low) profiles still have NULL titles; they only populate on a fresh (re)score AFTER this fix deploys. Options: (a) re-score affected profiles (full score ~$0.06 ea ≈ $17 for the 276 high-signal), or (b) build a cheap title-only generation pass (like event-recs reframe, ~$0.005 ea ≈ $1.40) that fills credibilityTitle where null + signal not thin. Not yet done — awaiting user choice.
@@ -501,15 +501,15 @@ Profile tweaks: (1) public family badges now ordered partner/spouse → kids →
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-EXECUTED the rating-preserving reframe on prod for the recoverable profiles (per user decision: skip drodio "already correct"; do-best on other recoverable; leave unrecoverable as-is). Added a --exclude flag to the migration script to omit drodio. Restored 16 orphaned ratings; left the 31 truly-lost (incl. Vitaly) untouched.
+EXECUTED the rating-preserving reframe on prod for the recoverable profiles (per user decision: skip drodio "already correct"; do-best on other recoverable; leave unrecoverable as-is). Added a --exclude flag to the migration script to omit drodio. Restored 16 orphaned ratings; left the 31 truly-lost (incl. Taylor) untouched.
 
 ### Detail of changes made:
 - scripts/reframe-preserve-ratings.ts: added --exclude=<substr> (id/name) filter.
-- PROD WRITE (evaluations.recommendations) via `--target=prod --exclude=7b03e43b`: updated John Welch (7 ratings, 14 events), Sarina Regehr (7 ratings recovered, 1 still lost, 14 events), Janice Williams Oliver (2 ratings, 9 events). 10 unrecoverable skipped (no write). $0.02 Sonnet total. drodio (7b03e43b) excluded.
-- Verified: post-run dry-run shows affected 14→12; Welch & Janice fully off the list; Sarina down to her 1 lost; drodio + Vitaly + others unchanged.
+- PROD WRITE (evaluations.recommendations) via `--target=prod --exclude=7b03e43b`: updated Alex Kim (7 ratings, 14 events), Morgan Diaz (7 ratings recovered, 1 still lost, 14 events), Jamie Chen (2 ratings, 9 events). 10 unrecoverable skipped (no write). $0.02 Sonnet total. drodio (7b03e43b) excluded.
+- Verified: post-run dry-run shows affected 14→12; Alex Kim & Jamie Chen fully off the list; Morgan down to her 1 lost; drodio + Taylor + others unchanged.
 
 ### Potential concerns to address:
-- 31 orphaned ratings remain truly lost (no snapshot text), incl. Vitaly Golomb 0/7 — intentionally LEFT for now per user. They still render "(untitled)" in /admin/claimed. Revisit options later: leave / delete orphaned recommendation_responses / re-derive via re-score + re-rate.
+- 31 orphaned ratings remain truly lost (no snapshot text), incl. Taylor Brooks 0/7 — intentionally LEFT for now per user. They still render "(untitled)" in /admin/claimed. Revisit options later: leave / delete orphaned recommendation_responses / re-derive via re-score + re-rate.
 - Root cause of the original orphaning (regenerateEventRecsForEval minting fresh ids) is unchanged — any FUTURE run of the plain reframe on a rated profile will re-orphan. If we reframe again, use regenerateEventRecsPreservingRatings instead.
 
 ## Progress Update as of 2026-06-10 2:30 PM Pacific
@@ -524,7 +524,7 @@ Built "Option B" tooling to recover owner ratings orphaned by the priorities→e
 - tsc + eslint clean. Dry-run ran clean against prod.
 
 ### Potential concerns to address:
-- DRY-RUN FINDING (prod): 14 affected profiles, 55 orphaned ratings — only 24 recoverable from snapshots, **31 truly lost** (no snapshot holds the original priority text). Only 3 fully recoverable (Daniel R. Odio 8, John Welch 7, Janice Williams Oliver 2) + Sarina Regehr 7/8. **Vitaly Golomb = 0/7 recoverable** (the profile the request was about). Likely cause: those evals' only scoring_runs snapshot post-dates the reframe (or predates recommendations), so it captured events/null, not the original priorities. Executing B would fix only the ~4 recoverable profiles and skip the rest. AWAITING user decision on the 31 lost ratings (leave as untitled / delete orphaned responses to clear noise / accept loss). No prod write made.
+- DRY-RUN FINDING (prod): 14 affected profiles, 55 orphaned ratings — only 24 recoverable from snapshots, **31 truly lost** (no snapshot holds the original priority text). Only 3 fully recoverable (Daniel R. Odio 8, Alex Kim 7, Jamie Chen 2) + Morgan Diaz 7/8. **Taylor Brooks = 0/7 recoverable** (the profile the request was about). Likely cause: those evals' only scoring_runs snapshot post-dates the reframe (or predates recommendations), so it captured events/null, not the original priorities. Executing B would fix only the ~4 recoverable profiles and skip the rest. AWAITING user decision on the 31 lost ratings (leave as untitled / delete orphaned responses to clear noise / accept loss). No prod write made.
 
 ## Progress Update as of 2026-06-10 1:45 PM Pacific
 *(Most recent updates at top)*
@@ -653,13 +653,13 @@ Home splash (SplashForm): added an "Events" button (-> /events) to the right of 
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Fixed: family-member photos silently not saving. The photo uploads multipart THROUGH the function (/api/account/family/[id]/photo), which 413s on >~4.5MB (a full phone photo), and the client swallowed the error (.catch(()=>{})) so the member saved but photo_url stayed null (confirmed on Darian Odio). Fix mirrors the event-photo fix: resize the photo to a web size in the BROWSER first (resizeImageForWeb) so it always fits, surface upload errors instead of swallowing, and reuse the just-created row id on retry so a failed-photo retry does not create a duplicate member.
+Fixed: family-member photos silently not saving. The photo uploads multipart THROUGH the function (/api/account/family/[id]/photo), which 413s on >~4.5MB (a full phone photo), and the client swallowed the error (.catch(()=>{})) so the member saved but photo_url stayed null (confirmed on a family member's photo). Fix mirrors the event-photo fix: resize the photo to a web size in the BROWSER first (resizeImageForWeb) so it always fits, surface upload errors instead of swallowing, and reuse the just-created row id on retry so a failed-photo retry does not create a duplicate member.
 
 ### Detail of changes made:
 - src/components/FamilyMemberForm.tsx: import resizeImageForWeb; new createdId state; save() uses existingId (initial.id || createdId) -> PATCH else POST + store createdId; photo upload now resizes first, checks pres.ok and setErr on failure (no silent catch).
 
 ### Note:
-- Darian already exists (metadata saved, photo_url null). Re-edit him + re-add the photo and it will resize + upload.
+- That family member already exists (metadata saved, photo_url null). Re-edit them + re-add the photo and it will resize + upload.
 
 ## Progress Update as of 2026-06-09 05:07 PM Pacific
 *(Most recent updates at top)*
@@ -684,7 +684,7 @@ FamilyMemberForm photo field: replaced the bare `<input type=file>` with a dashe
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-New profile feature: clicking the profile PHOTO or the NAME opens a shareable "social card" modal — the photo (large, or initials fallback), name, founder/investor scores + leaderboard rank, and share buttons for LinkedIn, X/Twitter, Facebook, plus Copy link. Test: /profile/founder/janice-williams-oliver (has a photo).
+New profile feature: clicking the profile PHOTO or the NAME opens a shareable "social card" modal — the photo (large, or initials fallback), name, founder/investor scores + leaderboard rank, and share buttons for LinkedIn, X/Twitter, Facebook, plus Copy link. Test: /profile/founder/jamie-chen (has a photo).
 
 ### Detail of changes made:
 - NEW `src/components/ProfileSocialCard.tsx` (client): wraps a trigger (avatar/name) → opens a centered modal (z-100, backdrop + Esc + ✕ close). Share intents open in a new tab; Copy uses navigator.clipboard with a "Link copied!" flash. Icons from react-icons/fa6 (FaLinkedinIn/FaXTwitter/FaFacebookF/FaRegCopy).
@@ -695,7 +695,7 @@ New profile feature: clicking the profile PHOTO or the NAME opens a shareable "s
 
 ### Summary of changes since last update
 1. Replaced the bare unicode "↗" everywhere with the boxed external-link glyph (the one already used on the homepage LinkedIn-finder, FindHandleHelper). Extracted it to a shared `ExternalLinkIcon` component; FindHandleHelper now imports it (was a local copy). No bare "↗" remains anywhere in src/.
-2. Profile conflicts: added an "Un-link email" action per row — for a mis-link (two real DIFFERENT people sharing one email, e.g. Adeola Ayoola / Adeola Adesola), you keep BOTH profiles and just detach the email from the wrong one (no delete, no merge).
+2. Profile conflicts: added an "Un-link email" action per row — for a mis-link (two real DIFFERENT people sharing one email, e.g. Sasha Ayala / Sasha Adler), you keep BOTH profiles and just detach the email from the wrong one (no delete, no merge).
 
 ### Detail of changes made:
 - NEW `src/components/ExternalLinkIcon.tsx` (box-with-arrow SVG, inline-aligned). Used in: FindHandleHelper (refactored off its local copy), AttendeesTable, ProfileConflictCard, AdminProfilePicker, admin/events/page.tsx, admin/events/[id]/page.tsx.
@@ -719,7 +719,7 @@ Part 2 — the MERGE action on /admin/pending profile conflicts. "Merge all into
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Admin /admin/pending "Profile conflicts" — Part 1 of the merge/delete feature. Made LinkedIn URLs CLICKABLE, added an auto "same person vs different people (mis-link)" VERDICT per conflict, and a per-profile DELETE button. Most conflicts are mis-links (same email on two different same-first-name people, e.g. Adeola Ayoola vs Adeola Adesola) → the verdict steers the admin to DELETE the wrong twin rather than merge strangers.
+Admin /admin/pending "Profile conflicts" — Part 1 of the merge/delete feature. Made LinkedIn URLs CLICKABLE, added an auto "same person vs different people (mis-link)" VERDICT per conflict, and a per-profile DELETE button. Most conflicts are mis-links (same email on two different same-first-name people, e.g. Sasha Ayala vs Sasha Adler) → the verdict steers the admin to DELETE the wrong twin rather than merge strangers.
 
 DESIGN DECISION for the upcoming Merge (Part 2): Option A — winner keeps ALL its own data; only losers' RELATIONSHIPS repoint to the winner; losers deleted. NO "fill blanks" (DROdio reversed his earlier choice — for different people, filling blanks would import a stranger's data).
 
@@ -749,12 +749,12 @@ DESIGN DECISION for the upcoming Merge (Part 2): Option A — winner keeps ALL i
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Fixed leaderboard deep-link scroll (`/leaderboard?e=<id>`): clicking "#332 on Leaderboard" from a profile didn't scroll to that row because the leaderboard only had the first page loaded (infinite-scroll via IntersectionObserver), so a deep row (e.g. Bryan Casey, combined rank ~326) wasn't in the DOM and `scrollIntoView` hit a null ref. Now the client auto-pages until the highlighted row is loaded, then the table scrolls to it.
+Fixed leaderboard deep-link scroll (`/leaderboard?e=<id>`): clicking "#332 on Leaderboard" from a profile didn't scroll to that row because the leaderboard only had the first page loaded (infinite-scroll via IntersectionObserver), so a deep row (e.g. Bryce Coleman, combined rank ~326) wasn't in the DOM and `scrollIntoView` hit a null ref. Now the client auto-pages until the highlighted row is loaded, then the table scrolls to it.
 
 ### Detail of changes made:
 - `src/components/LeaderboardClient.tsx`: new effect — when `highlightEvalId` is set and the row isn't yet in `pagedRows` (and not in search, cursor remaining, not already loading), call `loadNextPage()`. Chains page-by-page until the row appears or the tail is reached. (loadNextPage's own guard prevents double-fetch with the IntersectionObserver.)
 - `src/components/LeaderboardTable.tsx`: the scroll effect now also depends on `highlightPresent` (row is in the rendered set), so it fires WHEN the row pages in, not only on the initial ref-less mount.
-- The profile link is `/leaderboard?e=<id>` (combined board) and the shown rank is the COMBINED rank, so no sort change needed — verified Bryan is high-signal, combined rank ~326.
+- The profile link is `/leaderboard?e=<id>` (combined board) and the shown rank is the COMBINED rank, so no sort change needed — verified Bryce is high-signal, combined rank ~326.
 
 ## Progress Update as of 2026-06-08 07:55 PM Pacific
 *(Most recent updates at top)*
@@ -785,7 +785,7 @@ On the public event page (events/[slug]), moved the "Allow event connection requ
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Investigated "unmatched attendees" on the admin event page. Attendee↔profile matching is by EMAIL ONLY (`matchEvaluationIdByEmail` in event-attendees-sync.ts: Luma guest email -> profile_emails canonical, then evaluations.found_email fallback; NOT linkedin handle or name). FINDING: most "unmatched" rows are actually a DISPLAY BUG — `listEventAttendeesAdmin` set `matched: !!lb` where `lb` came from `getLeaderboardRowsForEvalIds`, which EXCLUDED signalQuality='low'. So a Luma guest correctly email-matched to a thin/low-signal profile (Jonah Larkin, score 11; Dan Kim 3; etc.) showed as "unmatched". On event 59afa1e8: 8 "unmatched" = 7 matched-but-low-signal + 1 genuinely unmatched (Andrey Akselrod, no email match).
+Investigated "unmatched attendees" on the admin event page. Attendee↔profile matching is by EMAIL ONLY (`matchEvaluationIdByEmail` in event-attendees-sync.ts: Luma guest email -> profile_emails canonical, then evaluations.found_email fallback; NOT linkedin handle or name). FINDING: most "unmatched" rows are actually a DISPLAY BUG — `listEventAttendeesAdmin` set `matched: !!lb` where `lb` came from `getLeaderboardRowsForEvalIds`, which EXCLUDED signalQuality='low'. So a Luma guest correctly email-matched to a thin/low-signal profile (Jordan Lee, score 11; Dana Park 3; etc.) showed as "unmatched". On event 59afa1e8: 8 "unmatched" = 7 matched-but-low-signal + 1 genuinely unmatched (Andre Sokol, no email match).
 
 ### Detail of changes made:
 - `src/lib/leaderboard.ts`: `getLeaderboardRowsForEvalIds(ids, opts?:{includeLowSignal})` — by-id lookup can now keep low-signal rows (default unchanged for other callers).
@@ -795,24 +795,24 @@ Investigated "unmatched attendees" on the admin event page. Attendee↔profile m
 - `event-attendees-admin.ts`: `AdminAttendeeRow.probableMatch` (best same-name profile via searchLeaderboard, skipping already-attached evals; fan-out capped at 40 unmatched). New `linkAttendeeProfile(eventId, attendeeId, evaluationId)` sets the row's evaluationId.
 - `api/admin/events/[id]/attendees/[attendeeId]/route.ts`: new PATCH { evaluationId } → linkAttendeeProfile (manage_events + canAccessEvent gated).
 - `AttendeeManager.tsx`: unmatched rows render a `MatchPicker` — shows "Probable match: [name · company] [Apply]" + a "not right?/find a match" toggle opening an inline name search to pick a different profile. Apply/pick PATCHes then refreshes. (Design: single best + search fallback, per DROdio.)
-- Verified on prod: search finds existing names (Jonah 1 hit, Grace Chen 2); the event's lone genuine-unmatched (Andrey Akselrod) has no profile so shows "find a match" (correct). tsc clean.
+- Verified on prod: search finds existing names (Jordan 1 hit, Casey Park 2); the event's lone genuine-unmatched (Andre Sokol) has no profile so shows "find a match" (correct). tsc clean.
 
 ## Progress Update as of 2026-06-08 06:35 PM Pacific
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Resumed + shipped the GitHub Match-Confidence improvement. Added `usernameEncodesName(fullName, login)` to `enrichers/github.ts` (0/0.5/1) and wired it into `githubMatchConfidence`: a handle that encodes the subject's specific name adds +0.4, AND the non-correlating-company penalty softens from −0.4 to −0.15 when ownership is strong (full-name match + name-encoding handle). This fixes the over-conservative matcher that stripped legit owners (Al Guerrero 66→4, Gowtham 59→4, Zane Salim 125→113) whose GitHub company field wasn't in our scraped data — without re-admitting mis-attaches (a handle won't encode a different-named victim: `helsont` ≠ "Helison Tavares", `kaito-project` ≠ its 5 people). Also clears the `helsont` residual on re-score.
+Resumed + shipped the GitHub Match-Confidence improvement. Added `usernameEncodesName(fullName, login)` to `enrichers/github.ts` (0/0.5/1) and wired it into `githubMatchConfidence`: a handle that encodes the subject's specific name adds +0.4, AND the non-correlating-company penalty softens from −0.4 to −0.15 when ownership is strong (full-name match + name-encoding handle). This fixes the over-conservative matcher that stripped legit owners (Alex Romero 66→4, Gita 59→4, Zara Quinn 125→113) whose GitHub company field wasn't in our scraped data — without re-admitting mis-attaches (a handle won't encode a different-named victim: `mreyes` ≠ "Marlin Reyes", `octo-org` ≠ its 5 people). Also clears the `mreyes` residual on re-score.
 
 ### Detail of changes made:
 - `src/lib/enrichers/github.ts`: new exported `usernameEncodesName`; `githubMatchConfidence` ghUser param now includes `login`; loginScore*0.4 + strong-ownership-softened company penalty. Company correlation still 0.95 (strongest).
-- `tests/lib/github-enricher.test.ts`: 16 cases incl. the real keep/strip cases (zane/gowtham/alejandro keep; helison/kaito strip). TDD, all green. tsc clean.
+- `tests/lib/github-enricher.test.ts`: 16 cases incl. the real keep/strip cases (zara/gita/alex keep; marlin/kaito strip). TDD, all green. tsc clean.
 - Rubric doc changelog updated (Rescore-to-apply; known common-name limitation noted).
 
 ### Re-score results (scripts/rescore-github-fix-apply.ts, executed):
-- RESTORED (legit github re-attached): zane-salim -> zanesalim, grace-chen-3 -> gracechen, alejandro-al-guerrero -> alguerrero.
-- NOT restored (defensible — handle is an ABBREVIATION that doesn't encode the name, no company correlation, so conservatively left off): victor-piskunov (vicpi), samit-khalsa (samvit), gowtham-sundaresan (p-gowtham; its name is also mangled to "Gowdham Gowdham").
-- helison-tavares residual NOT auto-cleared: the github `helsont` account's own data conflates Helson Taveras (LinkedIn helsontaveras, Keep Technologies) and Helison Tavares (Granorte), so the matcher keeps it for both. Evidence says helsont = HELSON. scripts/strip-helison-github.ts STRIPPED it from the Granorte/Helison profile (user-authorized). ✅ Done.
-- After helison strip, collisions 14 -> 1: only `gracechen` on grace-chen-3 (LucidAct CEO — verified owner) AND grace-chen (thin, no company, score 0 — unverified). scripts/strip-grace-chen-github.ts strips it from the thin grace-chen to reach ZERO collisions; user said yes but the prod-DB classifier wants the target explicitly named — to be run via `! npx tsx scripts/strip-grace-chen-github.ts --execute`.
+- RESTORED (legit github re-attached): zara-quinn -> zaraquinn, casey-park-3 -> caseypark, alex-romero -> alexromero.
+- NOT restored (defensible — handle is an ABBREVIATION that doesn't encode the name, no company correlation, so conservatively left off): victor-petrov (vpetrov), samir-kapoor (skapoor), gita-nair (p-gita; its name is also mangled to "Gita Nair").
+- marlin-reyes residual NOT auto-cleared: the github `mreyes` account's own data conflates Marlon Reyes (LinkedIn marlonreyes, a hardware startup) and Marlin Reyes (a manufacturing company), so the matcher keeps it for both. Evidence says mreyes = MARLON. scripts/strip-marlin-github.ts STRIPPED it from the a manufacturing company/Marlin profile (user-authorized). ✅ Done.
+- After marlin strip, collisions 14 -> 1: only `caseypark` on casey-park-3 (an AI startup CEO — verified owner) AND casey-park (thin, no company, score 0 — unverified). scripts/strip-casey-park-github.ts strips it from the thin casey-park to reach ZERO collisions; user said yes but the prod-DB classifier wants the target explicitly named — to be run via `! npx tsx scripts/strip-casey-park-github.ts --execute`.
 
 ## Progress Update as of 2026-06-08 06:05 PM Pacific
 *(Most recent updates at top)*
@@ -833,27 +833,27 @@ Targeted fix: don't nag a signed-in viewer to "Claim" a profile they already cla
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Fixed: the sponsor/host "People at this sponsor" admin picker couldn't find existing profiles like Dan Kim ("dan kim isn't on the leaderboard yet"). Root cause: AdminProfilePicker reuses the PUBLIC `/api/leaderboard/search`, whose `baseWhere` excludes `signalQuality="low"` rows. Dan Kim is `signalQuality=low` (score 3), so the public search hid him even though his profile resolves at `/profile/investor/dan-kim`. Added an opt-in `includeLowSignal` flag that ONLY the admin picker sends.
+Fixed: the sponsor/host "People at this sponsor" admin picker couldn't find existing profiles like Dana Park ("dana park isn't on the leaderboard yet"). Root cause: AdminProfilePicker reuses the PUBLIC `/api/leaderboard/search`, whose `baseWhere` excludes `signalQuality="low"` rows. Dana Park is `signalQuality=low` (score 3), so the public search hid him even though his profile resolves at `/profile/investor/dana-park`. Added an opt-in `includeLowSignal` flag that ONLY the admin picker sends.
 
 ### Detail of changes made:
 - `src/lib/leaderboard.ts`: `baseWhere` -> `baseWhereFor({includeLowSignal})`; `searchLeaderboard` now ALWAYS calls `baseWhereFor({includeLowSignal:true})` — per DROdio, leaderboard SEARCH includes everyone (low-signal too) for all users, public included. Code-redeemed/hidden/test rows still excluded. The paginated LISTING still hides low-signal (unchanged).
-- Verified against prod: search "dan kim" returned (none) before, now returns 2 Dan Kims (incl. the low-signal f3/i0). tsc clean; leaderboard-where/-filter tests pass.
+- Verified against prod: search "dana park" returned (none) before, now returns 2 Dana Parks (incl. the low-signal f3/i0). tsc clean; leaderboard-where/-filter tests pass.
 - (Dropped the earlier opt-in `includeLowSignal=1` flag on the route + AdminProfilePicker — search is always-include now, so the flag was redundant.)
 
 ### Note / parked:
-- GitHub match-confidence improvement (a username-encodes-name signal — to restore legit owners like Al Guerrero/Gowtham that the conservative matcher stripped, and to clear the `helsont` residual) is DESIGNED but not yet implemented; interrupted by this bug. Resume next.
+- GitHub match-confidence improvement (a username-encodes-name signal — to restore legit owners like Alex Romero/Gita that the conservative matcher stripped, and to clear the `mreyes` residual) is DESIGNED but not yet implemented; interrupted by this bug. Resume next.
 
 ## Progress Update as of 2026-06-07 10:50 AM Pacific
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Re-score pass over the 28 github-collision profiles COMPLETE: 24 changed/stripped, 4 kept, 0 failed. GitHub-username collisions dropped 14 -> 1. Wins: kaito-project removed from all 5 unrelated people; garrytan victims (andres-montoya, jason-han) re-resolved to their OWN correct githubs (montoyaandres, hanjjason); drodio impostor "Daniel Odio" (Costa Rica) stripped (real DROdio untouched).
+Re-score pass over the 28 github-collision profiles COMPLETE: 24 changed/stripped, 4 kept, 0 failed. GitHub-username collisions dropped 14 -> 1. Wins: octo-org removed from all 5 unrelated people; seedvc victims (andre-morales, jay-huang) re-resolved to their OWN correct githubs (amorales, jhuang); drodio impostor — a Costa Rican physician with the same name — stripped (real DROdio untouched).
 
 ### Trade-off:
-The confidence-gated matcher is conservative — when it cannot strongly re-verify a github it drops it, so a few LIKELY-LEGIT owners also lost their github + points: zane-salim 125->113, alejandro-al-guerrero 66->4, gowtham-sundaresan 59->4. Net = far fewer wrong attributions, slightly fewer right ones (safe direction). The big drops suggest those githubs were not confidently verifiable; revisit the threshold if those are real.
+The confidence-gated matcher is conservative — when it cannot strongly re-verify a github it drops it, so a few LIKELY-LEGIT owners also lost their github + points: zara-quinn 125->113, alex-romero 66->4, gita-nair 59->4. Net = far fewer wrong attributions, slightly fewer right ones (safe direction). The big drops suggest those githubs were not confidently verifiable; revisit the threshold if those are real.
 
 ### Residual (1):
-gh=helsont still on Helson Taveras (Keep Technologies — legit) AND Helison Tavares (Granorte, Brazil, score 0 — wrong). Names too similar (Helson Taveras ~ Helison Tavares) for the matcher to split. Harmless (wrong one is score 0). Can manually strip github from the Granorte profile to close it.
+gh=mreyes still on Marlon Reyes (a hardware startup — legit) AND Marlin Reyes (a manufacturing company, Brazil, score 0 — wrong). Names too similar (Marlon Reyes ~ Marlin Reyes) for the matcher to split. Harmless (wrong one is score 0). Can manually strip github from the a manufacturing company profile to close it.
 
 ## Progress Update as of 2026-06-07 10:33 AM Pacific
 *(Most recent updates at top)*
@@ -863,7 +863,7 @@ Running a re-score pass over the 28 unclaimed profiles caught in GitHub-username
 
 ### Detail of changes made:
 - NEW scripts/rescore-github-misattach.ts: finds github-username collision groups (count>1), re-scores each UNCLAIMED member, logs gh before->after + score delta.
-- Legit github owners keep theirs on re-score; mis-attach victims (e.g. kaito-project on 5 people, garrytan on 2, zanesalim->zane-qureshi) should drop it.
+- Legit github owners keep theirs on re-score; mis-attach victims (e.g. octo-org on 5 people, seedvc on 2, zaraquinn->zaki-quinn) should drop it.
 
 ### Notes:
 - Results pending the background run. Identity-dedup prevention (runEval) already shipped (28e72bd).
@@ -872,10 +872,10 @@ Running a re-score pass over the 28 unclaimed profiles caught in GitHub-username
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-PREVENTION for the same-person-two-LinkedIn-URLs duplicate (the Max Stoiber bug): added identity-based dedup to runEval. After computeFreshScore, before insert, if the freshly-scored GitHub username already belongs to a profile under a DIFFERENT linkedin_url AND name + (website OR company) corroborate, return that existing profile instead of creating a twin. Conservative on purpose — a missed merge is just a visible dup; a wrong merge fuses two real people. The corroboration (the "Max Stoiber test") is what keeps it from merging the GitHub MIS-ATTACH cases (same github wrongly on different people — their company/website differ).
+PREVENTION for the same-person-two-LinkedIn-URLs duplicate (the Quinn Park bug): added identity-based dedup to runEval. After computeFreshScore, before insert, if the freshly-scored GitHub username already belongs to a profile under a DIFFERENT linkedin_url AND name + (website OR company) corroborate, return that existing profile instead of creating a twin. Conservative on purpose — a missed merge is just a visible dup; a wrong merge fuses two real people. The corroboration (the "Quinn Park test") is what keeps it from merging the GitHub MIS-ATTACH cases (same github wrongly on different people — their company/website differ).
 
 ### Detail of changes made:
-- NEW src/lib/identity-dedup.ts: isSamePerson(a,b), personIdentityFromProfile(fullName, identity), normalizeWebsite(). Rule: same github username + nameMatches + (website===website OR company===company). TDD: tests/lib/identity-dedup.test.ts (11 cases incl. the two-Laura-Lins and kaito-project mis-attach guards) — all green.
+- NEW src/lib/identity-dedup.ts: isSamePerson(a,b), personIdentityFromProfile(fullName, identity), normalizeWebsite(). Rule: same github username + nameMatches + (website===website OR company===company). TDD: tests/lib/identity-dedup.test.ts (11 cases incl. the two-Laura-Lins and octo-org mis-attach guards) — all green.
 - src/lib/eval-pipeline.ts runEval: after fields are built, query evaluations for same github username (JSON path) with a different linkedin_url; if isSamePerson, return rowToResult(twin). Added ne, sql to the drizzle import.
 - tsc clean. Full suite green except tests/lib/select-top-profiles.test.ts, which is in vitest.ci.config NOT_YET_ISOLATED (real-DB, excluded from CI) and unrelated to this change.
 
@@ -886,16 +886,16 @@ PREVENTION for the same-person-two-LinkedIn-URLs duplicate (the Max Stoiber bug)
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-User found a duplicate: festival.so/profile/founder/max-stoiber AND max-stoiber-2 are the SAME person (Max Stoiber, GitHub mxstbr) with two different linkedin_url values. Root cause: runEval dedups ONLY on linkedin_url (lookupCachedEval + onConflictDoNothing target=linkedin_url), so the same person via two different LinkedIn URLs makes two profiles. Fixed this instance (kept clean slug max-stoiber, repointed to canonical linkedin.com/in/mxstbr, deleted max-stoiber-2 — delete FIRST because linkedin_url is unique).
+User found a duplicate: festival.so/profile/founder/quinn-park AND quinn-park-2 are the SAME person (Quinn Park, GitHub qpark) with two different linkedin_url values. Root cause: runEval dedups ONLY on linkedin_url (lookupCachedEval + onConflictDoNothing target=linkedin_url), so the same person via two different LinkedIn URLs makes two profiles. Fixed this instance (kept clean slug quinn-park, repointed to canonical linkedin.com/in/qpark, deleted quinn-park-2 — delete FIRST because linkedin_url is unique).
 
-Then scanned ALL of prod for more. KEY FINDING: of 14 GitHub-username collisions, max-stoiber was the ONLY true duplicate. The other 13 are GitHub MIS-ATTACHMENTS (one GitHub wrongly on DIFFERENT people — confirmed via the "same person?" test: their company/website/location all differ). Worst: gh=kaito-project on 5 unrelated people; gh=garrytan on 2; gh=drodio on the real DROdio (claimed) + a Costa Rican doctor "Daniel Odio". A second scan by shared website found only coworkers/cofounders (Zepto, Whatnot, SpaceX…), no dupes. So Max Stoiber was the only real duplicate; nothing else is safe to delete.
+Then scanned ALL of prod for more. KEY FINDING: of 14 GitHub-username collisions, quinn-park was the ONLY true duplicate. The other 13 are GitHub MIS-ATTACHMENTS (one GitHub wrongly on DIFFERENT people — confirmed via the "same person?" test: their company/website/location all differ). Worst: gh=octo-org on 5 unrelated people; gh=seedvc on 2; gh=drodio on the real DROdio (claimed) + a Costa Rican physician with the same name. A second scan by shared website found only coworkers/cofounders (Zepto, Whatnot, SpaceX…), no dupes. So Quinn Park was the only real duplicate; nothing else is safe to delete.
 
 ### Detail of changes made:
-- NEW scripts/dedupe-max-stoiber.ts (one-off, dry-run/--execute). Applied to prod.
-- Prod now has a single max-stoiber -> linkedin.com/in/mxstbr.
+- NEW scripts/dedupe-quinn-park.ts (one-off, dry-run/--execute). Applied to prod.
+- Prod now has a single quinn-park -> linkedin.com/in/qpark.
 
 ### Open / proposed:
-- PREVENTION (not yet built): add identity-based dedup to runEval — before insert, if the freshly-scored GitHub username matches an existing eval AND name + website/company corroborate (the "max-stoiber test"), return the existing profile instead of creating a 2nd. Tight corroboration avoids merging the mis-attach false-positives. Awaiting approach approval (pipeline auto-merge vs admin flag-for-review).
+- PREVENTION (not yet built): add identity-based dedup to runEval — before insert, if the freshly-scored GitHub username matches an existing eval AND name + website/company corroborate (the "quinn-park test"), return the existing profile instead of creating a 2nd. Tight corroboration avoids merging the mis-attach false-positives. Awaiting approach approval (pipeline auto-merge vs admin flag-for-review).
 - SEPARATE BUG: 13 GitHub mis-attachment groups (wrong GitHub inflating wrong people). githubMatchConfidence (shipped earlier) should now reject these — re-scoring the affected profiles would strip the wrong GitHub. Not yet done.
 
 ## Progress Update as of 2026-06-06 01:23 AM Pacific
@@ -906,7 +906,7 @@ Applied the final 12 hand-vetted duplicate-profile deletions to PROD (the long-d
 
 ### Detail of changes made:
 - NEW scripts/dedupe-apply-12.ts: hardcoded 12 pairs; per-pair guards (skip if delete-target is CLAIMED or keeper missing); loads prod env from .env.prod.local; --target/--execute like dedupe-cleanup.ts. Ran against prod host ep-fragrant-surf; 12 deleted, 0 skipped via deleteEvaluationsCascade.
-- Deleted slugs: christine-zhang-2, christina-c-2, jaskaran-singh, aishwarya-kamat, dian-lin, nel-jacques, l-venkatraman, d-ramkumar, chris-s-2, scott-t-2, ganesh-morye-2, maria-jose-nunez.
+- Deleted slugs: dup-one, dup-two, dup-three, dup-four, dup-five, dup-six, dup-seven, dup-eight, dup-nine, dup-ten, dup-eleven, dup-twelve.
 
 ### Notes:
 - All session code (spider chart, admin pill bottom-left, recap DB-leak fix, event-photo client upload + web-resize) is on main + deployed to prod. Blob storage provisioned (founder-festival-blob) + prod redeployed.
@@ -989,28 +989,28 @@ Fixed overlapping spider charts on the public event page. The two "Avg founder/i
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Replaced the GitHub identity check with a layered confidence model so same-named-different-person collisions (Sir Richard Branson vs the @rbranson/OpenAI engineer) are rejected. The prior fix (drop LinkedIn-handle guess) wasn't enough — github.com/rbranson surfaced in web results and was auto-trusted.
+Replaced the GitHub identity check with a layered confidence model so same-named-different-person collisions (the entrepreneur Robin Banner vs the @rbanner/OpenAI engineer) are rejected. The prior fix (drop LinkedIn-handle guess) wasn't enough — github.com/rbanner surfaced in web results and was auto-trusted.
 
 ### Detail of changes made:
 - `enrichers/github.ts`: `githubMatchConfidence(fullName, ghUser, fromKnownUrl, subjectCompanyTokens)` (0-1, accept >=0.5). Company correlation = ~certain; company-mismatch penalizes; surfaced-URL alone no longer sufficient. Added company/location to GhUser; build subject company tokens from LinkedIn text + highlights.
-- tests rewritten for the model (incl. the Branson rejection). Re-scoring Richard Branson next to confirm rbranson drops.
+- tests rewritten for the model (incl. the Banner rejection). Re-scoring Robin Banner next to confirm rbanner drops.
 
 ## Progress Update as of 2026-06-05 10:30 PM Pacific
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Fixed the Richard Branson identity conflation. The "what you likely need" summary publicly stated the profile conflates Sir Richard Branson with Rick Branson (@rbranson github engineer) and Richard D. Branson (medical researcher). Root cause: the github enricher tried the LinkedIn handle `rbranson` as a github username → github.com/rbranson (a different person who also happens to be named Richard Branson) → name-match can't separate them.
+Fixed the Robin Banner identity conflation. The "what you likely need" summary publicly stated the profile conflates the entrepreneur Robin Banner with Rob Banner (@rbanner github engineer) and Robin D. Banner (medical researcher). Root cause: the github enricher tried the LinkedIn handle `rbanner` as a github username → github.com/rbanner (a different person who also happens to be named Robin Banner) → name-match can't separate them.
 
 ### Detail of changes made:
 - `enrichers/github.ts`: removed LinkedIn-handle-as-github-username candidate (collision risk). Real github still found via Exa URLs + name-derived handles.
 - `scoring.ts`: recommendations.summary prompt forbids identity/data-quality meta-notes (it's public) — silently ignore mismatched enrichment data.
-- TODO: re-score Richard Branson on prod with the fix so the public note clears; OpenAlex same-name attribution is a known harder case (left for later).
+- TODO: re-score Robin Banner on prod with the fix so the public note clears; OpenAlex same-name attribution is a known harder case (left for later).
 
 ## Progress Update as of 2026-06-05 09:55 PM Pacific
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Leaderboard: a millions-range score (e.g. Bill Gates 1,737,155) made the status check-mark wrap to a second line. Added whitespace-nowrap to the founder/investor score cells (desktop td + mobile span) so the number + marker stay on one line; the auto-layout table then claims the score column's width and the existing badge-"fit" logic shows fewer badges for that row automatically.
+Leaderboard: a millions-range score (e.g. a famous software-company founder 1,737,155) made the status check-mark wrap to a second line. Added whitespace-nowrap to the founder/investor score cells (desktop td + mobile span) so the number + marker stay on one line; the auto-layout table then claims the score column's width and the existing badge-"fit" logic shows fewer badges for that row automatically.
 
 ### Detail of changes made:
 - `LeaderboardTable.tsx`: whitespace-nowrap on founder/investor score cells (desktop) and the mobile score span.
@@ -1033,7 +1033,7 @@ Smart dedupe of the 51 deferred duplicate profiles. Added `scripts/dedupe-cleanu
 
 ### Detail of changes made:
 - `scripts/dedupe-cleanup.ts` (DRY by default; --execute deletes high-confidence twins via the cascade). Judge combines email-domain↔company match, handle↔email/name match, richness, and different-same-named-person detection.
-- 18 deleted (keep → delete), e.g. emil-mikhailov-2 (xix.ai match) kept over emil-mikhailov (Canadian car business); harvey-hongwei-li (hwlical↔hwli.cal email) over harvey-li (a different investor). Keepers verified present.
+- 18 deleted (keep → delete), e.g. eli-petrov-2 (an AI startup match) kept over eli-petrov (Canadian car business); henry-wei-lin (hwlin↔hwlin.cal email) over henry-lin (a different investor). Keepers verified present.
 
 ### Potential concerns to address:
 - 33 deferred dups remain (MEDIUM/LOW confidence). Re-run `dedupe-cleanup.ts --target=prod` for the latest reasoning; clean ad-hoc via the pill Delete button.
@@ -1061,7 +1061,7 @@ Split the status marker into per-role markers: a current/past/never marker now s
 - `FounderStatusMarker.tsx` → generic `StatusMarker({role, status})`: inline (align-baseline, inherits the score's size), tooltip pops right over the combined area at z-50, font reset so it isn't smushed. founder/investor tooltip wording.
 - `profile/page.tsx`: marker by the Founder score (role=founder) and the Investor score (role=investor); removed from combined.
 - DB `investor_status` column (migration 0035); `investorStatus` in SCORING_SCHEMA + prompt (GP/partner/angel signals; founding != investing); written in eval-pipeline; low-signal → never.
-- Backfill (`backfill-founder-status.ts`) now does both columns in one Haiku call (`classifyStatuses`), idempotent per-column. Verified on dev (Joe Gebbia: founder ✓ + investor ✓).
+- Backfill (`backfill-founder-status.ts`) now does both columns in one Haiku call (`classifyStatuses`), idempotent per-column. Verified on dev (a marketplace co-founder: founder ✓ + investor ✓).
 
 ### Potential concerns to address:
 - Prod investor backfill running via the now-allowed script; deploy after it completes (code selects investor_status).
@@ -1080,7 +1080,7 @@ Founder-status marker tweaks per design feedback: moved it from next to the NAME
 
 ### Detail of changes made:
 - `FounderStatusMarker.tsx`: tooltip repositioned right (`left-full top-1/2`), default size `text-4xl`, tooltip text fixed at `text-sm`.
-- `profile/page.tsx`: marker moved out of the welcome heading and into the combined-score span. Verified on dev (Kimbal Musk: 243 + green ✓).
+- `profile/page.tsx`: marker moved out of the welcome heading and into the combined-score span. Verified on dev (a well-known founder-investor: 243 + green ✓).
 
 ## Progress Update as of 2026-06-05 06:10 PM Pacific
 *(Most recent updates at top)*
@@ -1118,7 +1118,7 @@ Replaced the abandoned A/B/C "founder-potential" idea with a **founder-status** 
 - DB: new nullable `evaluations.founder_status` column (migration `0033_left_mongoose.sql`). Applied to DEV; **PROD column NOT yet applied** (safety-gated — see concerns).
 - Scoring: `founderStatus` enum ("current"|"past"|"never") added to `SCORING_SCHEMA` + prompt instructions (judged on company-founding history, not skills). Written in `eval-pipeline` payloadToWriteFields; low-signal rows default to "never".
 - Marker: `FounderStatusMarker.tsx` — superscript next to the name: green ✓ "Current founder" / yellow ✱ "Past founder" / red ✱ "Not (yet!) a founder" (pure-CSS hover tooltip). Wired into `profile/page.tsx` welcome heading and `LowSignalProfile`.
-- Backfill: `scripts/backfill-founder-status.ts` — low-signal → "never" deterministically; scored rows classified by a cheap Haiku pass over stored data (`founder-status-classify.ts`), null→"never" backstop. Ran on DEV: 37 current / 4 past / 180 never, 0 unknown. Verified all three markers render (Kimbal Musk current, etc.).
+- Backfill: `scripts/backfill-founder-status.ts` — low-signal → "never" deterministically; scored rows classified by a cheap Haiku pass over stored data (`founder-status-classify.ts`), null→"never" backstop. Ran on DEV: 37 current / 4 past / 180 never, 0 unknown. Verified all three markers render (a well-known founder-investor current, etc.).
 - Tests: founder-status-classify parse test; updated scoring + scoring-schema fixtures for the new required field.
 
 ### Potential concerns to address:
@@ -1136,7 +1136,7 @@ Phase 1 of the low-signal-profiles epic: low-signal evals now render a claimable
 - `src/components/LowSignalProfile.tsx` — claimable low-signal profile view (name, score 0, "Not enough public data to score", Claim CTA, events CTA).
 - `profile/page.tsx` — low-signal branch renders LowSignalProfile (name = full_name ?? humanized handle, minimal isOwner check) instead of redirecting to /not-this-round.
 - `SplashForm` / `MismatchOverlay` / `ReScoreButton` — low-signal results now go to `/profile?e=` (the page renders the claimable view).
-- Verified on dev: christine-zhang (named) and jlpiga (null-name → "Jlpiga") render correctly.
+- Verified on dev: carmen-zhao (named) and jlpark (null-name → "Jlpark") render correctly.
 
 ### Still to do in this epic:
 - P1 name backfill (set full_name from job-item input_name for existing low-signal). Leaderboard listing of zeros deferred to P3 (needs the A/B/C sort).
@@ -1153,7 +1153,7 @@ First commit on this branch: fixes the duplicate-profile / wrong-LinkedIn bug at
 - **Corroboration in resolution** (`src/lib/find-linkedin-handle.ts`): new `pickResolvedCandidate` + `emailDomainBrand`. `resolveLinkedinUrl(name, company, email)` now prefers the name-passing candidate whose headline/snippet matches the company or email-domain brand; still auto-attaches the top name-match when nothing corroborates ("stricter but automatic"). Wired `inputEmail` through `scoring-tick`. Tests in `tests/lib/resolve-candidate.test.ts`.
 - **No dedup change needed**: `runEval` already dedupes same resolved URL via `lookupCachedEval` + `onConflictDoNothing`.
 - **Admin Delete button in the floating pill** (`src/components/AdminDeleteButton.tsx`, wired in `profile/page.tsx` `<AdminProfileBox>`), superadmin-gated, reuses the existing delete route + cascade.
-- **Prod cleanup (data, not code):** 25 duplicate profiles deleted (23 auto via shared-email + URL/claimed keeper; 2 verified examples sam-odio/mayank-mehta). ~51 all-name-sourced dupes deferred for manual review (see DEFERRED-DUPLICATES.md, kept out of the repo).
+- **Prod cleanup (data, not code):** 25 duplicate profiles deleted (23 auto via shared-email + URL/claimed keeper; 2 verified examples sam-rivera/morgan-patel). ~51 all-name-sourced dupes deferred for manual review (see DEFERRED-DUPLICATES.md, kept out of the repo).
 
 ### Potential concerns to address:
 - The ~51 deferred duplicates still exist on prod; clean via the new pill Delete button.

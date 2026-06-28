@@ -586,14 +586,14 @@ export async function GET(req: Request) {
 Run: `pnpm exec tsc --noEmit && pnpm exec eslint src/app/api/v1/score/route.ts src/lib/api/score-payload.ts src/lib/api-keys.ts`
 Expected: no errors.
 
-- [ ] **Step 3: Manual smoke test** (dev server on :3000, using the key from Task 4 and a LinkedIn URL known to be scored — e.g. one from the leaderboard like `https://linkedin.com/in/barmstrong`):
+- [ ] **Step 3: Manual smoke test** (dev server on :3000, using the key from Task 4 and a LinkedIn URL known to be scored — e.g. one from the leaderboard like `https://linkedin.com/in/jordan-lee`):
 
 ```bash
 KEY="sk_live_…"   # from Task 4
 # 401 without a key:
-curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:3000/api/v1/score?linkedin_url=https://linkedin.com/in/barmstrong"
+curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:3000/api/v1/score?linkedin_url=https://linkedin.com/in/jordan-lee"
 # 200 with a key + scored person:
-curl -s -H "Authorization: Bearer $KEY" "http://localhost:3000/api/v1/score?linkedin_url=https://linkedin.com/in/barmstrong" | head -c 600
+curl -s -H "Authorization: Bearer $KEY" "http://localhost:3000/api/v1/score?linkedin_url=https://linkedin.com/in/jordan-lee" | head -c 600
 # 404 for an unknown person:
 curl -s -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $KEY" "http://localhost:3000/api/v1/score?linkedin_url=https://linkedin.com/in/definitely-not-scored-xyz"
 # 400 for a bad url:

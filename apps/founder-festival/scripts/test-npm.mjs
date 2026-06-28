@@ -2,18 +2,18 @@
 //   npx tsx scripts/test-npm.mjs
 //
 // Covers:
-//   1. Derived handle + author-name corroboration (Sindre Sorhus; sindresorhus
-//      is extremely prolific and his packages include author.name in the manifest).
-//   2. Known-URL path (sindresorhus via explicit npmjs.com/~sindresorhus URL).
-//   3. Founder example with derived handle (Guillermo Rauch / rauchg).
+//   1. Derived handle + author-name corroboration (a prolific solo author whose
+//      packages include author.name in the manifest).
+//   2. Known-URL path (same author via explicit npmjs.com/~<handle> URL).
+//   3. Founder example with derived handle.
 //   4. Bogus name — must return 0 facts.
 //
 // NOTE on expected behaviour:
 //   • The derived+corroboration path works for prolific solo authors whose packages
-//     include `author.name` in the registry manifest (e.g. Sindre Sorhus).
-//   • For org-maintained packages (Vercel's next.js etc.) the `author` field is
-//     often absent, so derived candidates get DROPPED — expected & correct.
-//     In that case only the known-URL path reliably returns data.
+//     include `author.name` in the registry manifest.
+//   • For org-maintained packages the `author` field is often absent, so derived
+//     candidates get DROPPED — expected & correct. In that case only the
+//     known-URL path reliably returns data.
 
 import { enrichWithNpm } from "../src/lib/enrichers/npm.ts";
 
@@ -23,27 +23,27 @@ function ctx(fullName, linkedinHandle = "") {
 
 const CASES = [
   {
-    label: "Sindre Sorhus — derived handle (sindresorhus), corroborated via author.name",
-    ctx: ctx("Sindre Sorhus", "sindresorhus"),
+    label: "Jordan Lee — derived handle (jordanlee), corroborated via author.name",
+    ctx: ctx("Jordan Lee", "jordanlee"),
     urls: [],
     expect: "rich (1000+ packages)",
   },
   {
-    label: "Sindre Sorhus — known-URL path (npmjs.com/~sindresorhus)",
-    ctx: ctx("Sindre Sorhus"),
-    urls: ["https://www.npmjs.com/~sindresorhus"],
+    label: "Jordan Lee — known-URL path (npmjs.com/~jordanlee)",
+    ctx: ctx("Jordan Lee"),
+    urls: ["https://www.npmjs.com/~jordanlee"],
     expect: "rich (known URL, no corroboration required)",
   },
   {
-    label: "Guillermo Rauch (rauchg) — derived handle, may be dropped if no author.name",
-    ctx: ctx("Guillermo Rauch", "rauchg"),
+    label: "Alex Kim (alexkim) — derived handle, may be dropped if no author.name",
+    ctx: ctx("Alex Kim", "alexkim"),
     urls: [],
     expect: "either rich (if corroborated) or empty (if org packages lack author.name)",
   },
   {
-    label: "Guillermo Rauch — known-URL path (npmjs.com/~rauchg)",
-    ctx: ctx("Guillermo Rauch"),
-    urls: ["https://www.npmjs.com/~rauchg"],
+    label: "Alex Kim — known-URL path (npmjs.com/~alexkim)",
+    ctx: ctx("Alex Kim"),
+    urls: ["https://www.npmjs.com/~alexkim"],
     expect: "rich (240+ packages via known URL)",
   },
   {

@@ -127,7 +127,8 @@ export const SCORING_SCHEMA = z.object({
   // Is the subject PERSONALLY a technical builder/engineer (vs. a business/design/
   // operations founder of a technical company)? Gates the company-flagship OSS
   // bonus in eval-pipeline so a non-technical founder doesn't get huge technical
-  // credit for OSS their company's engineers wrote (e.g. Brian Chesky / airbnb).
+  // credit for OSS their company's engineers wrote (e.g. a non-technical founder
+  // of a deeply technical company).
   // Tolerant: missing/invalid → null, which the gate treats as "not technical".
   technicalFounder: z.boolean().nullable().catch(null),
   investorStageFocus: z

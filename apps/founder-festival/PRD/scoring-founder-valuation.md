@@ -3,8 +3,8 @@
 
 ### Summary of changes since last update
 Scoring rubric v0.0.5 — fixes founders of high-valuation companies being severely
-underscored (motivating case: Geoff Schmidt / Apollo GraphQL scored 26 because the
-$1.5B valuation + ~$180M raised never reached his profile).
+underscored (motivating case: Alex Kim / a still-private devtools company scored 26
+because the $1.5B valuation + ~$180M raised never reached his profile).
 
 ### Detail of changes made (src/lib/scoring.ts + PRD/scoring-rubric-v0.0.1.md):
 - R2: new `founder_valuation` rule — still-private company's peak post-money valuation
@@ -22,6 +22,6 @@ $1.5B valuation + ~$180M raised never reached his profile).
 ### Potential concerns to address:
 - R3 (Majestic Million) NOT implemented: formula min(100,floor(10000/rank)) yields +0 past
   rank ~10k AND the MM lookup runs before the company domain is resolved — immaterial for
-  Apollo (#25,405→+0). Deferred as a separate MM formula/timing rebalance decision.
-- This changes ALL future scoring + the LLM prompt. Validate by re-scoring Geoff after merge
+  the company (#25,405→+0). Deferred as a separate MM formula/timing rebalance decision.
+- This changes ALL future scoring + the LLM prompt. Validate by re-scoring Alex after merge
   (expect ~26 → ~1600). No DB migration (peakValuationUsd is in profile JSONB).

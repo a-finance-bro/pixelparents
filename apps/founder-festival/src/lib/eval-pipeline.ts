@@ -158,8 +158,8 @@ export async function lookupCachedEval(rawUrl: string): Promise<EvalResult | nul
 
 // A profile is shown whenever scoring produced a positive combined score — i.e.
 // we found enough to award points. This is deliberately NOT gated on
-// signalQuality: Peter Cho earned 25 authoritative points from a SEC Form D
-// filing yet was routed to /not-this-round because Claude rated his thin web
+// signalQuality: an attendee earned 25 authoritative points from a SEC Form D
+// filing yet was routed to /not-this-round because Claude rated their thin web
 // footprint "low". Per the rubric, signalQuality is display-only metadata and
 // never prevents scoring — so it must not hide the profile either. The genuine
 // no-signal case (research short-circuit) writes score 0 and lands here as
@@ -706,7 +706,7 @@ async function computeFreshScore(
 }
 
 // The main scoring model sometimes OMITS founderStatus / investorStatus on very
-// large outputs (e.g. Patrick Collison). The schema tolerates that (→ null), but
+// large outputs (e.g. a high-profile founder). The schema tolerates that (→ null), but
 // a null means no marker. Backfill the missing one(s) with the cheap classifier
 // from the data we just scored, so every scored profile gets a status. Best-
 // effort: on any failure we leave it null (#196 + the preserve-on-null guard in
@@ -1045,8 +1045,8 @@ export async function runEval(
   const fields = payloadToWriteFields(payload, linkedinUrl);
 
   // Identity-based dedup: the URL key above only catches the SAME LinkedIn URL.
-  // The same person can arrive via a different LinkedIn URL (the max-stoiber /
-  // mxstbr bug). If this freshly-scored person's GitHub username already belongs
+  // The same person can arrive via a different LinkedIn URL (the duplicate-handle
+  // bug). If this freshly-scored person's GitHub username already belongs
   // to a profile under a DIFFERENT URL — and name + website/company corroborate
   // (isSamePerson) — return that existing profile instead of creating a twin.
   const newIdentity = personIdentityFromProfile(

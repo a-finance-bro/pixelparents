@@ -7,7 +7,7 @@
 
 When a non-owner clicks a rating button (1–4 / "Hell No" → "Hell Yes") or the events CTA on `/welcome?e=<id>`, the `ClaimProfileModal` opens and the user authenticates via LinkedIn, GitHub, or email. Ownership is granted **only** at 100% confidence — i.e., a specific, exactly-comparable identity signal. The user is told *how* we confirmed them on success; if they sign in but we can't reach 100%, we tell them why and steer them to LinkedIn.
 
-The bar is "no one ends up owning someone else's evaluation row." We accept a narrow class of false positives (e.g., two `patrick.collison@stripe.com` colleagues at the same company); we don't accept anything weaker than that.
+The bar is "no one ends up owning someone else's evaluation row." We accept a narrow class of false positives (e.g., two `jordan.lee@acme.com` colleagues at the same company); we don't accept anything weaker than that.
 
 ## Non-goals
 
@@ -171,30 +171,30 @@ if (claim.provider === "email") {
 claim === target || claim.endsWith("." + target)
 ```
 
-(Allows `eu.stripe.com` to match `stripe.com`. Not the other way around.)
+(Allows `eu.acme.com` to match `acme.com`. Not the other way around.)
 
 #### `localPartMatchesName(localPart, fullName)`
 
-Tokenize `fullName` on whitespace, strip hyphens/apostrophes/accents (NFD-normalize, drop combining marks), lowercase. From `["patrick", "collison"]` produce the accepted set:
+Tokenize `fullName` on whitespace, strip hyphens/apostrophes/accents (NFD-normalize, drop combining marks), lowercase. From `["jordan", "lee"]` produce the accepted set:
 
 ```
-first             → "patrick"
-last              → "collison"
-firstlast         → "patrickcollison"
-first.last        → "patrick.collison"
-first_last        → "patrick_collison"
-first-last        → "patrick-collison"
-firstinitiallast  → "pcollison"
-firstinitial.last → "p.collison"
-firstinitial_last → "p_collison"
-lastfirst         → "collisonpatrick"
-last.first        → "collison.patrick"
+first             → "jordan"
+last              → "lee"
+firstlast         → "jordanlee"
+first.last        → "jordan.lee"
+first_last        → "jordan_lee"
+first-last        → "jordan-lee"
+firstinitiallast  → "jlee"
+firstinitial.last → "j.lee"
+firstinitial_last → "j_lee"
+lastfirst         → "leejordan"
+last.first        → "lee.jordan"
 ```
 
-For multi-token names (e.g., "Mary Jane Smith"), generate combinations using `first = tokens[0]` and `last = tokens[tokens.length - 1]`. Middle tokens are ignored to keep the set bounded. The lowercased `localPart` (with leading-trailing punctuation stripped, plus any `+suffix` like `patrick+spam@stripe.com` removed) must be a member of that set.
+For multi-token names (e.g., "Mary Jane Smith"), generate combinations using `first = tokens[0]` and `last = tokens[tokens.length - 1]`. Middle tokens are ignored to keep the set bounded. The lowercased `localPart` (with leading-trailing punctuation stripped, plus any `+suffix` like `jordan+spam@acme.com` removed) must be a member of that set.
 
 Accepted false positives:
-- `patrick.collison@stripe.com` matches any Patrick Collison whose employer domain is stripe.com (cohabiting namesakes).
+- `jordan.lee@acme.com` matches any Jordan Lee whose employer domain is acme.com (cohabiting namesakes).
 - Unicode names like `josé` will need normalization to `jose`; we accept that some users with diacritics in their actual email may not match.
 
 ### Empty fallback

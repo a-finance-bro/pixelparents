@@ -10,8 +10,8 @@ import {
   type BreakdownRow,
 } from "@/lib/credibility-vectors";
 
-// Rows drawn from a real profile (Dmytro Zaporozhets / GitLab) so attribution is
-// exercised against actual reason/source shapes, not contrived strings.
+// Rows drawn from a representative founder profile so attribution is exercised
+// against actual reason/source shapes, not contrived strings.
 const row = (points: number, reason: string, sources: string[] = []): BreakdownRow => ({
   points,
   reason,
@@ -30,7 +30,7 @@ describe("attributeRow", () => {
   });
 
   it("routes platform signals to technical via the source URL", () => {
-    expect(attributeRow(row(5, "Active builder with 115 repos.", ["https://github.com/dzaporozhets"]))).toBe("technical");
+    expect(attributeRow(row(5, "Active builder with 115 repos.", ["https://github.com/octocat"]))).toBe("technical");
     expect(attributeRow(row(2, "Identified on Stack Overflow.", ["https://stackoverflow.com"]))).toBe("technical");
   });
 
@@ -55,7 +55,7 @@ describe("attributeRow", () => {
 
   it("routes spelled-out valuations to traction (the lost-signal fix)", () => {
     // Long-form "$X billion" / "valued at" rows matched NOTHING before — a founder
-    // could lose their entire traction axis to null (alexandr-wang lost 29k pts).
+    // could lose their entire traction axis to null (one founder lost 29k pts).
     expect(
       attributeRow(row(29000, "Scale AI was valued at over $29 billion in June 2025 when Meta invested for a 49% stake.")),
     ).toBe("traction");
@@ -158,7 +158,7 @@ describe("signalHaverPercentile (rank only against profiles that have signal)", 
   });
 });
 
-// Investor rows drawn from real profiles (Arrington, Staenberg, Blecharczyk).
+// Investor rows drawn from representative investor profiles.
 describe("attributeInvestorRow", () => {
   it("routes portfolio outcomes (IPO/unicorn/acquisition) to outcomes", () => {
     expect(attributeInvestorRow(row(30, "Early investor in Uber, which reached unicorn status before its IPO."))).toBe("outcomes");
@@ -166,13 +166,13 @@ describe("attributeInvestorRow", () => {
   });
 
   it("routes deal-count rows to portfolio", () => {
-    expect(attributeInvestorRow(row(50, "Arrington Capital has invested in over 200 early-stage crypto companies."))).toBe("portfolio");
+    expect(attributeInvestorRow(row(50, "Northwind Capital has invested in over 200 early-stage crypto companies."))).toBe("portfolio");
     expect(attributeInvestorRow(row(40, "Angel investor in 40+ early-stage startups."))).toBe("portfolio");
     expect(attributeInvestorRow(row(60, "Active portfolio spanning Neon, Regrello, Fathom, Pano AI."))).toBe("portfolio");
   });
 
   it("routes role/firm/angel-status rows to firm", () => {
-    expect(attributeInvestorRow(row(15, "Active GP and founder of Arrington Capital, a thesis-driven web3 venture firm."))).toBe("firm");
+    expect(attributeInvestorRow(row(15, "Active GP and founder of Northwind Capital, a thesis-driven web3 venture firm."))).toBe("firm");
     expect(attributeInvestorRow(row(15, "Publicly identified as an angel investor across multiple sources."))).toBe("firm");
     expect(attributeInvestorRow(row(30, "Partner at Sequoia Capital."))).toBe("firm");
   });
@@ -202,7 +202,7 @@ describe("bucketInvestorByVector", () => {
     const b = bucketInvestorByVector([
       row(50, "Invested in over 200 companies."),
       row(30, "Early investor in Uber, which reached unicorn status."),
-      row(15, "Active GP and founder of Arrington Capital."),
+      row(15, "Active GP and founder of Northwind Capital."),
       row(16, "Investing experience since the 1990s, over 15 years."),
     ]);
     expect(b.portfolio.points).toBe(50);

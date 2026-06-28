@@ -4,8 +4,8 @@
 ### Summary of changes since last update
 Adds one-shot diagnostic logging to `eval-pipeline.ts` to figure out
 why per-phrase citations are still landing empty in prod even after the
-prompt was tightened (PR #126). Two re-scores in a row (Nazar Gulyk,
-Meruzhan Danielyan) both produced `citations: []` on every row despite
+prompt was tightened (PR #126). Two re-scores in a row (two different
+applicants) both produced `citations: []` on every row despite
 row-level `sources` containing real third-party URLs.
 
 The diagnostic logs:

@@ -11,8 +11,8 @@ HTTP 400 ("provide a valid domain or company_name") — so every profile was a m
   the evaluations.profile JSONB; look up by full_name + domain (reliable). Fall back to
   linkedin_url ALONE only when no domain (stored linkedin_urls are unreliable — some
   resolve to the wrong person). No domain + no linkedin => miss.
-- Verified against real prod data: 4/5 selected resolve (garry@ycombinator.com,
-  ronen@run.ai, dan@peoplereign.io, elizabeth@hustlefund.vc); Michael Michael has no domain.
+- Verified against real prod data: 4/5 selected resolve (founder@example.com,
+  investor@example.com, attendee@example.com, applicant@example.com); one profile has no domain.
 - Branched off current main to avoid squash-merge divergence from email-related-work.
 
 ### Potential concerns to address:

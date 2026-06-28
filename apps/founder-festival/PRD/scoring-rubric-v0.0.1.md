@@ -27,7 +27,7 @@ ever disagree, the code wins — update this file to match.
   `enrichers/tranco.ts`) — independent domain-popularity rank that CROSS-CHECKS Majestic
   Million; keyed off candidate company domains. TRANCO SUB-RULES: domain-reach magnitude
   awarded AT MOST ONCE across MM + Tranco combined (corroboration, not a second award).
-  Both wired into the waterfall (steps + HOST/PLATFORM maps). Live-verified (BurntSushi →
+  Both wired into the waterfall (steps + HOST/PLATFORM maps). Live-verified (a top Rust crate author →
   85 crates / 9.3B downloads; stripe.com → Tranco #241). No point disclosure in facts.
 - **2026-06-10 (no-op refactor — verified rubric accurate):** extracted the
   deterministic bonus helpers into `scoring-bonuses.ts` and the cost accounting into
@@ -49,7 +49,7 @@ ever disagree, the code wins — update this file to match.
 - **2026-06-10 (FIX: re-score preserves rated recommendations):** every re-score
   (`reEvaluate`) regenerated `recommendations.items` with fresh ids, orphaning the
   owner's `recommendation_responses` (their IRL-event ratings) — which then rendered
-  on the wrong rows (the /samuel-odio bug). reEvaluate now PRESERVES the existing
+  on the wrong rows (the /sam-rivera bug). reEvaluate now PRESERVES the existing
   recommendations (keeping item ids stable) when the owner has already rated them;
   otherwise it takes the fresh run's recommendations as before. No point-logic change.
 - **2026-06-10 (patent IDENTITY fix — no points change):** even after the coverage
@@ -65,7 +65,7 @@ ever disagree, the code wins — update this file to match.
   vanity handle alone → 0 patents; with "Daniel Rubén Odio" → 2 (1 granted, Armory).
   Same PATENTS scoring rule — only WHICH name is searched changed. Rescore-to-apply.
 - **2026-06-10 (patent COVERAGE fix — no points change):** the `[patents]` enricher
-  was finding ZERO patents for real inventors (Sam Odio's 8 granted Facebook
+  was finding ZERO patents for real inventors (Sam Rivera's 8 granted
   patents, DROdio's Armory patents) for two reasons: (1) corroboration only matched
   the subject's CURRENT company, but patents are assigned to PAST employers; (2) the
   USPTO search used the full name as a phrase, missing "Daniel R. Odio" (middle
@@ -74,14 +74,14 @@ ever disagree, the code wins — update this file to match.
   corroborate the assignee against the subject's WHOLE-career research text
   (LinkedIn + highlights), so past-employer patents count. Same PATENTS scoring
   rule (one technical-depth row scaled to count) — only WHICH patents are found
-  changed. Live-verified: Sam Odio → 13 (8 granted), DROdio → 2. Rescore-to-apply.
+  changed. Live-verified: Sam Rivera → 13 (8 granted), DROdio → 2. Rescore-to-apply.
 - **2026-06-10 (no-op refactor — verified rubric accurate):** consolidated HOST
   extraction into `src/lib/domain-normalize.ts` (`domainHost`); migrated the
   MM-bonus/badges/enricher domain-comparison sites to it. **No scoring/points/order
   change** — behavior-preserving for bare-domain inputs; only fixes cross-path
   hash drift that could miss a match.
 - **2026-06-10 (investor profiles — surface angel-investment evidence):** prolific
-  ANGELS (e.g. Jensen Huang) were scoring 0 as investors because our investor
+  ANGELS (e.g. a famous chip-company CEO) were scoring 0 as investors because our investor
   signals are firm-centric (NFX/Neo = VC partners, SEC = fund GPs) and nothing
   surfaced their personal investments. Fix is Exa, not BrightData (no investor
   dataset exists). Strengthened `groundSubjectFacts`: the query now explicitly
@@ -111,7 +111,7 @@ ever disagree, the code wins — update this file to match.
   same-name risk); facts = follower count → GTM/DISTRIBUTION. New X/TWITTER REACH
   rubric block (modest, don't double-count LinkedIn followers). Waterfall: 2 new
   white-checkmark steps (USPTO + X/Twitter) with host mappings. Live-verified
-  (Jensen Huang → NVIDIA-corroborated patents). Rescore-to-apply.
+  (a famous chip-company CEO → company-corroborated patents). Rescore-to-apply.
 - **2026-06-10 (FIX: credibility title was never emitted):** the `credibilityTitle`
   output (added with #316) was described in the rubric and accepted by the schema,
   but the `SCHEMA_HINT` output contract in `eval-pipeline.ts` (the authoritative
@@ -138,7 +138,7 @@ ever disagree, the code wins — update this file to match.
   double-count, no point disclosure). Waterfall: 3 new white-checkmark steps;
   Crunchbase findings nest under the Crunchbase step. **Dedup:** `runEval` also keys
   on `linkedin_num_id` (the strongest key, stable across vanity URLs — catches the
-  Joshua Uwaifo class directly). Migration 0049 adds `bd_async` jsonb +
+  duplicate-handle class directly). Migration 0049 adds `bd_async` jsonb +
   `linkedin_num_id`. Same-domain/exact-identity corroboration keeps mis-attribution
   out. Glassdoor/G2/app-stores are now one registry entry away (input resolution
   pending); patents = the separate USPTO API (key already provisioned). Cost:
@@ -165,8 +165,8 @@ ever disagree, the code wins — update this file to match.
 - **2026-06-10 (no scoring change — GitHub-less duplicate dedup):** `runEval`
   gained a second identity-dedup key for people with NO GitHub: same name + same
   dedicated (non-generic) website returns the existing profile instead of a "-2"
-  twin (the Joshua Uwaifo case: /in/ojuwaifo vs /in/joshua-uwaifo-9239989a, both
-  uefo.pro). `identity-dedup.ts` adds `isSamePersonByWebsite` + `dedupWebsiteDomain`
+  twin (the duplicate-handle case: /in/jokafor vs /in/jordan-okafor-9239989a, both
+  a personal domain). `identity-dedup.ts` adds `isSamePersonByWebsite` + `dedupWebsiteDomain`
   (generic/social hosts excluded). No points, rules, or attribution changed.
 - **2026-06-10 (new output: credibility title):** the LLM now emits a
   `credibilityTitle` — one punchy sentence describing the person (e.g. "4x-exited
@@ -248,19 +248,19 @@ ever disagree, the code wins — update this file to match.
   the Exa fetch comes back empty, and uses its structured profile (name, headline,
   experiences, education, honors, follower count) as the LinkedIn page text.
   Cost-controlled: fires only on the profiles that need it (~$0.10/call).
-  `buildProfileText` pure/tested; live-verified (Bill Gates → 502-char blob). NOTE:
+  `buildProfileText` pure/tested; live-verified (a famous software-company founder → 502-char blob). NOTE:
   cannot rescue a profile set to PRIVATE (EnrichLayer 404s "marked as private" — no
   public API can read a private profile). `enrichLayerUsed` flag in grounding.
 - **2026-06-08 (GitHub identity — username-encodes-name signal):** `githubMatchConfidence`
   now also weighs whether the GitHub LOGIN encodes the subject's specific name
-  (`usernameEncodesName`, e.g. `zanesalim` → "Zane Salim"; +0.4 when strong) and SOFTENS
+  (`usernameEncodesName`, e.g. `zaraquinn` → "Zara Quinn"; +0.4 when strong) and SOFTENS
   the non-correlating-company penalty (−0.4 → −0.15) when ownership is strong (full-name
   match AND a name-encoding handle). Fixes the over-conservative matcher that stripped
-  legit owners (Al Guerrero, Gowtham, Zane Salim) when their GitHub company field wasn't
+  legit owners (Alex Romero, Gita Nair, Zara Quinn) when their GitHub company field wasn't
   in our scraped data, WITHOUT re-admitting mis-attaches (a handle won't encode a
-  different-named victim — `helsont` ≠ "Helison Tavares", `kaito-project` ≠ its 5 people).
+  different-named victim — `mreyes` ≠ "Marlin Reyes", `octo-org` ≠ its 5 people).
   Company correlation is still the strongest tier (0.95). KNOWN LIMITATION: for genuinely
-  common names (two real "Laura Lin"s) the handle can't disambiguate; only company
+  common names (two real "Lena Park"s) the handle can't disambiguate; only company
   correlation can. Rescore-to-apply.
 - **2026-06-07 (new source: YouTube — talk/media reach):** added the `[youtube]`
   enricher (`enrichers/youtube.ts`, free w/ `GOOGLE_API_KEY`, YouTube Data API v3).
@@ -269,8 +269,8 @@ ever disagree, the code wins — update this file to match.
   whose metadata (title/description/channel) mentions one of the subject's own
   COMPANY tokens (from `extractCompanyNames`); if no company can be extracted, YouTube
   is skipped (precision over recall). Rubric "YOUTUBE REACH": top corroborated video
-  10k/100k/1M+ views → +3/+6/+10 [GTM/Distribution]. Live-verified (Jensen Huang: 10
-  NVIDIA-corroborated videos, ~25.1M views). Waterfall step + `youtube.com` host
+  10k/100k/1M+ views → +3/+6/+10 [GTM/Distribution]. Live-verified (a famous chip-company CEO: 10
+  company-corroborated videos, ~25.1M views). Waterfall step + `youtube.com` host
   mapping. NOTE: search costs 100 quota units (10k/day → ~100 evals/day before 403 +
   no-op). Rescore-to-apply.
 - **2026-06-07 (new source: Google Knowledge Graph — notability threshold):** added
@@ -316,24 +316,24 @@ ever disagree, the code wins — update this file to match.
   + `libraries.io` host mapping. Rescore-to-apply.
 - **v0.0.14 — FOUNDER EXIT now uses max(CURRENT, IPO) market cap, not IPO-day.** A
   data bug: the rubric told the model to use a public company's market cap AT IPO,
-  so Jensen Huang's NVIDIA was scored at its 1999 IPO cap (~$6B → 74 pts) instead of
+  so a famous chip-company CEO's company was scored at its 1999 IPO cap (~$6B → 74 pts) instead of
   its current ~$3.5T — leaving the founder of the world's most valuable company at
   #14. Fix: the `founder_exit` rule now awards on the **HIGHER of current or IPO**
   market cap (NOT peak); the model must look up the CURRENT market cap for any
   still-public company (the IPO figure is a floor). New `extractedMetrics.current
-  MarketCapUsd` field. With ~$3.5T, NVIDIA's row → ~1,775 (sqrt) → Jensen ≈ #1. This
+  MarketCapUsd` field. With ~$3.5T, the company's row → ~1,775 (sqrt) → the chip-company CEO ≈ #1. This
   is RESCORE-to-apply (changes what the model emits) — existing public-company
   founders recorded at stale IPO-day caps need a re-score to pick up current value.
 - **v0.0.13 — ENTERPRISE VALUE IS NOW A SQUARE-ROOT CURVE (no cap).** The v0.0.12 log
   curve compressed too hard — Stripe ($91.5B) earned only ~1.2× Groupon ($12.7B)
   despite being 7× more valuable, and a serial founder's portfolio of mid-size
-  companies (summed) out-ranked a single generational one (Lefkofsky > Collison).
+  companies (summed) out-ranked a single generational one (a serial founder > a single-company founder).
   Replaced log with **square root**: `points(usd) = round(C·√usd)`, C set so a $100B
   company ≈ **300 pts** ($200M→13, $1B→30, $12.7B→107, $91.5B→287, $1.74T→1,250).
   Now a more valuable company is worth proportionally more (Stripe ≈ **2.7×** Groupon),
   **NO CAP** (generational founders are MEANT to far outscore — a founder's job is
   creating company value), and every company still **sums** (no best-company
-  weighting, per DROdio). This naturally fixes Collison (#2/#3) > Lefkofsky (#9)
+  weighting, per DROdio). This naturally fixes the single-company founder (#2/#3) > the serial founder (#9)
   without diminishing — one Stripe out-earns a portfolio of smaller exits.
   `enterpriseValuePoints` + `curvedDollarPoints` in `scoring.ts`; applied in
   `eval-pipeline.applyEnterpriseValueCurve`. venture_raised at half weight (capital
@@ -352,8 +352,8 @@ ever disagree, the code wins — update this file to match.
   (`applyDollarLogCurve`, before clamp/weighting); the model still emits the linear
   figure so the dollar amount is recoverable. **Effect (preview over 872 prod
   profiles):** credibility now beats size — technical founders climb hard
-  (mitchell-hashimoto, geoff-schmidt, max-stoiber, daniel-stenberg) while mega-cap
-  founders compress but stay elite (Bill Gates 1.74M→505). Existing rows are
+  (morgan-hale, gabe-sutton, quinn-park, dustin-shaw) while mega-cap
+  founders compress but stay elite (a famous software-company founder 1.74M→505). Existing rows are
   recalibrated by a one-pass recompute (`scripts/recompute-dollar-curve.ts`) — no
   re-research/LLM needed, since the dollar figure is recoverable from the stored
   points. The `k` constants are the single knob for outcome-vs-skill weighting.
@@ -372,10 +372,10 @@ ever disagree, the code wins — update this file to match.
 - **2026-06-06 (prestige data-sourcing — makes v0.0.11 actually fire):** the Exa
   deep-research query (`researchLinkedinProfile` in `exa.ts`) only named funding /
   company terms, so the search never surfaced honors and the PRESTIGE tier was
-  data-starved — a rescore of Brian Chesky produced ZERO prestige rows despite his
+  data-starved — a rescore of a well-known consumer-marketplace founder produced ZERO prestige rows despite his
   TIME100 / Forbes coverage (his 33k-char research blob contained no award facts).
   The query now also names awards / honors / Forbes / Fortune / TIME / 30-under-30 /
-  fellowship / Thiel / Rhodes / MacArthur / press. After the change Chesky scores
+  fellowship / Thiel / Rhodes / MacArthur / press. After the change the founder scores
   "Named to Fortune's 40 Under 40 (+8, T2, off-radar)" and funding recall is
   unharmed (SEC Form D + structured fields still feed it). numResults stays 10
   (no cost change). Validated by dev rescore.
@@ -402,8 +402,7 @@ ever disagree, the code wins — update this file to match.
   sources fire changed; the rubric below remains accurate as of this date.
 - **2026-06-05 (github identity: confidence model + company correlation):** replaced
   the binary GitHub-match check (which auto-trusted ANY Exa-surfaced github URL —
-  the actual hole that let github.com/rbranson, an OpenAI engineer also named
-  Richard Branson, attach to Sir Richard Branson) with `githubMatchConfidence`
+  the actual hole that let github.com/rbanner, an OpenAI engineer also named Robin Banner, attach to the entrepreneur Robin Banner) with `githubMatchConfidence`
   (0-1, accept >= 0.5). Layered: (a) the github account's stated COMPANY appearing
   in the subject's own LinkedIn data → ~certain (0.95); a company that does NOT
   appear penalizes the score (different same-named person); (b) otherwise a sum of
@@ -415,8 +414,8 @@ ever disagree, the code wins — update this file to match.
   attribute to NO radar vector (so the points count in the founder/investor TOTAL
   but never appear on the radar). Two regex gaps fixed in `credibility-vectors.ts`:
   (a) founder **valuations written long-form** — "valued at over $29 billion" —
-  matched nothing (the rule only caught abbreviated "$29B"); alexandr-wang lost his
-  ENTIRE 29k traction axis to null, wade-foster 7k. The traction rule now matches
+  matched nothing (the rule only caught abbreviated "$29B"); alex-tan lost his
+  ENTIRE 29k traction axis to null, wes-porter 7k. The traction rule now matches
   spelled-out amounts + the words "valued"/"valuation"/"market cap". (b) **generic
   investor identity rows** — "seed/scout/active investor", "portfolio including …" —
   matched nothing (only "angel investor"/"portfolio of" were caught); ~550 investor
@@ -436,16 +435,14 @@ ever disagree, the code wins — update this file to match.
   `credibility.ts` — it does not change any awarded points, rules, or attribution,
   and it takes effect at view time (no rescore needed).
 - **2026-06-05 (identity-conflation fixes):** (a) GitHub enricher no longer tries
-  the LinkedIn vanity handle as a GitHub username — `/in/rbranson` (Sir Richard
-  Branson) was resolving to github.com/rbranson, a different engineer also named
-  Richard Branson, attributing his repos to Sir Richard. Real github is still
+  the LinkedIn vanity handle as a GitHub username — `/in/rbanner` (the entrepreneur Robin Banner) was resolving to github.com/rbanner, a different engineer also named Robin Banner, attributing his repos to the entrepreneur. Real github is still
   found via Exa-surfaced URLs + name-derived handles (both name-gated). This
   REMOVES wrongly-attributed GitHub points from same-name collisions (scores that
   were inflated by a different person's repos will drop on re-score). (b) The
   public `recommendations.summary` prompt now forbids identity-disambiguation /
   data-quality meta-notes — the model must silently ignore mismatched enrichment
   data and write only about the person. (OpenAlex same-name attribution — e.g. a
-  medical researcher "Richard D. Branson" — remains a known harder case.)
+  medical researcher "Robin D. Banner" — remains a known harder case.)
 - **2026-06-05 (non-scoring)** — `recommendations` reframed from advice/priorities
   into proposed IRL Festival events (prompt-only; no change to point scoring). See
   the `recommendations` field note below.
@@ -465,15 +462,15 @@ ever disagree, the code wins — update this file to match.
   effect is that a genuinely-hung source's facts are omitted (graceful degradation)
   instead of blocking the eval. Rubric content below remains accurate as of this date.
 - **v0.0.10** — **Company-OSS bonus now gated on the founder being PERSONALLY
-  technical.** Brian Chesky scored 100th-percentile Technical Depth from a single
-  +129 row: "Founded the company behind airbnb/javascript (148k★)" — the v0.0.8
+  technical.** A non-technical consumer-marketplace founder scored 100th-percentile Technical Depth from a single
+  +129 row: "Founded the company behind a 148k★ OSS org" — the v0.0.8
   company-flagship OSS bonus, which fired for ANY founder regardless of whether
   they wrote the code. Fix: the scorer now emits `technicalFounder` (boolean — is
   the INDIVIDUAL an engineer/technical builder, vs. a business/design/ops founder
   of a technical company), and `addCompanyGithubBonus` only awards the company-OSS
-  bonus when `technicalFounder === true`. So Geoff Schmidt (created Apollo/Meteor)
-  and Patrick Collison (wrote Stripe's early code) still get it; Brian Chesky
-  (designer/CEO) does not. `technicalFounder` is judgment metadata — it awards no
+  bonus when `technicalFounder === true`. So a technical developer-tools founder
+  and a technical payments founder still get it; a non-technical (designer/business) CEO
+  does not. `technicalFounder` is judgment metadata — it awards no
   points itself; it only gates the existing bonus. (Existing profiles must be
   RESCORED to pick this up.)
 - **2026-06-05 (industries field — metadata, no points):** the scorer now emits an
@@ -487,8 +484,7 @@ ever disagree, the code wins — update this file to match.
 - **2026-06-05 (reliability, verified accurate — no scoring change):** make the
   founder/investor status markers populate reliably. (a) The rubric now marks
   `founderStatus` / `investorStatus` as REQUIRED top-level fields the model must
-  always emit (it was silently dropping them on very large outputs like Patrick
-  Collison). (b) When the model still omits one, `computeFreshScore` backfills it
+  always emit (it was silently dropping them on very large outputs like a heavily-covered founder). (b) When the model still omits one, `computeFreshScore` backfills it
   with the cheap classifier (`classifyStatuses`) from the data just scored. (c)
   `reEvaluate` preserves a previously-known status when a re-score returns null,
   so a re-score never wipes a marker. All three touch only the two classification
@@ -497,7 +493,7 @@ ever disagree, the code wins — update this file to match.
   AND `investorStatus` in `SCORING_SCHEMA` were bare required enums; when the
   model omitted/mis-returned either, zod `safeParse` failed on that field (both
   retries) and the ENTIRE eval threw → `/api/rescore` returned "rescore failed"
-  (repro'd on Sam Odio). Both are now `.nullable().catch(null)` so a missing value
+  (repro'd on Sam Rivera). Both are now `.nullable().catch(null)` so a missing value
   degrades to null ("not yet determined") instead of failing the eval. Both fields
   are independent of the score and award no points — no rules/points/curves/
   attribution changed; the rubric above remains accurate as of this date.
@@ -505,7 +501,7 @@ ever disagree, the code wins — update this file to match.
   right buckets.** Motivation: HN signal was firing but landing entirely in the
   GTM vector (the attribution rule blanket-routed "hacker news/karma" → gtm), and
   it only measured REACH (karma/posts), never what the person actually writes.
-  Also: founders of technical companies (e.g. the Collison brothers / Stripe) got
+  Also: founders of technical companies (e.g. the founders of a well-known payments company) got
   technical credit for the *company*, not themselves. Changes: (a) the
   `[hackernews]` enricher now surfaces a **sample of the person's longest HN
   comments** (HN hides comment scores, so length proxies substance); (b) a new
@@ -526,7 +522,7 @@ ever disagree, the code wins — update this file to match.
   curves, and attribution below remain accurate as of this date.
 - **2026-06-05 (perf, verified accurate — no scoring change):** raised the
   `/api/rescore` + `/api/eval` `maxDuration` 60→180s and parallelized the HN
-  identity-resolution fetches (heavy profiles like Patrick Collison were
+  identity-resolution fetches (heavy profiles like large, heavily-covered founders were
   exceeding 60s and failing with a bare "Network error"). No points, rules, or
   attribution changed — the rubric content above remains accurate as of this date.
 - **v0.0.8c** — **HN rows now deep-link to source (UX, no point change).** A
@@ -538,10 +534,10 @@ ever disagree, the code wins — update this file to match.
   the next increment, "A".)
 - **v0.0.8b** — **HN identity, tier 4: the tkmx leaderboard as an identity
   source.** Content discovery (v0.0.8a) only finds a handle when the subject's
-  own domain is in the Exa highlights — which misses Sam Odio (his identifying HN
+  own domain is in the Exa highlights — which misses Sam Rivera (his identifying HN
   domain is an old blog modern search won't surface). Added a 4th `resolveHnHandle`
   tier: match the subject to a HN Tokenmaxxing leaderboard entry by a known handle
-  OR a prefix-tolerant name match ("Samuel Odio" ↔ `hn_username` "Sam_Odio"), then
+  OR a prefix-tolerant name match ("Sam Rivera" ↔ `hn_username` "Sam_Rivera"), then
   confirm via HN bio corroboration. Catches arbitrary handles for anyone listed on
   tkmx. Still capture-only — no point values changed. (Existing profiles must be
   RESCORED to pick up any of these capture fixes — the rubric only affects new scores.)
@@ -549,18 +545,18 @@ ever disagree, the code wins — update this file to match.
   values changed. The Hacker News + HN Tokenmaxxing enrichers used to only fire
   when Exa had already surfaced the subject's `news.ycombinator.com/user?id=` URL,
   so they silently missed people whose HN profile wasn't surfaced — including
-  Sam Odio (#1 on the Tokenmaxxing board) and DROdio, both of whom are listed on
+  Sam Rivera (#1 on the Tokenmaxxing board) and DROdio, both of whom are listed on
   tkmx. Added a shared `resolveHnHandle()` with a third tier: **content discovery**
   — search HN for stories linking the subject's own domains, take the
   bio-corroborated dominant author (HN usernames are case-sensitive + arbitrary,
-  e.g. "Sam_Odio", so name-guessing can't find them). HN Tokenmaxxing now reuses
+  e.g. "Sam_Rivera", so name-guessing can't find them). HN Tokenmaxxing now reuses
   this resolved handle instead of only Exa URLs, so the leaderboard-presence and
   rank tiers (+10 / +10/+20/+35) actually fire for listed founders.
 - **v0.0.8** — **Technical-depth recalibration: reward IMPACT, de-weight
   presence/age.** Motivation: a non-technical founder (e.g. DROdio) scored 92nd
   percentile on the Technical Depth radar vector almost entirely on "has an old
   GitHub account + pushed once recently," while a genuinely technical founder
-  (Geoff Schmidt, creator of Meteor + co-founder of Apollo GraphQL) scored only
+  (a developer-tools founder) scored only
   83rd because his real OSS lives in the company **org**, which the personal-account
   enricher never sees. Changes: (a) **GitHub presence/age de-weighted** — identity
   +3→+2, tenure/age +3→+1, and the **recency bonus is gated on real building**
@@ -599,8 +595,7 @@ ever disagree, the code wins — update this file to match.
 - **v0.0.5** — **Founder valuation** rule added: a still-private company's peak
   post-money valuation scores `max(1, floor(peakValuationUsd / $1M))`, **uncapped**
   (rule `founder_valuation`), and **supersedes "Venture raised"** for that company.
-  Motivation: a founder of a $1.5B private unicorn (e.g. Apollo GraphQL's Geoff
-  Schmidt) was scoring ~26 because the valuation/raise was never reflected. Also:
+  Motivation: a founder of a $1.5B private unicorn (e.g. a developer-tools founder) was scoring ~26 because the valuation/raise was never reflected. Also:
   (a) **funding/valuation extraction is now a named top priority** in the prompt
   (populate `totalRaisedUsd` + `peakValuationUsd` from company funding news, not
   just the person's SEC filings); (b) **GitHub** now attributes the COMPANY's org
@@ -741,8 +736,8 @@ on this branch.
 *Mirrors the Majestic Million bonus: deterministic and post-scoring, keyed on the
 resolved `primaryCompanyDomain` (the GitHub enricher only sees the subject's
 PERSONAL account and runs before the company is resolved, so a founder whose real
-OSS lives in the company **org** — e.g. Geoff Schmidt → `apollographql/apollo-client`,
-Mitchell Hashimoto → `hashicorp/terraform` — was never credited for it).*
+OSS lives in the company **org** — e.g. a founder whose flagship OSS is `apollographql/apollo-client`,
+or `hashicorp/terraform` — was never credited for it).*
 - Derive the org from the domain (`apollographql.com → apollographql`), look up
   its **top-starred non-fork repo** via the GitHub search API, and award the
   **founder** `githubTopRepoPoints(stars)` (the same uncapped `round(25 × log10(stars))`
@@ -779,9 +774,9 @@ score AND drives Technical Depth.*
 **Worked examples (the calibration targets that drove v0.0.8):**
 | Founder | Before | What changes | After (intended) |
 |---|---|---|---|
-| Max Stoiber (styled-components 100k★) | 100 | unchanged — impact-driven | ~100 |
-| Mitchell Hashimoto (Terraform et al.) | 100 | + company-org bonus (hashicorp) | ~100 |
-| **Geoff Schmidt** (Meteor + Apollo) | **83** | **+ company-org bonus** (`apollographql/apollo-client` ~+107) | **low 90s+** |
+| A popular OSS author (100k★ project) | 100 | unchanged — impact-driven | ~100 |
+| An infra-tools founder (multiple popular projects) | 100 | + company-org bonus (hashicorp) | ~100 |
+| **A developer-tools founder** (flagship OSS) | **83** | **+ company-org bonus** (`apollographql/apollo-client` ~+107) | **low 90s+** |
 | **DROdio** | **92** | recency +15→+3, id +3→+2, tenure +3→+1 (23 pts → ~7) | **~60th** |
 
 ### Product Hunt builder sub-rules (`[producthunt]`)
@@ -907,7 +902,7 @@ honor is awarded **once**.*
 | Partner / GP at a top-tier firm (Sequoia, Benchmark, a16z, Founders Fund, Greylock, Accel, Bessemer, Lightspeed, USV) | +30 |
 | Partner / Principal at any other recognized VC firm | +15 |
 | Active GP / fund manager (syndicate, search fund, micro-VC) | +15 (once; stacks with Partner/Principal) |
-| Publicly identified angel investor | +15 (marquee names like Naval/Esther Dyson/Ron Conway → +25) |
+| Publicly identified angel investor | +15 (marquee names (the most famous angels) → +25) |
 | Per year of investing experience | +1 each (cap 15) |
 
 ### NFX Signal sub-rules (`[nfx]`)

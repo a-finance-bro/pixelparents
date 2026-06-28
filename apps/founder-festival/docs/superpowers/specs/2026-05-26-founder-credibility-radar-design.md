@@ -4,13 +4,13 @@
 **Author:** Claude (built autonomously while DROdio was away; every judgment call
 is flagged below for review)
 **Source PRD:** Festival.so Founder Profile & Scoring Platform Improvements v0.2
-(post-Swapnil feedback), FEAT-02 "Technical Depth Score — Multi-Vector Spider Graph"
+(post-stakeholder feedback), FEAT-02 "Technical Depth Score — Multi-Vector Spider Graph"
 
 ## Goal
 
 Show a founder's credibility as depth across five vectors on a radar/spider
 graph, scannable in ~10 seconds, with the ability to drill into the raw evidence
-behind each vector ("can this founder go five levels deep?"). Swapnil's ask.
+behind each vector ("can this founder go five levels deep?"). The stakeholder's ask.
 
 This is **Phase 1 only** — the radar. FEAT-04 (Fit Score) and FEAT-03 (Unfair
 Advantage) are explicitly deferred to later phases.
@@ -31,7 +31,7 @@ Chosen for **investor meaning × data we actually have** (grounded in the live
 Naming decisions vs the PRD's suggestions:
 - "PMF" → **Traction** (we infer shipped-and-worked proxies; we don't see real
   revenue/retention, so PMF would over-promise).
-- "Problem Proximity" (Swapnil) is **not** a vector — it's the Fit Score (FEAT-04,
+- "Problem Proximity" (a stakeholder ask) is **not** a vector — it's the Fit Score (FEAT-04,
   Phase 2), a cross-cutting AI judgment rather than a data-volume axis.
 
 ## How a vector is computed (the important part)
@@ -136,6 +136,6 @@ Investor-side caveats (verified on the 30 scored investors):
 
 - 12/12 unit tests pass; `tsc --noEmit` clean on the new files.
 - Renders at HTTP 200 on real profiles. Sample results show meaningful
-  differentiation: Joe Gebbia (designer) Technical 39 / Operator 87 / GTM 99 vs
-  Dmytro Zaporozhets (GitLab) Technical 97 / GTM 96 — exactly the
-  engineer-vs-operator signal Swapnil wanted.
+  differentiation: a designer-founder Technical 39 / Operator 87 / GTM 99 vs
+  an engineer-founder Technical 97 / GTM 96 — exactly the
+  engineer-vs-operator signal the team wanted.

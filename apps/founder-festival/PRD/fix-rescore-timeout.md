@@ -2,7 +2,7 @@
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Fix for the "Network error" on rescoring heavy profiles (Patrick Collison).
+Fix for the "Network error" on rescoring heavy profiles (a high-presence founder).
 Root cause: `/api/rescore` (and `/api/eval`) capped at `maxDuration = 60`; a
 high-presence profile that escalates to Opus — made slower by the sequential HTTP
 calls my recent HN identity-resolution work added — exceeds 60s, Vercel kills the

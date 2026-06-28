@@ -3,18 +3,18 @@ import { nameMatches, nameTokens } from "@/lib/name-match";
 
 describe("nameMatches — must ACCEPT correct matches (no over-rejection)", () => {
   const accept: [string, string][] = [
-    ["Garry Tan", "Garry Tan"], // exact
-    ["Urška Sršen", "Urska Srsen"], // diacritics stripped
-    ["Urska Srsen", "Urška Sršen"], // diacritics (reverse)
-    ["Máuhan M Zonoozy", "Mauhan Zonoozy"], // middle initial dropped
+    ["Taylor Brooks", "Taylor Brooks"], // exact
+    ["Zoë Müller", "Zoe Muller"], // diacritics stripped
+    ["Zoe Muller", "Zoë Müller"], // diacritics (reverse)
+    ["Tómas R Vance", "Tomas Vance"], // middle initial dropped
     ["Robert Smith", "Bob Smith"], // nickname — last name carries it
-    ["Alexander Nevedovsky", "Alex Nevedovsky"], // prefix nickname
-    ["Wang Siyuan", "Siyuan Wang"], // name order swapped
-    ["Garry Tan", "Garry Tan, CFA"], // extra suffix token
-    ["Helghardt Avenant", "Helghardt"], // candidate is first name only
-    ["Caroline DeWitte", "Caroline De Witte"], // spacing
-    ["Garry Tan", "garrytan"], // candidate.name fell back to the handle
-    ["Khalid M.", "Khalid Mansour"], // searched last name is just an initial → first carries it
+    ["Alexander Brightwood", "Alex Brightwood"], // prefix nickname
+    ["Li Haoran", "Haoran Li"], // name order swapped
+    ["Taylor Brooks", "Taylor Brooks, CFA"], // extra suffix token
+    ["Reinhardt Vasquez", "Reinhardt"], // candidate is first name only
+    ["Marguerite DeLacroix", "Marguerite De Lacroix"], // spacing
+    ["Taylor Brooks", "taylorbrooks"], // candidate.name fell back to the handle
+    ["Omar K.", "Omar Karim"], // searched last name is just an initial → first carries it
   ];
   for (const [searched, candidate] of accept) {
     it(`accepts "${searched}" ↔ "${candidate}"`, () => {
@@ -25,9 +25,9 @@ describe("nameMatches — must ACCEPT correct matches (no over-rejection)", () =
 
 describe("nameMatches — must REJECT wrong people", () => {
   const reject: [string, string][] = [
-    ["Garry Tan", "Sergey E"], // the real-world bug that started this
-    ["Ben Kownack", "Maria Gonzalez"],
-    ["Elizabeth Yin", "Michael Brown"],
+    ["Taylor Brooks", "Riley Chen"], // the real-world bug that started this
+    ["Devin Marsh", "Maria Gonzalez"],
+    ["Sara Whitman", "Michael Brown"],
   ];
   for (const [searched, candidate] of reject) {
     it(`rejects "${searched}" ↔ "${candidate}"`, () => {
@@ -38,12 +38,12 @@ describe("nameMatches — must REJECT wrong people", () => {
 
 describe("nameMatches — lenient on missing data", () => {
   it("accepts when the candidate name is empty (can't validate)", () => {
-    expect(nameMatches("Garry Tan", "")).toBe(true);
+    expect(nameMatches("Taylor Brooks", "")).toBe(true);
   });
 });
 
 describe("nameTokens", () => {
   it("strips accents, initials, and suffixes", () => {
-    expect(nameTokens("Máuhan M Zonoozy Jr.")).toEqual(["mauhan", "zonoozy"]);
+    expect(nameTokens("Tómas R Vance Jr.")).toEqual(["tomas", "vance"]);
   });
 });

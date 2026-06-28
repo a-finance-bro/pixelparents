@@ -6,7 +6,7 @@ First entry for this branch. Fixes a bug where the lifecycle welcome email greet
 
 ### Detail of changes made:
 - `src/lib/welcome-emails.ts` — `firstNameFor()` now reduces *both* its `clerkFirstName` and `fallbackName` inputs to the first whitespace-separated token (was: trusted Clerk's value as-is, only split the fallback). Refactored to a single `firstToken()` helper that returns `undefined` for empty/whitespace strings so `??` chaining works correctly. Updated the comment to call out that Clerk's `firstName` is user-controlled and routinely contains a full name.
-- `tests/lib/welcome-emails.test.ts` — added a `firstNameFor` case covering `"Ada Lovelace"` and a whitespace-padded variant in the Clerk-`firstName` slot. All 9 tests in this file pass.
+- `tests/lib/welcome-emails.test.ts` — added a `firstNameFor` case covering `"Jordan Lee"` and a whitespace-padded variant in the Clerk-`firstName` slot. All 9 tests in this file pass.
 - Investigation findings worth preserving for future ramp-up:
   - The schema (`src/db/schema.ts`) has **no** `firstName`/`lastName` columns on `users`. The only name field is `evaluations.full_name` (LinkedIn-derived, used for scoring context, not for greetings).
   - Clerk is the source of truth for user names. The app does not customize Clerk's sign-up UI and does not write to Clerk's `firstName`/`lastName` from app code, so whatever is in `clerkUser.firstName` came from either Clerk's default sign-up form or an OAuth provider (LinkedIn / GitHub) — not from anything this codebase controls.

@@ -6,7 +6,7 @@
 ### Summary of changes since last update
 Replaced the 500-row leaderboard hard cap with cursor-based infinite scroll
 + added a server-side search endpoint so the search box finds people beyond
-the rendered window (e.g. Erika Anderson, rank > 500 in prod).
+the rendered window (e.g. Jordan Lee, rank > 500 in prod).
 
 ### Detail of changes made:
 - `src/lib/leaderboard.ts` — extracted `orderColFor`, `roleGateFor`, and the
@@ -43,10 +43,10 @@ the rendered window (e.g. Erika Anderson, rank > 500 in prod).
 - Smoke-tested dev:
   - `GET /api/leaderboard/page?limit=3` → cursor returned, page 2 fetched
     via that cursor returns the correct next 3 rows below the prior score.
-  - `GET /api/leaderboard/search?q=Erika+Anderson` → returns her row with
-    `profileHref: /profile/founder/erika-anderson`.
-  - `GET /api/leaderboard/search?q=anderson&role=investor` → 0 results
-    (correctly gates her out — she has `investorScore=0`).
+  - `GET /api/leaderboard/search?q=Jordan+Lee` → returns their row with
+    `profileHref: /profile/founder/jordan-lee`.
+  - `GET /api/leaderboard/search?q=lee&role=investor` → 0 results
+    (correctly gates them out — they have `investorScore=0`).
   - `GET /leaderboard` → 200, no SSR errors.
 
 ### Potential concerns to address:

@@ -22,17 +22,17 @@ market cap" traction term:
 | p90 | 957 | 66 |
 | p95 | 5,305 | 89 |
 | p99 | 29,060 | 152 |
-| **max** | **1,737,155** (bill-gates) | **255** |
+| **max** | **1,737,155** (jordan-lee) | **255** |
 
 The "skill" component (everything except traction) is a sane, bounded 0–255
 distribution. The traction term adds **millions**. The entire top-15 leaderboard is
 sorted purely by company market cap:
 
 ```
-1,737,155  bill-gates       dom=traction(1,736,905)   ← Microsoft ~$1.74T
-   91,957  john-collison     dom=traction(91,770)      ← Stripe ~$91.5B
-   91,687  patrick-collison  dom=traction(91,505)
-   78,109  brian-chesky      dom=traction(78,011)      ← Airbnb ~$78B
+1,737,155  jordan-lee       dom=traction(1,736,905)   ← a mega-cap ~$1.74T
+   91,957  alex-kim          dom=traction(91,770)      ← a fintech ~$91.5B
+   91,687  sam-rivera        dom=traction(91,505)
+   78,109  taylor-morgan     dom=traction(78,011)      ← a marketplace ~$78B
    …all dom=traction
 ```
 
@@ -131,13 +131,13 @@ The radar now reflects essentially all scored points. ✅
 re-creation rather than two distinct same-named people:
 
 ```
-charlie feng ×2     [charlie-feng, charlie-feng-2]
-jimin kim ×2        [jimin-kim, jimin-kim-2]
-grace chen ×2       [grace-chen, grace-chen-3]
-navaneethan murugan ×2, brian leonard ×2, anmol sharma ×2, …
+morgan diaz ×2      [morgan-diaz, morgan-diaz-2]
+casey brooks ×2     [casey-brooks, casey-brooks-2]
+riley park ×2       [riley-park, riley-park-3]
+jamie nguyen ×2, drew patel ×2, robin shah ×2, …
 ```
 
-Some (e.g. "christina c.", "david c." — truncated names) are likely distinct people;
+Some (e.g. "jamie p.", "drew k." — truncated names) are likely distinct people;
 the `-2` slugs are the suspicious ones. **Needs human review before deletion** (prior
 dupe cleanup is documented in memory). A `scripts/dedupe-cleanup.ts` already exists.
 Did NOT delete anything — listing for review.

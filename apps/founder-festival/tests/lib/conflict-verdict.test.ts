@@ -3,24 +3,24 @@ import { conflictVerdict } from "@/lib/conflict-verdict";
 
 describe("conflictVerdict", () => {
   it("flags different people when surnames differ (the mis-link case)", () => {
-    expect(conflictVerdict(["Adeola Ayoola", "Adeola Adesola"]).kind).toBe("different");
-    expect(conflictVerdict(["Caroline Stevenson", "Caroline Webb"]).kind).toBe("different");
-    expect(conflictVerdict(["Danni Shi", "Dani Friedland"]).kind).toBe("different");
-    expect(conflictVerdict(["Francis deSouza", "Francis Maravilla"]).kind).toBe("different");
+    expect(conflictVerdict(["Avery Bennett", "Avery Carlton"]).kind).toBe("different");
+    expect(conflictVerdict(["Dana Stevens", "Dana Whitfield"]).kind).toBe("different");
+    expect(conflictVerdict(["Toni Marsh", "Tony Calder"]).kind).toBe("different");
+    expect(conflictVerdict(["Marcus deVries", "Marcus Holloway"]).kind).toBe("different");
   });
 
   it("calls it the same person when surnames match", () => {
-    expect(conflictVerdict(["Max Stoiber", "Max Stoiber"]).kind).toBe("same");
-    expect(conflictVerdict(["María José Núñez", "Maria Jose Nunez"]).kind).toBe("same"); // diacritics normalized
+    expect(conflictVerdict(["Casey Morgan", "Casey Morgan"]).kind).toBe("same");
+    expect(conflictVerdict(["Sofía Valderrama", "Sofia Valderrama"]).kind).toBe("same"); // diacritics normalized
   });
 
   it("is uncertain without two usable surnames", () => {
-    expect(conflictVerdict(["Cher", null]).kind).toBe("uncertain");
-    expect(conflictVerdict(["Gauri J.", null]).kind).toBe("uncertain");
+    expect(conflictVerdict(["Zephyr", null]).kind).toBe("uncertain");
+    expect(conflictVerdict(["Nadia R.", null]).kind).toBe("uncertain");
   });
 
   it("3-way: all distinct surnames → different", () => {
-    expect(conflictVerdict(["Omar Mohtar", "Omar Alfaro", "Omar Singh"]).kind).toBe("different");
+    expect(conflictVerdict(["Diego Vance", "Diego Rosario", "Diego Halloran"]).kind).toBe("different");
   });
 
   it("3-way: a repeated surname → uncertain (not cleanly all-distinct)", () => {

@@ -229,10 +229,10 @@ const EMPTY_METRICS = {
 describe("SCORING_SCHEMA — identity fields", () => {
   it("accepts publicEmail + githubUsername when present", () => {
     const parsed = SCORING_SCHEMA.parse({
-      fullName: "Patrick Collison",
+      fullName: "Sam Rivera",
       primaryCompanyDomain: "stripe.com",
-      publicEmail: "patrick@stripe.com",
-      githubUsername: "patrickc",
+      publicEmail: "sam@stripe.com",
+      githubUsername: "samr",
       founderScore: 10,
       investorScore: 0,
       combinedScore: 10,
@@ -245,8 +245,8 @@ describe("SCORING_SCHEMA — identity fields", () => {
       investorBreakdown: [],
       recommendations: { summary: "x", items: [] },
     });
-    expect(parsed.publicEmail).toBe("patrick@stripe.com");
-    expect(parsed.githubUsername).toBe("patrickc");
+    expect(parsed.publicEmail).toBe("sam@stripe.com");
+    expect(parsed.githubUsername).toBe("samr");
   });
 
   it("accepts null publicEmail + null githubUsername", () => {

@@ -48,7 +48,7 @@ export default async function PendingItemsPage() {
   }
 
   // Profile conflicts: one verified email → ≥2 evaluations (duplicate / mis-linked
-  // profiles, e.g. the Patricia Liu case).
+  // profiles, e.g. the same-name collision case).
   const conflicts = await getProfileConflicts();
   const totalPending = grouped.size + conflicts.length;
 

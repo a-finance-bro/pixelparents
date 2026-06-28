@@ -13,7 +13,7 @@ describe("nfxSearchTerms", () => {
   });
 
   it("returns just the name (no variant) for a two-token name", () => {
-    expect(nfxSearchTerms("Marc Andreessen")).toEqual(["Marc Andreessen"]);
+    expect(nfxSearchTerms("Drew Bennett")).toEqual(["Drew Bennett"]);
   });
 });
 
@@ -30,8 +30,8 @@ describe("nfxSlugCandidates", () => {
   });
 
   it("works with no LinkedIn handle (search hit + fallback only)", () => {
-    const c = nfxSlugCandidates({ searchSlugs: ["marc-andreessen"], fullName: "Marc Andreessen", linkedinHandle: null });
-    expect(c).toContain("marc-andreessen");
+    const c = nfxSlugCandidates({ searchSlugs: ["drew-bennett"], fullName: "Drew Bennett", linkedinHandle: null });
+    expect(c).toContain("drew-bennett");
     expect(c).not.toContain(""); // no falsy entries
   });
 });

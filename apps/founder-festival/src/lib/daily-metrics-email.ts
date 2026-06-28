@@ -11,7 +11,7 @@ import {
   type HeadlineMetric,
 } from "./daily-metrics";
 
-const POSTHOG_DASHBOARD = "https://us.posthog.com/project/443135";
+const POSTHOG_DASHBOARD = "https://us.posthog.com/project/0";
 
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, (c) =>

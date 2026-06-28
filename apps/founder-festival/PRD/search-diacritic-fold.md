@@ -5,8 +5,8 @@
 
 ### Summary of changes since last update
 Fixed leaderboard/header/admin search not finding profiles when the query has
-different diacritics than the stored name — e.g. Luma's "Ebru Yıldırım" (Turkish
-dotless ı) failed to find the existing profile stored as ASCII "Ebru Yildirim".
+different diacritics than the stored name — e.g. Luma's "Derya Yılmaz" (Turkish
+dotless ı) failed to find the existing profile stored as ASCII "Derya Yilmaz".
 
 ### Detail of changes made:
 - `src/lib/leaderboard.ts`: added `asciiFoldForSearch(s)` (maps Turkish ıİşŞğĞüÜöÖçÇ
@@ -15,8 +15,8 @@ dotless ı) failed to find the existing profile stored as ASCII "Ebru Yildirim".
   itself the ASCII-folded name), making search diacritic-insensitive. Existing
   raw-needle conditions (fullName/linkedin/company) unchanged.
 - `tests/lib/search-diacritic.test.ts`: pure fold tests + a DB test proving an
-  ASCII-stored "Ebru Yildirim" (slug ebru-yildirim-*) is found by the Turkish
-  query "Ebru Yıldırım".
+  ASCII-stored "Derya Yilmaz" (slug derya-yilmaz-*) is found by the Turkish
+  query "Derya Yılmaz".
 
 ### Potential concerns to address:
 - Robust for ASCII-stored names with clean slugs (the common case). A name STORED

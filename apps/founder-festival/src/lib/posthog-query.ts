@@ -7,7 +7,7 @@
 // Returns null/throws-free helpers so a missing key never crashes a caller.
 import { fetchWithTimeout } from "@/lib/fetch-timeout";
 
-const PROJECT_ID = process.env.POSTHOG_PROJECT_ID ?? "443135";
+const PROJECT_ID = process.env.POSTHOG_PROJECT_ID ?? "0";
 
 // The Query API lives on the app host (us.posthog.com), NOT the ingest host
 // (us.i.posthog.com that NEXT_PUBLIC_POSTHOG_HOST points at). Derive the app

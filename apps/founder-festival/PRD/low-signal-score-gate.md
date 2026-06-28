@@ -12,9 +12,9 @@ about you" page, because the profile-vs-not-this-round decision keyed off
 
 ### Summary of changes since last update
 Gate the profile display on the SCORE, not `signalQuality` (option A of the
-diagnosis). Discovered via Peter Cho (eval `ac989cb5`): scored **25** points —
-20 of them authoritative from a SEC Form D filing (named on Runebook, Inc.'s
-$1.9M offering) — yet routed to `/not-this-round` because Claude rated his thin
+diagnosis). Discovered via an applicant (eval `ac989cb5`): scored **25** points —
+20 of them authoritative from a SEC Form D filing (named on Acme, Inc.'s
+$1.9M offering) — yet routed to `/not-this-round` because Claude rated their thin
 web footprint `signalQuality: "low"`.
 
 ### Root cause

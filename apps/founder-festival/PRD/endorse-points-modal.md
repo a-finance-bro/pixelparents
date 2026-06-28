@@ -2,7 +2,7 @@
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-In the endorse compose form, the "Profile points" number is now clickable and opens a small breakdown popover: "Profile points: <total>", the top-10 people you've endorsed with points spent ("-10 Jonah Larkin"), and "Remaining: <available>".
+In the endorse compose form, the "Profile points" number is now clickable and opens a small breakdown popover: "Profile points: <total>", the top-10 people you've endorsed with points spent ("-10 Jordan Lee"), and "Remaining: <available>".
 
 ### Detail of changes made:
 - `src/app/(authed)/profile/page.tsx`: compute the viewer's authored endorsements (`endorsedByMe`) for ALL members (not just owners), and pass `myAllocations` (endorsee name + points) to MemberEndorsements.

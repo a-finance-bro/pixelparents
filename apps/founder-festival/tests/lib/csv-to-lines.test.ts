@@ -205,9 +205,9 @@ describe("parseCsv — tab-delimited (TSV) input", () => {
 
 describe("parseCsvRows — TSV with headers maps columns correctly", () => {
   it("maps Full Name / First / Last / Email from a tab-delimited export", () => {
-    const tsv = "Full Name\tFirst\tLast\tEmail\nMayank Mehta\tMayank\tMehta\tmayank@pulse.qa";
+    const tsv = "Full Name\tFirst\tLast\tEmail\nJordan Lee\tJordan\tLee\tjordan@northwind.io";
     expect(parseCsvRows(tsv)).toEqual([
-      { name: "Mayank Mehta", email: "mayank@pulse.qa" },
+      { name: "Jordan Lee", email: "jordan@northwind.io" },
     ]);
   });
 });

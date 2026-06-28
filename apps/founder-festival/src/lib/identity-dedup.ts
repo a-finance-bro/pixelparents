@@ -2,13 +2,13 @@ import { nameMatches } from "./name-match";
 
 // Identity-based duplicate detection. festival.so used to dedup profiles ONLY on
 // the resolved LinkedIn URL, so the SAME person arriving via two different
-// LinkedIn URLs (e.g. linkedin.com/in/mxstbr vs .../max-stoiber-46698678) created
+// LinkedIn URLs (e.g. linkedin.com/in/jordan-lee vs .../jordan-lee-46698678) created
 // two profiles. This adds a second, person-level key: same GitHub username.
 //
 // GitHub username alone is NOT safe — it gets mis-attached (one GitHub wrongly on
 // several different people). So we only treat two rows as the same person when
-// github username + name + (website OR company) all corroborate — the "Max
-// Stoiber test." That merges the real duplicate but refuses to merge the
+// github username + name + (website OR company) all corroborate — the "same-person
+// test." That merges the real duplicate but refuses to merge the
 // mis-attach cases (different people whose company/website differ).
 
 export type PersonIdentity = {

@@ -4,7 +4,7 @@
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Adopted Steve Yegge's **beads** (`bd`) as the project issue tracker. Ran `bd init`
+Adopted **beads** (`bd`) as the project issue tracker. Ran `bd init`
 (prefix `ff`) + the Claude/Codex integrations. Per owner: **full beads** — `bd` owns
 task tracking and persistent memory (`bd remember`) instead of TodoWrite/TaskCreate and
 MEMORY.md — **except the per-branch `PRD/<branch>.md` commit posts, which STAY.**

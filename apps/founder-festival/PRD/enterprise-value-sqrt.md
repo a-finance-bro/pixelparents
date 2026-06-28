@@ -7,7 +7,7 @@ DROdio. Log compressed too hard (Stripe only ~1.2× Groupon despite 7× the valu
 a serial founder's summed portfolio out-ranked a single generational company). Sqrt
 makes a more valuable company worth proportionally more (Stripe ≈ 2.7× Groupon) and
 lets generational founders far outscore everyone — which naturally fixes
-Collison (#2/#3) > Lefkofsky (#9) WITHOUT best-company weighting.
+the #2/#3 founders ranking above the #9 serial founder WITHOUT best-company weighting.
 
 ### Detail of changes made:
 - `src/lib/scoring.ts` — replaced the log curve with `enterpriseValuePoints(usd) =
@@ -24,11 +24,11 @@ Collison (#2/#3) > Lefkofsky (#9) WITHOUT best-company weighting.
 - Doc → v0.0.13.
 
 ### Verified (dry-run, 359 prod rows from backup):
-bill-gates 1,505 · john-collison 491 (#2) · patrick-collison 474 (#3) · eric-lefkofsky
-300 (#9) · mitchell-hashimoto 293 (#11). Matches the approved "$100B≈300" preview.
+jordan-lee 1,505 · alex-kim 491 (#2) · sam-rivera 474 (#3) · taylor-brooks
+300 (#9) · casey-morgan 293 (#11). Matches the approved "$100B≈300" preview.
 
 ### Potential concerns to address:
-- No cap means trillion-dollar companies score very high (Bill Gates 1,505) — this is
+- No cap means trillion-dollar companies score very high (Jordan Lee 1,505) — this is
   intended (DROdio: generational founders should way outscore). Skill tops ~250, so
   a sub-$10B-company founder is below the generational tier by design.
 - The original-linear backup `/tmp/dollar-curve-backup-prod-359.json` is the source of

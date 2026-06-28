@@ -12,7 +12,7 @@ returns a verifiability confidence (0-100) + verdict — to cut the human's revi
 - `api/score-items/[id]/ai-check` — admin-gated endpoint.
 - `PendingItemRow.tsx` — "Run AI Check" button (middle, between confirm/reject) +
   color-coded result display (verdict + confidence + summary + sources).
-- Live-verified (Patrick Collison/Stripe → partial 85%).
+- Live-verified (a well-known payments-company founder → partial 85%).
 
 ### Next (same Claim Review Console plan)
 2. Edit pencil (reuse `modify`) + approval email (hello@festival.so template).

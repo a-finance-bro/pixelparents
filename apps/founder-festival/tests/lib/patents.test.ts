@@ -6,7 +6,7 @@ import type { UsptoPatent } from "@/lib/uspto";
 
 const P = (over: Partial<UsptoPatent>): UsptoPatent => ({
   title: "A METHOD",
-  inventors: ["Jensen Huang"],
+  inventors: ["Morgan Reyes"],
   applicant: "NVIDIA Corporation",
   granted: true,
   filingDate: "2013-01-01",
@@ -18,28 +18,29 @@ describe("inventorIsSubject (strict first+last, tolerant of middle initials/nick
     expect(inventorIsSubject("Daniel Odio", "Daniel R. Odio")).toBe(true);
   });
   it("matches a nickname↔full form (Sam↔Samuel)", () => {
-    expect(inventorIsSubject("Sam Odio", "Samuel Odio")).toBe(true);
+    expect(inventorIsSubject("Theo Vance", "Theodore Vance")).toBe(true);
   });
   it("handles BrightData's 'Nick - Real Name' form", () => {
     expect(inventorIsSubject("DROdio - Daniel R. Odio", "Daniel R. Odio")).toBe(true);
   });
   it("rejects a different first name with the same surname", () => {
-    expect(inventorIsSubject("Daniel Odio", "Samuel Odio")).toBe(false);
+    expect(inventorIsSubject("Marcus Vance", "Theodore Vance")).toBe(false);
   });
 });
 
 describe("corroboratePatent (career-wide assignee match)", () => {
-  // DROdio's research mentions Armory; Sam's mentions Facebook — PAST employers.
+  // DROdio's research mentions Armory; a same-surname stranger's mentions
+  // Brightwave, not the patent's Facebook assignee — PAST employers.
   it("keeps a PAST-employer patent when the assignee appears in research text", () => {
     const danArmory = P({ inventors: ["Daniel R. Odio"], applicant: "Armory, Inc." });
     expect(corroboratePatent(danArmory, "Daniel Odio", "co-founder of armory continuous delivery")).toBe(true);
   });
   it("drops a same-surname inventor whose assignee isn't in the subject's research", () => {
-    const samFacebook = P({ inventors: ["Samuel Odio", "David Garcia"], applicant: "Facebook, Inc." });
-    expect(corroboratePatent(samFacebook, "Daniel Odio", "co-founder of armory")).toBe(false);
+    const vanceFacebook = P({ inventors: ["Theodore Vance", "Jamie Park"], applicant: "Facebook, Inc." });
+    expect(corroboratePatent(vanceFacebook, "Riley Vance", "co-founder of brightwave")).toBe(false);
   });
   it("drops a patent with no assignee (can't corroborate)", () => {
-    expect(corroboratePatent(P({ applicant: null }), "Jensen Huang", "ceo of nvidia")).toBe(false);
+    expect(corroboratePatent(P({ applicant: null }), "Morgan Reyes", "ceo of nvidia")).toBe(false);
   });
 });
 
@@ -51,7 +52,7 @@ describe("resolvePatentName (vanity-handle fallback)", () => {
     expect(resolvePatentName(ctx("DROdio", "Daniel Rubén Odio"))).toBe("Daniel Rubén Odio");
   });
   it("keeps the live name when it already parses into a first+last", () => {
-    expect(resolvePatentName(ctx("Samuel Odio", "Sam Odio"))).toBe("Samuel Odio");
+    expect(resolvePatentName(ctx("Theodore Vance", "Theo Vance"))).toBe("Theodore Vance");
   });
   it("falls back to the raw live name when neither parses (first score still tries)", () => {
     expect(resolvePatentName(ctx("DROdio", null))).toBe("DROdio");
@@ -78,7 +79,7 @@ describe("patentFacts", () => {
 describe("twitterHandleFromLinkedin", () => {
   it("extracts a handle from the subject's listed bio links", () => {
     expect(twitterHandleFromLinkedin({ bio_links: [{ link: "https://twitter.com/drodio" }] })).toBe("drodio");
-    expect(twitterHandleFromLinkedin({ bio_links: ["https://x.com/patrickc"] })).toBe("patrickc");
+    expect(twitterHandleFromLinkedin({ bio_links: ["https://x.com/samr"] })).toBe("samr");
   });
   it("ignores non-profile twitter paths + missing links", () => {
     expect(twitterHandleFromLinkedin({ bio_links: ["https://twitter.com/intent/tweet"] })).toBeNull();

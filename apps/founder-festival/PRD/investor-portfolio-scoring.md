@@ -6,7 +6,7 @@ Merged origin/main; rubric-doc changelog conflict resolved (kept both: my invest
 *(Most recent updates at top)*
 
 ### Summary
-Fixed thin investor scoring for prolific ANGELS (Jensen Huang = 0 investor pts). Root cause: investor signals are firm-centric (NFX/Neo/SEC) and nothing surfaced personal angel investments. Verified BrightData has NO investor/investments dataset (Crunchbase person returned empty for Jensen). Fix = strengthen the Exa grounded-facts investor query + tie the existing investor rubric to it. No migration, same Exa call.
+Fixed thin investor scoring for prolific ANGELS (a famous chip-company founder = 0 investor pts). Root cause: investor signals are firm-centric (NFX/Neo/SEC) and nothing surfaced personal angel investments. Verified BrightData has NO investor/investments dataset (Crunchbase person returned empty for that founder). Fix = strengthen the Exa grounded-facts investor query + tie the existing investor rubric to it. No migration, same Exa call.
 
 ### Detail
 - `src/lib/exa-grounding.ts`: query now explicitly asks for every startup the subject backed (angel/seed/rounds led, board/advisor seats) + outcomes + total portfolio count. New `portfolioCount` field (stated count, else # enumerated, min). Rendered into GROUNDED FACTS as "Investor portfolio: ~N companies"; notableInvestments slice raised to 15.
@@ -14,4 +14,4 @@ Fixed thin investor scoring for prolific ANGELS (Jensen Huang = 0 investor pts).
 
 ### Concerns
 - Investor recall now depends on Exa surfacing the angel's investments; very private angels still under-score. The investor rubric weighting itself was already adequate — this is a DATA-surfacing fix.
-- /jensen-huang needs a re-score to pick this up.
+- That profile needs a re-score to pick this up.

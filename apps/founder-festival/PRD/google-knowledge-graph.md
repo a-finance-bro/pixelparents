@@ -7,6 +7,6 @@ added GOOGLE_API_KEY. (YouTube Data API not yet enabled — companion signal pen
 ### Detail
 - `enrichers/google-kg.ts` — KG entities:search, gated on name overlap +
   CORROBORATION (kgNameOverlap + kgCorroborated, tested) so a same-named celebrity
-  can't attach. Live-verified on Jensen Huang.
+  can't attach. Live-verified on a famous chip-company founder.
 - `scoring.ts` — corroborated KG entity → +4 once [Domain]. Waterfall step + google.com
   host mapping. 26 tests pass. Rescore-to-apply.

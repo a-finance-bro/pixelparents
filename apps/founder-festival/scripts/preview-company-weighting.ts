@@ -63,7 +63,7 @@ async function main() {
     const pos = (s: string) => scored.findIndex((x) => x.slug === s) + 1;
     console.log("  Top 12:");
     scored.slice(0, 12).forEach((s, i) => console.log(`    ${String(i + 1).padStart(2)}. ${String(s.f).padStart(5)}  ${s.slug}`));
-    console.log(`    → john-collison #${pos("john-collison")} | patrick-collison #${pos("patrick-collison")} | eric-lefkofsky #${pos("eric-lefkofsky")} | mitchell-hashimoto #${pos("mitchell-hashimoto")} | geoff-schmidt #${pos("geoff-schmidt")}`);
+    console.log(`    → jordan-lee #${pos("jordan-lee")} | alex-kim #${pos("alex-kim")} | jamie-park #${pos("jamie-park")} | casey-morgan #${pos("casey-morgan")} | taylor-rivera #${pos("taylor-rivera")}`);
   }
 }
 main().then(() => process.exit(0));

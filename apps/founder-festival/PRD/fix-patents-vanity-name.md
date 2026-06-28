@@ -3,7 +3,7 @@
 
 ### Summary of changes since last update
 First entry. After the patent COVERAGE fix (#347) shipped, a verification rescore of
-`/drodio` + `/samuel-odio` showed the `patents` source was STILL absent from `/drodio`.
+`/drodio` + `/jordan-lee` showed the `patents` source was STILL absent from `/drodio`.
 Diagnosed the second, deterministic root cause and fixed it: the enricher was searching
 USPTO with DROdio's vanity LinkedIn display name "DROdio" instead of his legal name.
 
@@ -11,8 +11,8 @@ USPTO with DROdio's vanity LinkedIn display name "DROdio" instead of his legal n
 - **Root cause (verified, not guessed):** `runEnrichments` runs the `patents` enricher
   with `extractFullName(ctx)`, derived LIVE from the LinkedIn page. For DROdio that
   returns **"DROdio"** (his vanity display name) — a single token with no separable
-  first/last — so `subjectFirstLast` returns null and every patent is dropped. Sam's
-  live name resolves to "Samuel Odio", which works; his earlier absence was transient
+  first/last — so `subjectFirstLast` returns null and every patent is dropped. The other
+  profile's live name resolves to "Jordan Lee", which works; its earlier absence was transient
   run-variance, reproduced as WORKING via the real `runEnrichments`.
 - The legal name **does** exist on the eval row as `full_name` ("Daniel Rubén Odio"),
   set from the LLM's `scoring.fullName` on a prior scoring — but the enricher never saw it.

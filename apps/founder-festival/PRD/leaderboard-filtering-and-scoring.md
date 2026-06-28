@@ -28,7 +28,7 @@ Split the design spec into three TDD implementation plans under `docs/superpower
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Brainstormed (via the superpowers visual companion) a design for leaderboard filtering + a founder-score outcome-weighting fix, prompted by Anelya Grant's investor feedback. Wrote the design spec to `docs/superpowers/specs/2026-05-28-leaderboard-filtering-and-scoring-design.md`. No code yet — design pending user review, then an implementation plan.
+Brainstormed (via the superpowers visual companion) a design for leaderboard filtering + a founder-score outcome-weighting fix, prompted by an investor's feedback. Wrote the design spec to `docs/superpowers/specs/2026-05-28-leaderboard-filtering-and-scoring-design.md`. No code yet — design pending user review, then an implementation plan.
 
 ### Detail of changes made:
 - **Filtering UI:** chosen pattern is a faceted **sidebar** (layout B of 3 mockups). The current top tabs (Combined/Founder/Investor) fold into a **Role** facet.
@@ -43,4 +43,4 @@ Brainstormed (via the superpowers visual companion) a design for leaderboard fil
 - **Backfill cost:** re-scoring all rows to populate exit values spends LLM/Exa budget — run as a controlled batch, not inline.
 - **Badge filtering** approach (reproduce predicate in SQL vs. persist a `badge_ids[]` column) deferred to implementation; default to the SQL predicate.
 - `.superpowers/` is not in `.gitignore` yet — add it so brainstorm artifacts aren't committed.
-- "Why ranked here" inline breakdown (the legibility half of Anelya's complaint) is recommended but deferred from V1.
+- "Why ranked here" inline breakdown (the legibility half of the investor's complaint) is recommended but deferred from V1.

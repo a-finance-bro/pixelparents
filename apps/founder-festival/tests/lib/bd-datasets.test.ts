@@ -4,7 +4,7 @@ import { BD_DATASETS, type BdRowCtx } from "@/lib/bd-datasets";
 const ds = (key: string) => BD_DATASETS.find((d) => d.key === key)!;
 
 const baseCtx = (over: Partial<BdRowCtx> = {}): BdRowCtx => ({
-  fullName: "Patrick Collison",
+  fullName: "Sam Rivera",
   profile: { primaryCompanyDomain: "stripe.com", identity: { companyName: "Stripe", websiteUrl: "https://stripe.com" } },
   linkedinRaw: { current_company: { name: "Stripe", company_id: "stripe" } },
   bdAsync: {},
@@ -38,12 +38,12 @@ describe("BD_DATASETS registry", () => {
     const withCompany = baseCtx({
       bdAsync: {
         crunchbaseCompany: {
-          data: { facts: [], raw: { founders: [{ id: "patrick-collison", value: "Patrick Collison" }] } },
+          data: { facts: [], raw: { founders: [{ id: "sam-rivera", value: "Sam Rivera" }] } },
         },
       },
     });
     expect(person.resolveInput(withCompany)).toEqual({
-      url: "https://www.crunchbase.com/person/patrick-collison",
+      url: "https://www.crunchbase.com/person/sam-rivera",
     });
     // a company whose founders DON'T include the subject → no person lookup
     const otherFounder = baseCtx({
@@ -64,7 +64,7 @@ describe("BD_DATASETS registry", () => {
 
   it("crunchbasePerson renders board/advisor + press facts", () => {
     const facts = ds("crunchbasePerson").facts({
-      full_name: "Patrick Collison",
+      full_name: "Sam Rivera",
       board_and_advisor_roles: [{}, {}],
       num_current_advisor_roles: 1,
       num_news_articles: 120,

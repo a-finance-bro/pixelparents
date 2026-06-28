@@ -5,8 +5,8 @@
 //
 // Proves four things:
 //   1. Known-URL path: user_id extracted from a URL → direct lookup (highest trust).
-//   2. Name-search path: "Jon Skeet" (highest-rep user) found by name.
-//   3. Name-search path: "Jeff Atwood" (SO co-founder) found by name.
+//   2. Name-search path: a high-rep user found by name.
+//   3. Name-search path: another well-known user found by name.
 //   4. Precision gate: a bogus name returns 0 facts (no false attribution).
 
 import { enrichWithStackOverflow } from "../src/lib/enrichers/stackoverflow.ts";
@@ -17,20 +17,20 @@ function ctx(fullName, linkedinHandle = "") {
 
 const CASES = [
   {
-    label: "Jon Skeet via known SO URL (user_id path) — expect RICH data",
-    ctx: ctx("Jon Skeet"),
-    urls: ["https://stackoverflow.com/users/22656/jon-skeet"],
+    label: "Jordan Lee via known SO URL (user_id path) — expect RICH data",
+    ctx: ctx("Jordan Lee"),
+    urls: ["https://stackoverflow.com/users/12345/jordan-lee"],
     expect: "rich",
   },
   {
-    label: "Jon Skeet via name search (no URL) — expect RICH data",
-    ctx: ctx("Jon Skeet"),
+    label: "Jordan Lee via name search (no URL) — expect RICH data",
+    ctx: ctx("Jordan Lee"),
     urls: [],
     expect: "rich",
   },
   {
-    label: "Jeff Atwood via name search — expect RICH data",
-    ctx: ctx("Jeff Atwood"),
+    label: "Alex Kim via name search — expect RICH data",
+    ctx: ctx("Alex Kim"),
     urls: [],
     expect: "rich",
   },

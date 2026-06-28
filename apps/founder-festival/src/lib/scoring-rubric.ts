@@ -65,8 +65,8 @@ the search highlights.
       proceeds raised. You MUST look up the CURRENT market cap for a company that is
       still publicly traded; the IPO-day figure is usually badly stale and would
       massively underscore the founder. (Real failure: NVIDIA IPO'd at ~$6B in 1999
-      but is worth ~$3.5T today — using the $6B IPO figure scored Jensen Huang as if
-      he runs a $6B company. Microsoft, Apple, Amazon, Meta, etc. are all worth
+      but is worth ~$3.5T today — using the $6B IPO figure scored its founder as if
+      they run a $6B company. Microsoft, Apple, Amazon, Meta, etc. are all worth
       orders of magnitude more now than at IPO.) For a company that has since fallen
       below its IPO valuation, the IPO figure acts as a floor — award on whichever is
       higher. Example: NVIDIA → use ~$3.5T (current) → +3500000.
@@ -570,11 +570,11 @@ specific deal counts or dollar figures aren't disclosed in the highlights.
   fit.)
 - Publicly identified as an angel investor: +15
   (Apply when sources explicitly call the subject an angel investor, named angel,
-  or similar — does NOT require Naval-tier reputation. If they're elevated to a
-  marquee name like Naval Ravikant, Esther Dyson, Ron Conway, etc., use +25
+  or similar — does NOT require marquee-tier reputation. If they're elevated to a
+  household-name, marquee investor, use +25
   instead of +15.)
 - Per year of investing experience, cap at 15 years: +1 each.
-  → If a source gives a fund/firm founding year (e.g., "Staenberg Venture
+  → If a source gives a fund/firm founding year (e.g., "Acme Venture
   Partners (1997)"), count from that year to today as the floor; you do not
   need an explicit "X years of investing" phrase.
 

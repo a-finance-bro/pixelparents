@@ -14,7 +14,7 @@ profiles only** (the people in learnings are post-event attendees who've been
 scored); there is no "create new person" path.
 
 Display: the published mention shows **just the person's name** (no leading "@")
-as a gold link, e.g. `Jensen Huang`.
+as a gold link, e.g. `Jordan Lee`.
 
 ## Why this is low-risk
 
@@ -46,7 +46,7 @@ Mention node whose stored attributes are `{ id, label, href }` (evaluationId,
 fullName, canonical profileHref) and whose `renderHTML` emits:
 
 ```html
-<a href="<profileHref>" data-mention-id="<evaluationId>" class="mention">Jensen Huang</a>
+<a href="<profileHref>" data-mention-id="<evaluationId>" class="mention">Jordan Lee</a>
 ```
 
 - **Name only**, no "@" (per the approved design).
@@ -102,12 +102,12 @@ unchanged. `EventLearningsEditor` passes `enableMentions` to **both** its editor
 
 ```
 Admin types "@jen" in a learnings field
-   → suggestion queries /api/leaderboard/search?q=jen  (existing endpoint)
+   → suggestion queries /api/leaderboard/search?q=jor  (existing endpoint)
    → dropdown of profiles (name · company · score)
    → admin picks one
    → Mention node inserted { id: evalId, label: fullName, href: profileHref }
-editor.getHTML()  →  ...<a href="/profile/founder/jensen-huang"
-                          data-mention-id="<evalId>" class="mention">Jensen Huang</a>...
+editor.getHTML()  →  ...<a href="/profile/founder/jordan-lee"
+                          data-mention-id="<evalId>" class="mention">Jordan Lee</a>...
    → POST /api/admin/events/[id]/learnings  (unchanged)
    → sanitizeRecapHtml keeps the anchor  →  stored in events.learnings_*
 Public recap: sanitizeRecapHtml(stored) → dangerouslySetInnerHTML

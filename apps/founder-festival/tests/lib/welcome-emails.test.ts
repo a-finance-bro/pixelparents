@@ -24,12 +24,12 @@ describe("firstNameFor", () => {
     expect(firstNameFor(null, "Dana", "Profile Person")).toBe("Dana");
   });
   it("takes the first token of Clerk firstName when it contains a full name", () => {
-    expect(firstNameFor(null, "Ada Lovelace", "ignored")).toBe("Ada");
-    expect(firstNameFor(null, "  Ada  Lovelace  ", null)).toBe("Ada");
+    expect(firstNameFor(null, "Nova Hayes", "ignored")).toBe("Nova");
+    expect(firstNameFor(null, "  Nova  Hayes  ", null)).toBe("Nova");
   });
   it("falls back to the first token of the fallback name", () => {
-    expect(firstNameFor(null, null, "Ada Lovelace")).toBe("Ada");
-    expect(firstNameFor(null, "   ", "Ada Lovelace")).toBe("Ada");
+    expect(firstNameFor(null, null, "Nova Hayes")).toBe("Nova");
+    expect(firstNameFor(null, "   ", "Nova Hayes")).toBe("Nova");
   });
   it("falls back to 'there' when nothing usable", () => {
     expect(firstNameFor(null, null)).toBe("there");

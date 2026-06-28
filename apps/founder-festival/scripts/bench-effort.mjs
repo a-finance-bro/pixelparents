@@ -17,8 +17,8 @@ const PROFILES = process.argv.slice(2).length
   ? process.argv.slice(2)
   : [
       "https://linkedin.com/in/drodio",
-      "https://linkedin.com/in/garrytan",
-      "https://linkedin.com/in/aileenlee",
+      "https://linkedin.com/in/jordanlee",
+      "https://linkedin.com/in/alexkim",
     ];
 
 function totals(payload) {

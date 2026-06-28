@@ -66,21 +66,21 @@ function looksYcStyle(text: string): boolean {
 
 // Parse the messy YC-search-result paste format:
 //
-//   Joe Gebbia
+//   Jordan Lee
 //   W09
 //   Founder/CPO at
-//   Airbnb (W09)
+//   Acme (W09)
 //   Jan 2008 - Present
 //   ·
 //   Previously at
-//   Chronicle Books
+//   Globex Books
 //   ,
 //   7 more
-//   Brian Chesky
-//   Brian Chesky          ← sometimes the name is duplicated
+//   Alex Kim
+//   Alex Kim          ← sometimes the name is duplicated
 //   W09
 //   Founder/CEO at
-//   Airbnb (W09)
+//   Acme (W09)
 //   ...
 //
 // Each "(Co-)?Founder ... at" anchor produces one entry — the company is the

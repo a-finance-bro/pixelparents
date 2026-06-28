@@ -60,7 +60,7 @@ export function ManualHintButton({ evaluationId, currentHint = null }: Props) {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Full name (e.g. Patricia Lee)"
+            placeholder="Full name (e.g. Jordan Lee)"
             className="mb-2 w-full rounded border border-white/15 bg-black/60 px-2 py-1 text-sm text-white placeholder:text-white/30"
           />
           <textarea

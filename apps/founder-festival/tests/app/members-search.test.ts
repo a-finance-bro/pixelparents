@@ -47,16 +47,16 @@ describe("GET /api/admin/members/search", () => {
 
   it("maps rows to {name, href}, prefers nickname, drops nameless/hrefless", async () => {
     searchImpl = async () => [
-      { fullName: "John Carmack", nickname: null, profileHref: "/profile/jc" },
-      { fullName: "Jo Liu", nickname: "Jojo", profileHref: "/profile/jl" },
+      { fullName: "Jordan Clarke", nickname: null, profileHref: "/profile/jc" },
+      { fullName: "Mia Lin", nickname: "Mimi", profileHref: "/profile/jl" },
       { fullName: "", nickname: null, profileHref: "/x" }, // no name → dropped
       { fullName: "No Href", nickname: null, profileHref: "" }, // no href → dropped
     ];
     const res = await GET(req("jo"));
     expect(await res.json()).toEqual({
       members: [
-        { name: "John Carmack", href: "/profile/jc" },
-        { name: "Jojo", href: "/profile/jl" },
+        { name: "Jordan Clarke", href: "/profile/jc" },
+        { name: "Mimi", href: "/profile/jl" },
       ],
     });
   });

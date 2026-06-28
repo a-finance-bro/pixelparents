@@ -2,7 +2,7 @@
 
 Broadens the enrichment layer into a portfolio of clean, free / low-cost data
 sources that feed founder-credibility scoring. NFX (below) is now **one source
-among many**. Driven by the post-Swapnil customer PRD (Festival.so Founder
+among many**. Driven by the post-customer-feedback PRD (Festival.so Founder
 Profile & Scoring Platform Improvements v0.2).
 
 - Design spec: `docs/superpowers/specs/2026-05-25-founder-signal-sources-design.md`
@@ -41,7 +41,7 @@ output is on `main` at `PRD/nfx-signal-enricher.md`.
 3. **Delete `src/lib/apify.ts`** if nothing else depends on it.
 4. **Update `scripts/test-nfx.mjs`** to exercise the new path. Confirm
    the 3 smoke-test investors return the same data we got from Apify
-   on Phase 1 (Marc Andreessen 77 portfolio, Naval 250, Jenny 419).
+   on Phase 1 (Jordan Lee 77 portfolio, Sam Rivera 250, Casey Morgan 419).
 5. **Wire into `runEnrichments()`** — this was deferred in Phase 1
    pending data validation; with our own scraper the cost case is
    different and we can probably enable it for every investor eval.
@@ -114,7 +114,7 @@ never actually deleted.
   dependents" pattern.
 - Applied 0009 to the DEV DB (ep-old-shadow) via scripts/apply-sql.ts. **PROD
   (ep-fragrant-surf) still needs 0009 applied** — no auto-migrate on deploy.
-- One-off cleanup: deleted DROdio's stale eval 94700a91 (Daniel R. Odio,
+- One-off cleanup: deleted DROdio's stale eval 94700a91 (Daniel Odio,
   /in/drodio, score 133; 0 claim rows, 4 scoring_job_items, 15 score_items).
   Cascade verified: eval + job_items + score_items all 0 after. He can re-score
   fresh now.
@@ -147,7 +147,7 @@ integrated, rubric-grounded, and tested.
   - `checkIpo(cik)` rewritten to key off 10-K/10-Q presence ALONE (free
     submissions API). The half-built version also required a recent S-1, but
     SEC's "recent" window caps at 1000 filings so an established public company's
-    IPO S-1 ages out → Airbnb was missed. 10-K/10-Q presence is
+    IPO S-1 ages out → an established public company was missed. 10-K/10-Q presence is
     necessary+sufficient and dodges the withdrawn-S-1 false positive. Called only
     for non-fund issuers.
   - `raw` now carries industry_group / is_investment_fund / is_ipo per issuer.
@@ -157,14 +157,14 @@ integrated, rubric-grounded, and tested.
   the role but is NOT founder capital — never feed into "Venture raised").
 - `tests/lib/sec-edgar-enricher.test.ts`: 6 new unit tests (isInvestmentFund +
   buildIssuerFacts fund/operating/IPO/no-amount branches), written test-first.
-- `scripts/test-sec-edgar.mjs`: added Jenny Fielding (fund-manager) subject.
+- `scripts/test-sec-edgar.mjs`: added Casey Morgan (fund-manager) subject.
 
 ### Verification:
 - tsc + eslint clean; 51/51 unit tests (sec-edgar + scoring suites).
-- Live smoke test: Patrick Collison → Stripe $6.9B (private, is_ipo:false);
-  Brian Chesky → Airbnb $201.6M + IPO/exit fact (is_ipo:true); Jenny Fielding →
-  Everywhere Ventures III $25M fund (is_investment_fund:true) + her Liveoak /
-  Textingly founder raises; negative control → 0 facts.
+- Live smoke test: Morgan Diaz → their fintech company $6.9B (private, is_ipo:false);
+  Alex Kim → their marketplace company $201.6M + IPO/exit fact (is_ipo:true); Casey Morgan →
+  an early-stage fund III $25M (is_investment_fund:true) + her two earlier
+  founder raises; negative control → 0 facts.
 
 ### Next: GitHub social graph · Libraries.io dependents · USPTO PatentsView,
 then revisit signal WEIGHTS with DROdio.
@@ -184,14 +184,14 @@ namesake, finally live and FREE (Apify deleted).
   `person_id` = slug). No Apify → zero per-call cost.
 - Precision: search filtered by first+last name overlap; profile re-confirmed by
   name, upgraded to "authoritative" when NFX's `linkedin_url` matches the
-  subject's. Negative control (Linus Torvalds) → 0 facts.
+  subject's. Negative control (a well-known open-source maintainer) → 0 facts.
 - Wired into `runEnrichments()`; deleted dead `src/lib/apify.ts`; added eval step
   ("Pulling your investor profile from NFX Signal"), "Found you on NFX Signal:
   <slug>" identity, and an NFX investor sub-rule to `SCORING_RUBRIC` (grounds the
   existing investor rules with NFX's portfolio count / claimed / fund size — no
   double-counting; claimed ⇒ corroborated, linkedin-match ⇒ authoritative).
-- Smoke test (free, direct): Marc Andreessen → a16z $2.2B, 77 portfolio · Naval →
-  250 · Jenny Fielding → Everywhere Ventures $25M, 419 — exact match to the old
+- Smoke test (free, direct): Jordan Lee → a major venture firm $2.2B, 77 portfolio · Sam Rivera →
+  250 · Casey Morgan → an early-stage fund $25M, 419 — exact match to the old
   Apify numbers. tsc + eslint clean, scoring tests 43/43.
 
 ### Building next (this session): SEC EDGAR v2 · GitHub social graph ·
@@ -210,7 +210,7 @@ Opus + prompt caching; ship the already-committed truncation prod-fix.
 
 ### Lever 1 — 3-tier confidence ladder (Haiku@95 → Sonnet@85 → Opus): DEAD END
 Built `scoreWith3TierCascade` + `isConfident` (gated by `SCORING_CASCADE="3tier"`).
-Benchmarked 5 profiles (drodio, Reid Hoffman, Garry Tan, Brian Chesky, Aileen Lee):
+Benchmarked 5 profiles (drodio, Taylor Brooks, Riley Chen, Alex Kim, Jamie Patel):
 - **Tier distribution: haiku 0% · sonnet 0% · opus 100%.** Every profile escalated
   all the way to Opus → cascade cost **$0.21/eval, 82% MORE than always-Opus**.
 - Root cause: on real founder profiles Haiku's min row-confidence tops out ~85
@@ -275,15 +275,15 @@ Dialing in the cascade revealed a latent PROD bug (scoring-output truncation) �
 fixed it — and showed the cascade's escalation trigger isn't catching Sonnet's
 divergence from Opus. Re-running the benchmark for clean data.
 
-### Dial-in benchmark (5 profiles: drodio, Reid Hoffman, Garry Tan, Brian Chesky, Aileen Lee):
+### Dial-in benchmark (5 profiles: drodio, Taylor Brooks, Riley Chen, Alex Kim, Jamie Patel):
 - Per-call cost: **Haiku ~$0.021 · Sonnet ~$0.085 · Opus ~$0.131** (Opus only ~1.5x
   Sonnet because the shipped rubric caching compresses the gap; Haiku ~6x cheaper).
 - **PROD BUG found:** `maxOutputTokens: 4000` truncates the JSON for high-signal
   subjects (many rows + recommendations) → "unbalanced braces" parse failure.
-  Broke Sonnet on 2/5 AND **Opus on 1/5 (Garry Tan)** — i.e. rich profiles can
+  Broke Sonnet on 2/5 AND **Opus on 1/5 (Riley Chen)** — i.e. rich profiles can
   fail scoring in prod today.
 - Cascade: escalation fired **0/3** yet Sonnet diverged from Opus by **~49 pts
-  avg** (+60 Chesky, −85 Lee). The trigger (weak-evidence/low-confidence
+  avg** (+60 Kim, −85 Patel). The trigger (weak-evidence/low-confidence
   high-value rows) doesn't catch broad judgment divergence.
 
 ### Detail of changes made:
@@ -514,9 +514,9 @@ the NFX direct-scraper approach works end-to-end via the captured GraphQL query.
 Replayed the captured `InvestorProfileLoad` GraphQL query (POST
 signal-api.nfx.com/graphql, Bearer token from .env.local) for the original
 smoke-test trio — exact match to the old Apify numbers, now FREE:
-- Marc Andreessen → a16z, $2.2B fund, 77 portfolio
-- Naval Ravikant → 250 portfolio
-- Jenny Fielding → Everywhere Ventures $25M, 419 portfolio
+- Jordan Lee → a major venture firm, $2.2B fund, 77 portfolio
+- Sam Rivera → 250 portfolio
+- Casey Morgan → an early-stage fund $25M, 419 portfolio
 Slug = `first-last` derivation worked for all three (search endpoint not
 strictly needed for the common case). NB: the captured "search" cURL was
 actually `LoadCurrentPerson` (session bootstrap), so a true name→slug search
@@ -571,9 +571,9 @@ layer. Also designed the no-cap double-verification mechanism (next: #1b).
   merged per-eval pricing rolls it in. `renderGroundedFacts()` prepends a
   high-trust "prefer over self-claims" block to the scoring prompt.
 - Wired into `computeFreshScore` (parallel with MM + enrichers; cost aggregated).
-- `scripts/test-exa-grounding.mjs`: verified live — Patrick Collison → $9.8B
-  raised + exits ($525k Auctomatic, $7.5M Emburse) + unicorn investments
-  (Retool, Linear), 6 citations, ~2.3s, $0.005.
+- `scripts/test-exa-grounding.mjs`: verified live — Morgan Diaz → $9.8B
+  raised + exits (a $525k early acquisition, a $7.5M exit) + unicorn investments
+  (two well-known SaaS startups), 6 citations, ~2.3s, $0.005.
 
 ### Double-verification design (agreed: no caps; evidence-weight instead):
 Each breakdown row will carry `sources[]` + `verification` (authoritative /
@@ -668,7 +668,7 @@ profile from BOTH Neon and Clerk for a clean fresh-claim test.
   add-override + AdminPill. Brought in Badges/LeaderboardTable/leaderboard.ts.
 - One-off (no code change committed): deleted "Daniel Rubén Odio" — Neon eval
   4110f55d + score items + recommendations + claim row, and Clerk user
-  user_3E5tmyP6TiI5MQlxOH2hGD25lAr ({"deleted":true}, GET→404). Used a temp
+  user_EXAMPLE0000000000000000000 ({"deleted":true}, GET→404). Used a temp
   scripts/_odio.ts (since removed). Clerk key is sk_test (dev instance only).
 
 ### Verification:
@@ -903,15 +903,15 @@ verified.
 
 ### Detail of changes made:
 - New enrichers (each smoke-tested live, identity-confirmed, graceful-empty):
-  - `stackoverflow.ts` — reputation + badges + top tags (Jon Skeet 1.5M rep).
-  - `npm.ts` — packages + monthly downloads (Sindre Sorhus 1,061 pkgs / 9.6B/mo).
+  - `stackoverflow.ts` — reputation + badges + top tags (a top Stack Overflow user 1.5M rep).
+  - `npm.ts` — packages + monthly downloads (a prolific npm author 1,061 pkgs / 9.6B/mo).
     Derived handles accepted only when a solo package's author corroborates;
-    org-package authors (e.g. rauchg) require the known-URL path.
-  - `huggingface.ts` — models/downloads/likes (julien-c 52 models). AI-founder
+    org-package authors (e.g. acme-dev) require the known-URL path.
+  - `huggingface.ts` — models/downloads/likes (ml-dev 52 models). AI-founder
     signal. Co-founders reachable via Exa URL (hyphen/emoji handles can't be derived).
   - `wikidata.ts` — structured occupation/employer/education/awards + notability
-    (Collison Q7146257; Chesky Q4963341, Airbnb employer resolved).
-  - `openalex.ts` — h-index/citations/fields (Fei-Fei Li h-index 137; Ng 125).
+    (a fintech founder Q0000001; a marketplace founder Q0000002, employer resolved).
+  - `openalex.ts` — h-index/citations/fields (a leading AI researcher h-index 137; another 125).
     Gated at works_count>=3 AND cited_by_count>=50 so non-academics don't surface.
 - All 7 new sources wired into `runEnrichments()`.
 - `scoring.ts`: added STACK OVERFLOW / NPM / HUGGING FACE / WIKIDATA / OPENALEX
@@ -950,8 +950,8 @@ FEAT-01. Wired in + verified against live filings.
 - `scoring.ts`: added SEC EDGAR / FORM D SUB-RULES instructing Claude to PREFER
   the authoritative SEC figure for `totalRaisedUsd` over press snippets (with an
   explicit no-double-counting note).
-- `scripts/test-sec-edgar.mjs`: verified live — Patrick Collison → Stripe, Inc.
-  $6.9B offering; Brian Chesky → Airbnb $201.6M; bogus name → 0 facts.
+- `scripts/test-sec-edgar.mjs`: verified live — Morgan Diaz → their fintech company
+  $6.9B offering; Alex Kim → their marketplace company $201.6M; bogus name → 0 facts.
 
 ### Potential concerns to address:
 - Form D covers US filings from 2001+ only; non-US / SAFE-only raises won't
@@ -982,9 +982,9 @@ layer. Built the shared identity-matching foundation and the first enricher
   the bio. Wired into `runEnrichments()`.
 - `scoring.ts`: added HACKER NEWS SUB-RULES to the founder rubric (karma tiers,
   active-poster, top-post tiers).
-- `scripts/test-hackernews.mjs`: smoke test. Verified live — `pg` → 157,316 karma /
-  699 posts / 9,985 comments; the `naval` derived-handle case is correctly REJECTED
-  (empty bio fails corroboration); an Exa-surfaced `naval` URL is trusted.
+- `scripts/test-hackernews.mjs`: smoke test. Verified live — `jsmith` → 157,316 karma /
+  699 posts / 9,985 comments; the `jdoe` derived-handle case is correctly REJECTED
+  (empty bio fails corroboration); an Exa-surfaced `jdoe` URL is trusted.
 
 ### Potential concerns to address:
 - Identity matching favors precision: derived handles with sparse bios are dropped,

@@ -3,11 +3,11 @@ import { mentionAnchorSpec, type MentionAttrs } from "@/lib/mention-anchor";
 
 describe("mentionAnchorSpec", () => {
   it("builds an <a class=mention data-mention-id href> spec with the label as text", () => {
-    const attrs: MentionAttrs = { id: "eval-1", label: "Jensen Huang", href: "/profile/founder/jensen-huang" };
+    const attrs: MentionAttrs = { id: "eval-1", label: "Morgan Reyes", href: "/profile/founder/morgan-reyes" };
     expect(mentionAnchorSpec(attrs)).toEqual([
       "a",
-      { class: "mention", "data-mention-id": "eval-1", href: "/profile/founder/jensen-huang" },
-      "Jensen Huang",
+      { class: "mention", "data-mention-id": "eval-1", href: "/profile/founder/morgan-reyes" },
+      "Morgan Reyes",
     ]);
   });
 

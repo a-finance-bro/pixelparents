@@ -15,9 +15,9 @@ Added two new scoring sources — USPTO patents (synchronous enricher) + X/Twitt
 - index.ts: registered patents (sync); twitter flows via BD_DATASETS spread. EXPECTED_SOURCES + bdCitationFor updated.
 - eval-steps.ts: 2 new waterfall steps (USPTO + X/Twitter) + host mappings (uspto.gov, x.com, twitter.com).
 - scoring-rubric.ts: PATENTS + X/TWITTER REACH blocks (technical / distribution; no double-count; no point disclosure).
-- Tests: patents.test.ts (corroboration/facts/handle) + bd-datasets update. 19+ pass. Live-verified Jensen Huang → 2 NVIDIA-corroborated patents.
+- Tests: patents.test.ts (corroboration/facts/handle) + bd-datasets update. 19+ pass. Live-verified a famous chip-company CEO → 2 employer-corroborated patents.
 
 ### Concerns
 - Twitter coverage limited to profiles that list X on their LinkedIn (safe but partial). Broader handle resolution (Exa-surfaced) is a refinement.
 - USPTO is patent APPLICATIONS (granted flagged via status); rate limits unknown — enricher is best-effort + skips on error.
-- OPEN (user ask): investor scoring is thin (Jensen Huang = 0 investor pts). Crunchbase PERSON gives board/advisor roles but not direct investments; need a Crunchbase investments source or an Exa investor-grounded search.
+- OPEN (user ask): investor scoring is thin (the famous chip-company CEO = 0 investor pts). Crunchbase PERSON gives board/advisor roles but not direct investments; need a Crunchbase investments source or an Exa investor-grounded search.

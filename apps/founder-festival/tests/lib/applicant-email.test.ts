@@ -8,8 +8,8 @@ import { isValidApplicantEmail } from "@/lib/email";
 describe("isValidApplicantEmail", () => {
   it.each([
     "a@b.com",
-    "patrick.collison@stripe.com",
-    "patrick.collison+festival@stripe.com",
+    "sam.rivera@stripe.com",
+    "sam.rivera+festival@stripe.com",
     "x@eu.stripe.com",
   ])("accepts %s", (email) => {
     expect(isValidApplicantEmail(email)).toBe(true);

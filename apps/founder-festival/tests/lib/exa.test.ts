@@ -39,16 +39,16 @@ describe("extractCandidateDomains", () => {
   });
 
   // Regression: a profile HOSTED on a platform must not contribute that platform
-  // as a "company domain" for the Majestic Million bonus. (Jing Conan Wang was
+  // as a "company domain" for the Majestic Million bonus. (Robin Harper was
   // getting GTM credit because linkedin.com is MM rank 6.)
   it("excludes platform / host / press / aggregator domains", () => {
     const found = extractCandidateDomains([
       {
-        url: "https://www.linkedin.com/in/jingconan",
-        title: "Jing Conan Wang - LinkedIn",
+        url: "https://www.linkedin.com/in/rharper",
+        title: "Robin Harper - LinkedIn",
         highlights: [
-          "Profile at linkedin.com/in/jingconan",
-          "github.com/jingconan and a TechCrunch (techcrunch.com) feature",
+          "Profile at linkedin.com/in/rharper",
+          "github.com/rharper and a TechCrunch (techcrunch.com) feature",
           "Discussed on news.ycombinator.com",
           "Founder of realstartup.io",
         ],

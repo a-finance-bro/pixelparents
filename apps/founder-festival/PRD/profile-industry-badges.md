@@ -17,4 +17,4 @@ Profile pages now show the subject's canonical industries as turquoise badges in
 ### Potential concerns to address:
 - Investor industry-FOCUS badges (`industry-<slug>`, category investor) are a separate, older concept and remain non-clickable — only the new canonical-industry badges (category `industry`) and `FILTERABLE_BADGE_IDS` link out.
 - Pre-existing `react-hooks/set-state-in-effect` lint errors in `Badges.tsx` (the fit-mode measurement effect) are untouched and non-blocking.
-- Verified `computeBadges` emits the right turquoise badges + ids for Bryan Casey's industries (devtools/ai-ml/data/fintech); will confirm rendering on prod after deploy.
+- Verified `computeBadges` emits the right turquoise badges + ids for a sample founder's industries (devtools/ai-ml/data/fintech); will confirm rendering on prod after deploy.

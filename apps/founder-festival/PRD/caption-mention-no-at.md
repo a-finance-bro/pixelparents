@@ -5,7 +5,7 @@
 
 ### Summary of changes since last update
 Carousel captions now show a mentioned member's name in gold WITHOUT a leading "@"
-(e.g. "Swapnil Shinde" not "@Swapnil Shinde"). Display-only change.
+(e.g. "Jordan Lee" not "@Jordan Lee"). Display-only change.
 
 ### Detail of changes made:
 - `PhotoCarousel.tsx`: mention segments render `s.text.replace(/^@/, "")` so the gold

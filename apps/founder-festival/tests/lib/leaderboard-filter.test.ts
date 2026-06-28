@@ -94,7 +94,7 @@ describe("parseLeaderboardFilter", () => {
 
 describe("tokenizeSearchQuery", () => {
   it("splits on whitespace and drops empties", () => {
-    expect(tokenizeSearchQuery("sam odio")).toEqual(["sam", "odio"]);
+    expect(tokenizeSearchQuery("theo vance")).toEqual(["theo", "vance"]);
     expect(tokenizeSearchQuery("  multiple   spaces ")).toEqual(["multiple", "spaces"]);
     expect(tokenizeSearchQuery("solo")).toEqual(["solo"]);
     expect(tokenizeSearchQuery("   ")).toEqual([]);

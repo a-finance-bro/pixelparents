@@ -23,10 +23,10 @@ NOT merged — gated on DROdio's approval of `k` + the prod recompute.**
 - Doc → v0.0.12 + changelog.
 
 ### Preview result (872 prod profiles, 359 have a dollar row):
-- Bill Gates 1,737,155 → 505 (#1→#2); credibility now beats size.
-- Climbers: mitchell-hashimoto #31→#6, geoff-schmidt #75→#12, garry-tan #131→#10,
-  joe-gebbia #121→#11, max-stoiber/daniel-stenberg/sarah-guo all rising.
-- Serial founders (eric-lefkofsky) legitimately top out.
+- Jordan Lee 1,737,155 → 505 (#1→#2); credibility now beats size.
+- Climbers: casey-morgan #31→#6, riley-chen #75→#12, jamie-patel #131→#10,
+  morgan-diaz #121→#11, alex-kim/sam-rivera/taylor-brooks all rising.
+- Serial founders legitimately top out.
 
 ### Potential concerns to address:
 - `k` is a judgment knob (outcome-vs-skill weighting). k=40 makes a mega-cap (~250)

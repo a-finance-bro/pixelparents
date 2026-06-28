@@ -1,6 +1,6 @@
 # Branch: `founder-credibility-radar` — Founder Credibility Radar (FEAT-02)
 
-Phase 1 of the post-Swapnil credibility work: a founder-credibility spider/radar
+Phase 1 of the post-customer-feedback credibility work: a founder-credibility spider/radar
 graph on the profile, showing depth across five vectors (percentile-ranked vs the
 population) with a per-axis drill-down to the raw evidence. Built autonomously;
 full design + judgment calls in
@@ -37,7 +37,7 @@ when the person scored on both. "ROI" deliberately excluded (not public).
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Fixed a scoring bug (reported on Jing Conan Wang): a founder hosted on a
+Fixed a scoring bug (reported on Riley Chen): a founder hosted on a
 platform (linkedin.com, MM rank 6) was earning the Founder Majestic Million
 "company in the MM table" bonus for the PLATFORM's domain rank, not their own
 company. Added a platform/host/press/aggregator denylist to
@@ -55,7 +55,7 @@ in progress — `credibility-vectors.ts` now has investor vectors; consumers nex
   excluded; real company domains kept).
 
 ### Potential concerns to address:
-- **Fix applies GOING FORWARD.** Existing profiles (incl. Jing) keep their stale
+- **Fix applies GOING FORWARD.** Existing profiles (incl. Riley Chen) keep their stale
   breakdown — the bad MM points stay in their stored `founderScore` until
   re-scored. Recommend a bulk re-score of affected profiles (those with an MM row
   citing a platform domain) when convenient; NOT auto-run (costs Exa+Claude).
@@ -94,7 +94,7 @@ Operator, Domain, GTM) by source-URL domain then reason keywords, summed, and
 percentile-ranked (mid-rank → median = 50 on every axis). Renders as the
 DROdio-chosen "Option A / Classic" radar on the profile, above the score table,
 with a click-to-expand evidence panel. Pure logic is unit-tested (12 tests);
-verified rendering on real profiles (Swapnil, Dmytro, Joe Gebbia, Brian Chesky)
+verified rendering on real profiles (Taylor Brooks, Morgan Diaz, Jamie Patel, Alex Kim)
 with sensible differentiation (designer vs engineer founders look different).
 
 ### Detail of changes made:

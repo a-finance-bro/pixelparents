@@ -13,7 +13,7 @@ First entry. Reframed the profile "Are these your current priorities?" section i
 
 ### Verification done:
 - `next build` compiles + typechecks.
-- Dev real run (`--limit=2`): Oleg Rogynskyy (7 events, $0.0119) + Joe Gebbia (8 events, $0.0136). Output reviewed — concrete, specific, well-categorized events; DROdio approved the format.
+- Dev real run (`--limit=2`): Jordan Lee (7 events, $0.0119) + Alex Kim (8 events, $0.0136). Output reviewed — concrete, specific, well-categorized events; DROdio approved the format.
 
 ### Potential concerns to address:
 - **Deploy ordering:** the new heading is a CODE change that must reach prod BEFORE (or close to) running the backfill, else refreshed profiles briefly show event text under the old "priorities" heading. Plan: merge code → run top-100 prod backfill.

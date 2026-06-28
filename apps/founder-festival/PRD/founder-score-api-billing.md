@@ -83,7 +83,7 @@ Two requested API features:
   all /api/v1/*), free + per-key rate-limited, reuses `findLinkedinHandles`. Returns
   ranked `{ candidates: [{ url, name, headline }] }` so agents resolve a name→URL via
   OUR search instead of a separate web search, then score. Smoke-tested: 401 no-key,
-  400 no-name, 200 returns the right Chris Hartley (Instacart) on top.
+  400 no-name, 200 returns the right Jordan Lee (a grocery-delivery company) on top.
 - **Recent Activity now shows scorings + cost + who.** `/api/developers/credits`
   leftJoins evaluations on the debit's evaluation_id; the console humanizes the
   reason (Top-up/Score/Refund) and appends the scored person's name/handle.

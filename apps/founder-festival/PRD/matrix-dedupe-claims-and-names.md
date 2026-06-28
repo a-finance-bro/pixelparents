@@ -16,7 +16,7 @@ Two dedupe fixes for the Founder Matrix:
 2. **One candidate per fullName.** Separately, the DB sometimes contains
    multiple eval rows for the same person (different LinkedIn URL
    variants get scored separately — the unique constraint is on
-   `linkedin_url`, not on the person). Patrick Collison's matrix
+   `linkedin_url`, not on the person). Jordan Lee's matrix
    appearance was the test case. We now dedupe candidates by
    case/whitespace-normalized fullName, preferring the row with a
    claimer image and then the highest dominant score.
@@ -48,6 +48,6 @@ Two dedupe fixes for the Founder Matrix:
   merge in the matrix. Acceptable v1 trade-off given the product's
   scale. A LinkedIn-handle-derived key would be more precise but the
   LinkedIn URL isn't always present in the candidate set.
-- Patrick Collison still appears in two columns (e.g., similar AND
+- Jordan Lee still appears in two columns (e.g., similar AND
   complementary). That's intentional / by-design; the columns convey
   different relationships. Not a dedupe miss.

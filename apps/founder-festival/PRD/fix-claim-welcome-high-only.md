@@ -2,7 +2,7 @@
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Fixed the claim-welcome email going to non-owning claimers (the Jon Staenberg bug). The 2-min sweep sent the "you claimed your profile" email to anyone with an `evaluationId`, including `medium` (LinkedIn name-only) matches who are NOT owners — contradicting the profile/leaderboard, which treat claimed = `high` only. Now the sweep + backlog count are high-confidence only. First step of the larger "claimed = high everywhere" alignment.
+Fixed the claim-welcome email going to non-owning claimers (the non-owner claim-email bug). The 2-min sweep sent the "you claimed your profile" email to anyone with an `evaluationId`, including `medium` (LinkedIn name-only) matches who are NOT owners — contradicting the profile/leaderboard, which treat claimed = `high` only. Now the sweep + backlog count are high-confidence only. First step of the larger "claimed = high everywhere" alignment.
 
 ### Detail of changes made:
 - `src/lib/welcome-email-sweep.ts`:

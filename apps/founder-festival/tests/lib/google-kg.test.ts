@@ -3,19 +3,19 @@ import { kgNameOverlap, kgCorroborated } from "@/lib/enrichers/google-kg";
 
 describe("kgNameOverlap", () => {
   it("requires both first + last for multi-word names", () => {
-    expect(kgNameOverlap("Jensen Huang", "Jensen Huang")).toBe(true);
-    expect(kgNameOverlap("Jensen Huang", "Jensen Button")).toBe(false); // only first matches
-    expect(kgNameOverlap("Jensen Huang", "Huang Renxun")).toBe(false);
+    expect(kgNameOverlap("Morgan Reyes", "Morgan Reyes")).toBe(true);
+    expect(kgNameOverlap("Morgan Reyes", "Morgan Bailey")).toBe(false); // only first matches
+    expect(kgNameOverlap("Morgan Reyes", "Quentin Vasquez")).toBe(false);
   });
   it("handles single-token names + null", () => {
-    expect(kgNameOverlap("Madonna", "Madonna")).toBe(true);
+    expect(kgNameOverlap("Nova", "Nova")).toBe(true);
     expect(kgNameOverlap(null, "Anyone")).toBe(false);
   });
 });
 
 describe("kgCorroborated", () => {
   const subjectTokens = new Set(["nvidia", "stanford"]);
-  it("accepts a tech/business description (Jensen's real KG desc)", () => {
+  it("accepts a tech/business description (a representative KG desc)", () => {
     expect(kgCorroborated("President and CEO of NVIDIA", subjectTokens)).toBe(true);
     expect(kgCorroborated("American entrepreneur", new Set())).toBe(true);
   });

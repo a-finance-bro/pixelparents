@@ -13,9 +13,9 @@ function ctx(fullName) {
 }
 
 const SUBJECTS = [
-  "Patrick Collison", //   Stripe (operating-company raise, still private)
-  "Brian Chesky", //       Airbnb (operating company that IPO'd → expect is_ipo:true)
-  "Jenny Fielding", //     Everywhere Ventures (fund manager → expect is_investment_fund:true)
+  "Jordan Lee", //   a startup (operating-company raise, still private)
+  "Alex Kim", //     an operating company that IPO'd → expect is_ipo:true
+  "Casey Morgan", // a fund manager → expect is_investment_fund:true
   "Zxqv Notarealfounder", // negative control
 ];
 

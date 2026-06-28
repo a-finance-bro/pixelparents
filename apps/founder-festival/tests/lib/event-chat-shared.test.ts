@@ -65,7 +65,7 @@ describe("canPostChat", () => {
 
 describe("parseMentionedIds", () => {
   it("extracts + dedups + lowercases, ignores non-uuid markers", () => {
-    const body = `hey @[Sam Odio](${ID1}) and @[Jane](${ID2}) and again @[Sam](${ID1.toUpperCase()}) plus @[Nope](not-a-uuid)`;
+    const body = `hey @[Theo Vance](${ID1}) and @[Jane](${ID2}) and again @[Theo](${ID1.toUpperCase()}) plus @[Nope](not-a-uuid)`;
     expect(parseMentionedIds(body)).toEqual([ID1, ID2]);
   });
   it("returns [] when no mentions", () => {
@@ -75,10 +75,10 @@ describe("parseMentionedIds", () => {
 
 describe("renderMentions", () => {
   it("splits text and mention segments", () => {
-    const segs = renderMentions(`hi @[Sam Odio](${ID1})!`);
+    const segs = renderMentions(`hi @[Theo Vance](${ID1})!`);
     expect(segs).toEqual([
       { kind: "text", text: "hi " },
-      { kind: "mention", text: "@Sam Odio", evalId: ID1 },
+      { kind: "mention", text: "@Theo Vance", evalId: ID1 },
       { kind: "text", text: "!" },
     ]);
   });
@@ -89,7 +89,7 @@ describe("renderMentions", () => {
 
 describe("mentionsToText", () => {
   it("renders markers as readable @Name (no links) for titles", () => {
-    expect(mentionsToText(`Welcome @[Sam Odio](${ID1})!`)).toBe("Welcome @Sam Odio!");
+    expect(mentionsToText(`Welcome @[Theo Vance](${ID1})!`)).toBe("Welcome @Theo Vance!");
   });
   it("passes through plain titles", () => {
     expect(mentionsToText("Post-dinner plans")).toBe("Post-dinner plans");

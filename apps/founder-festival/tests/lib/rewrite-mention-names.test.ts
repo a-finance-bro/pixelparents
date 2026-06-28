@@ -18,9 +18,9 @@ describe("rewriteMentionNames", () => {
   });
 
   it("leaves markers whose evalId isn't in the map untouched", () => {
-    const body = `@[Sam Odio](${OTHER}) and @[Daniel R. Odio](${ID})`;
+    const body = `@[Theo Vance](${OTHER}) and @[Daniel R. Odio](${ID})`;
     const out = rewriteMentionNames(body, new Map([[ID, "DROdio"]]));
-    expect(out).toBe(`@[Sam Odio](${OTHER}) and @[DROdio](${ID})`);
+    expect(out).toBe(`@[Theo Vance](${OTHER}) and @[DROdio](${ID})`);
   });
 
   it("is a no-op for an empty map or no markers", () => {

@@ -127,7 +127,7 @@ describe("mapFindingToStep", () => {
     expect(mapFindingToStep({ sources: ["https://www.ycombinator.com/companies/x"], rubric: "founder" })).toBe(stepIdx("Y Combinator"));
     expect(mapFindingToStep({ sources: ["https://tkmx.odio.dev/u/DROdio"], rubric: "founder" })).toBe(stepIdx("Tokenmaxxing"));
     expect(mapFindingToStep({ sources: ["https://libraries.io/github/jane/acme"], rubric: "founder" })).toBe(stepIdx("Libraries.io"));
-    expect(mapFindingToStep({ sources: ["https://www.google.com/search?q=Jensen+Huang"], rubric: "founder" })).toBe(stepIdx("Knowledge Graph"));
+    expect(mapFindingToStep({ sources: ["https://www.google.com/search?q=Morgan+Reyes"], rubric: "founder" })).toBe(stepIdx("Knowledge Graph"));
     expect(mapFindingToStep({ sources: ["https://www.youtube.com/watch?v=abc"], rubric: "founder" })).toBe(stepIdx("YouTube"));
   });
 

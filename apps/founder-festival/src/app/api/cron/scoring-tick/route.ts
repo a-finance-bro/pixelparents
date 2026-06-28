@@ -32,8 +32,8 @@ const ITEMS_PER_TICK = 5;
 // mid-item (300s timeout, deploy, OOM) the item stays flipped to 'scoring' but
 // its try/catch never runs — and the claim query only picks up pending/resolved,
 // so it's orphaned forever. That keeps the parent job 'running' indefinitely and
-// the admin "SCORING…" chip lit even though everyone else finished (PRD: Jon
-// Staenberg + Kevin Liu stuck on event 6e515b68).
+// the admin "SCORING…" chip lit even though everyone else finished (PRD: two
+// attendees stuck on an event).
 const STUCK_SCORING_TIMEOUT_MIN = 15;
 
 // Reap items stranded in 'scoring'/'resolving' by a dead worker: mark them failed

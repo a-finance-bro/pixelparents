@@ -12,7 +12,7 @@ Bugfix follow-up to the sortable-leaderboard feature (PR #177): clicking a score
 
 ### Verification:
 - `tsc --noEmit` clean. `tests/lib/leaderboard-filter.test.ts` passes (10).
-- Browser-verified with Playwright driving system Chrome against the dev server (port 3002): default view is combined-DESC; clicking **Investor** (no refresh) re-sorts the list to investor-DESC and the top row changes (Joe Gebbia → Arash Ferdowsi); a second click toggles to investor-ASC; URLs update to `?sort=investor` then `?sort=investor&top=lowest`.
+- Browser-verified with Playwright driving system Chrome against the dev server (port 3002): default view is combined-DESC; clicking **Investor** (no refresh) re-sorts the list to investor-DESC and the top row changes (Jordan Lee → Alex Kim); a second click toggles to investor-ASC; URLs update to `?sort=investor` then `?sort=investor&top=lowest`.
 
 ### Potential concerns to address:
 - Search box clears on sort/facet change (see trade-off above). Revisit only if it becomes annoying.

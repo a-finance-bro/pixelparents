@@ -27,8 +27,8 @@ exact facts our investor rubric tries to extract from text today:
 - Accredited status (`isAccredited`)
 - Endorsement count (`numEndorsements` — display only in Phase 1)
 
-Verified from the live API against Suzanne Xie's record at
-`/api/1.1/obj/user?constraints=[{"key":"Slug","constraint_type":"equals","value":"02-suzanne-xie"}]`
+Verified from the live API against an investor's record at
+`/api/1.1/obj/user?constraints=[{"key":"Slug","constraint_type":"equals","value":"02-taylor-brooks"}]`
 plus the joined `/api/1.1/obj/person` lookup. Total visible Neo VCs ≈ 215
 (`isVC=true AND isVisible=true`), so this is a small high-quality set.
 
@@ -93,7 +93,7 @@ eval time.
 | `investor_leads_rounds` | `boolean` nullable | OR-truth across Neo + NFX (null = unknown) |
 | `investor_check_size` | `jsonb` `{ minUsd?, maxUsd?, rawText }` nullable | Neo's text range parsed when possible |
 | `on_neo` | `boolean` nullable | tri-state: null = never checked / false = checked, no match / true = matched |
-| `neo_slug` | `text` nullable | e.g. `"02-suzanne-xie"`. Enables backlink + Phase 2 endorsement fetcher. |
+| `neo_slug` | `text` nullable | e.g. `"02-taylor-brooks"`. Enables backlink + Phase 2 endorsement fetcher. |
 
 Drizzle migration: `0032_neo_investor_facts.sql` (generated via
 `pnpm db:generate`). All new columns are nullable / defaulted — backwards

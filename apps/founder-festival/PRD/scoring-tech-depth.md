@@ -27,9 +27,9 @@ Technical-depth recalibration (rubric v0.0.8), split onto its own branch off the
 latest main (the leaderboard work lives on `worktree-scoring-rubric` / PR #178).
 Diagnosed from 4 public profiles: non-technical founders (DROdio) hit the
 92nd-percentile Technical Depth radar vector almost entirely on "old GitHub
-account + one recent push," while a truly technical founder (Geoff Schmidt —
-Meteor + Apollo) only scored 83rd because his OSS lives in company orgs the
-personal-account GitHub enricher never sees. Fix: de-weight presence/age, boost
+account + one recent push," while a truly technical founder (Jordan Lee —
+creator of a popular OSS framework) only scored 83rd because their OSS lives in
+company orgs the personal-account GitHub enricher never sees. Fix: de-weight presence/age, boost
 impact, and add a deterministic company-flagship OSS bonus for founders.
 
 ### Detail of changes made:
@@ -55,9 +55,9 @@ impact, and add a deterministic company-flagship OSS bonus for founders.
 ### Potential concerns to address:
 - **Calibration not yet verified on prod** — the new rubric only affects NEW
   scores; the 4 targets (ideally the whole pool) must be rescored after deploy to
-  read the new percentiles. Targets: DROdio→~60th, Geoff→low-90s, Max/Mitchell→~100.
+  read the new percentiles. Targets: DROdio→~60th, Jordan→low-90s, Casey/Riley→~100.
 - **`addCompanyGithubBonus` adds 1 GitHub *search* call per founder eval** on the
   post-LLM path (30/min with prod token); a bulk `rescore-all` could exceed it and
   silently skip the bonus (degrades to null). Cache org→top-repo if that matters.
 - HN Tokenmaxxing as a high-fidelity technical signal + a hook improvement to keep
-  the rubric doc in sync are the next asks (Sam Odio calibration).
+  the rubric doc in sync are the next asks (another calibration target's profile).

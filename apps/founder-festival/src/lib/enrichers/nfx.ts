@@ -157,7 +157,7 @@ function linkedinMatches(subjectUrl: string, nfxUrl: string | null | undefined):
 }
 
 // Derive a "first-last" slug as a fallback when search returns nothing (the
-// validated common-case slug shape, e.g. "marc-andreessen").
+// validated common-case slug shape, e.g. "jordan-lee").
 function fallbackSlug(fullName: string): string | null {
   const parts = fullName.toLowerCase().replace(/[^a-z0-9 ]/g, "").split(/\s+/).filter(Boolean);
   if (parts.length < 2) return null;

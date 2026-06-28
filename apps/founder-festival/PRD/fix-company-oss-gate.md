@@ -2,9 +2,9 @@
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Fix: Brian Chesky (non-technical designer/CEO of Airbnb) scored 100th-percentile
+Fix: a non-technical designer/CEO of a consumer-marketplace company scored 100th-percentile
 Technical Depth from a single +129 row — "Founded the company behind
-airbnb/javascript (148k★)" — i.e. the v0.0.8 company-flagship OSS bonus, which
+a flagship OSS repo (148k★)" — i.e. the v0.0.8 company-flagship OSS bonus, which
 fired for ANY founder regardless of personal technical involvement. Gated it on
 the founder being personally technical.
 
@@ -14,8 +14,9 @@ the founder being personally technical.
   company? Founding a technical company does NOT make someone technical. Tolerant
   (.nullable().catch(null)).
 - `eval-pipeline.ts`: `addCompanyGithubBonus` now returns early unless
-  `scoring.technicalFounder === true`. Geoff Schmidt (created Apollo/Meteor) and
-  Patrick Collison (wrote Stripe's early code) keep the bonus; Brian Chesky does not.
+  `scoring.technicalFounder === true`. A framework-creating technical founder and
+  a payments-company founder who wrote the early code keep the bonus; the
+  marketplace founder does not.
 - Doc → v0.0.10 + the company-OSS bonus section notes the gate. tsc clean; 39 tests pass.
 
 ### Potential concerns to address:

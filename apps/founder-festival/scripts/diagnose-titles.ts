@@ -1,7 +1,7 @@
 // Read-only diagnostic: why a profile has no credibility title above its badges.
 // Resolves each handle (clerk username OR slug) to its evaluation and prints the
 // title/signal/score + scoring-run history. No writes.
-//   npx tsx scripts/diagnose-titles.ts --target=prod arash-ferdowsi jensen-huang
+//   npx tsx scripts/diagnose-titles.ts --target=prod jordan-lee alex-kim
 import { readFileSync } from "node:fs";
 
 const target = (process.argv.find((a) => a.startsWith("--target="))?.split("=")[1] ?? "dev") as "dev" | "prod";

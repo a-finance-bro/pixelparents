@@ -138,21 +138,21 @@ import { SCORING_SCHEMA } from "@/lib/scoring";
 describe("SCORING_SCHEMA — identity fields", () => {
   it("accepts publicEmail + githubUsername when present", () => {
     const parsed = SCORING_SCHEMA.parse({
-      fullName: "Patrick Collison",
-      primaryCompanyDomain: "stripe.com",
-      publicEmail: "patrick@stripe.com",
-      githubUsername: "patrickc",
+      fullName: "Jordan Lee",
+      primaryCompanyDomain: "acme.com",
+      publicEmail: "jordan@acme.com",
+      githubUsername: "jordanl",
       founderScore: 10,
       investorScore: 0,
       combinedScore: 10,
       signalQuality: "high",
       companyStage: "growth",
-      founderBreakdown: [{ points: 10, reason: "Founder of Stripe." }],
+      founderBreakdown: [{ points: 10, reason: "Founder of Acme." }],
       investorBreakdown: [],
       recommendations: { summary: "x", items: [] },
     });
-    expect(parsed.publicEmail).toBe("patrick@stripe.com");
-    expect(parsed.githubUsername).toBe("patrickc");
+    expect(parsed.publicEmail).toBe("jordan@acme.com");
+    expect(parsed.githubUsername).toBe("jordanl");
   });
 
   it("accepts null publicEmail + null githubUsername", () => {
@@ -376,23 +376,23 @@ import { localPartMatchesName } from "@/lib/identity-match";
 
 describe("localPartMatchesName", () => {
   it.each([
-    ["patrick", "Patrick Collison"],
-    ["collison", "Patrick Collison"],
-    ["patrickcollison", "Patrick Collison"],
-    ["patrick.collison", "Patrick Collison"],
-    ["patrick_collison", "Patrick Collison"],
-    ["patrick-collison", "Patrick Collison"],
-    ["pcollison", "Patrick Collison"],
-    ["p.collison", "Patrick Collison"],
-    ["p_collison", "Patrick Collison"],
-    ["collisonpatrick", "Patrick Collison"],
-    ["collison.patrick", "Patrick Collison"],
+    ["jordan", "Jordan Lee"],
+    ["lee", "Jordan Lee"],
+    ["jordanlee", "Jordan Lee"],
+    ["jordan.lee", "Jordan Lee"],
+    ["jordan_lee", "Jordan Lee"],
+    ["jordan-lee", "Jordan Lee"],
+    ["jlee", "Jordan Lee"],
+    ["j.lee", "Jordan Lee"],
+    ["j_lee", "Jordan Lee"],
+    ["leejordan", "Jordan Lee"],
+    ["lee.jordan", "Jordan Lee"],
   ])("'%s' matches '%s'", (local, name) => {
     expect(localPartMatchesName(local, name)).toBe(true);
   });
 
   it.each([
-    ["patrick", "Patrick"], // single-token name — must still match "patrick"
+    ["jordan", "Jordan"], // single-token name — must still match "jordan"
     ["smith", "Mary Jane Smith"], // multi-token: only first+last considered
     ["mary.smith", "Mary Jane Smith"],
   ])("'%s' matches '%s'", (local, name) => {
@@ -404,11 +404,11 @@ describe("localPartMatchesName", () => {
   });
 
   it("strips +suffix", () => {
-    expect(localPartMatchesName("patrick.collison+spam", "Patrick Collison")).toBe(true);
+    expect(localPartMatchesName("jordan.lee+spam", "Jordan Lee")).toBe(true);
   });
 
   it("is case-insensitive", () => {
-    expect(localPartMatchesName("PATRICK", "patrick collison")).toBe(true);
+    expect(localPartMatchesName("JORDAN", "jordan lee")).toBe(true);
   });
 
   it("normalizes diacritics (José → jose)", () => {
@@ -417,15 +417,15 @@ describe("localPartMatchesName", () => {
   });
 
   it("rejects unrelated local-parts", () => {
-    expect(localPartMatchesName("admin", "Patrick Collison")).toBe(false);
-    expect(localPartMatchesName("info", "Patrick Collison")).toBe(false);
-    expect(localPartMatchesName("xyz", "Patrick Collison")).toBe(false);
+    expect(localPartMatchesName("admin", "Jordan Lee")).toBe(false);
+    expect(localPartMatchesName("info", "Jordan Lee")).toBe(false);
+    expect(localPartMatchesName("xyz", "Jordan Lee")).toBe(false);
   });
 
   it("returns false on empty inputs", () => {
-    expect(localPartMatchesName("", "Patrick Collison")).toBe(false);
-    expect(localPartMatchesName("patrick", "")).toBe(false);
-    expect(localPartMatchesName("patrick", "   ")).toBe(false);
+    expect(localPartMatchesName("", "Jordan Lee")).toBe(false);
+    expect(localPartMatchesName("jordan", "")).toBe(false);
+    expect(localPartMatchesName("jordan", "   ")).toBe(false);
   });
 });
 ```
@@ -525,21 +525,21 @@ import { domainMatches } from "@/lib/identity-match";
 
 describe("domainMatches", () => {
   it("exact match", () => {
-    expect(domainMatches("stripe.com", "stripe.com")).toBe(true);
+    expect(domainMatches("acme.com", "acme.com")).toBe(true);
   });
   it("subdomain of target matches", () => {
-    expect(domainMatches("eu.stripe.com", "stripe.com")).toBe(true);
-    expect(domainMatches("payments.eu.stripe.com", "stripe.com")).toBe(true);
+    expect(domainMatches("eu.acme.com", "acme.com")).toBe(true);
+    expect(domainMatches("payments.eu.acme.com", "acme.com")).toBe(true);
   });
   it("parent of target does NOT match", () => {
-    expect(domainMatches("stripe.com", "eu.stripe.com")).toBe(false);
+    expect(domainMatches("acme.com", "eu.acme.com")).toBe(false);
   });
   it("similar-name domains do not match (no substring trick)", () => {
-    expect(domainMatches("notstripe.com", "stripe.com")).toBe(false);
-    expect(domainMatches("stripe.com.attacker.com", "stripe.com")).toBe(false);
+    expect(domainMatches("notacme.com", "acme.com")).toBe(false);
+    expect(domainMatches("acme.com.attacker.com", "acme.com")).toBe(false);
   });
   it("case-insensitive", () => {
-    expect(domainMatches("Stripe.COM", "stripe.com")).toBe(true);
+    expect(domainMatches("Acme.COM", "acme.com")).toBe(true);
   });
 });
 ```
@@ -642,18 +642,18 @@ describe("matchConfidence — LinkedIn", () => {
 describe("matchConfidence — GitHub", () => {
   it("stored username matches claim username → github-username", () => {
     const r = matchConfidence(
-      { provider: "github", githubUsername: "patrickc" },
+      { provider: "github", githubUsername: "jordanl" },
       evalUrl,
-      { fullName: "Patrick Collison", githubUsername: "patrickc" },
+      { fullName: "Jordan Lee", githubUsername: "jordanl" },
     );
     expect(r).toEqual({ kind: "match", signal: "github-username" });
   });
 
   it("case-insensitive github match", () => {
     const r = matchConfidence(
-      { provider: "github", githubUsername: "PatrickC" },
+      { provider: "github", githubUsername: "JordanL" },
       evalUrl,
-      { fullName: "Patrick Collison", githubUsername: "patrickc" },
+      { fullName: "Jordan Lee", githubUsername: "jordanl" },
     );
     expect(r).toEqual({ kind: "match", signal: "github-username" });
   });
@@ -662,7 +662,7 @@ describe("matchConfidence — GitHub", () => {
     const r = matchConfidence(
       { provider: "github", githubUsername: "anyone" },
       evalUrl,
-      { fullName: "Patrick Collison" },
+      { fullName: "Jordan Lee" },
     );
     expect(r).toEqual({ kind: "no-match", reason: "github-no-stored-username" });
   });
@@ -671,7 +671,7 @@ describe("matchConfidence — GitHub", () => {
     const r = matchConfidence(
       { provider: "github", githubUsername: "imposter" },
       evalUrl,
-      { fullName: "Patrick Collison", githubUsername: "patrickc" },
+      { fullName: "Jordan Lee", githubUsername: "jordanl" },
     );
     expect(r).toEqual({ kind: "no-match", reason: "github-username-mismatch" });
   });
@@ -680,7 +680,7 @@ describe("matchConfidence — GitHub", () => {
     const r = matchConfidence(
       { provider: "github" },
       evalUrl,
-      { fullName: "Patrick Collison", githubUsername: "patrickc" },
+      { fullName: "Jordan Lee", githubUsername: "jordanl" },
     );
     expect(r).toEqual({ kind: "no-match", reason: "github-username-mismatch" });
   });
@@ -689,18 +689,18 @@ describe("matchConfidence — GitHub", () => {
 describe("matchConfidence — Email exact tier", () => {
   it("exact publicEmail match → email-exact", () => {
     const r = matchConfidence(
-      { provider: "email", email: "Patrick@Stripe.com" },
+      { provider: "email", email: "Jordan@Acme.com" },
       evalUrl,
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com", publicEmail: "patrick@stripe.com" },
+      { fullName: "Jordan Lee", primaryCompanyDomain: "acme.com", publicEmail: "jordan@acme.com" },
     );
     expect(r).toEqual({ kind: "match", signal: "email-exact" });
   });
 
   it("non-matching publicEmail falls through to name+company tier", () => {
     const r = matchConfidence(
-      { provider: "email", email: "patrick.collison@stripe.com" },
+      { provider: "email", email: "jordan.lee@acme.com" },
       evalUrl,
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com", publicEmail: "patrick@stripe.com" },
+      { fullName: "Jordan Lee", primaryCompanyDomain: "acme.com", publicEmail: "jordan@acme.com" },
     );
     expect(r).toEqual({ kind: "match", signal: "email-name-company" });
   });
@@ -709,43 +709,43 @@ describe("matchConfidence — Email exact tier", () => {
 describe("matchConfidence — Email name+company tier", () => {
   it("first.last@company → email-name-company", () => {
     const r = matchConfidence(
-      { provider: "email", email: "patrick.collison@stripe.com" },
+      { provider: "email", email: "jordan.lee@acme.com" },
       evalUrl,
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com" },
+      { fullName: "Jordan Lee", primaryCompanyDomain: "acme.com" },
     );
     expect(r).toEqual({ kind: "match", signal: "email-name-company" });
   });
 
   it("subdomain of stored domain matches", () => {
     const r = matchConfidence(
-      { provider: "email", email: "patrick.collison@eu.stripe.com" },
+      { provider: "email", email: "jordan.lee@eu.acme.com" },
       evalUrl,
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com" },
+      { fullName: "Jordan Lee", primaryCompanyDomain: "acme.com" },
     );
     expect(r).toEqual({ kind: "match", signal: "email-name-company" });
   });
 
   it("wrong domain → email-no-signal", () => {
     const r = matchConfidence(
-      { provider: "email", email: "patrick.collison@google.com" },
+      { provider: "email", email: "jordan.lee@othercorp.com" },
       evalUrl,
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com" },
+      { fullName: "Jordan Lee", primaryCompanyDomain: "acme.com" },
     );
     expect(r).toEqual({ kind: "no-match", reason: "email-no-signal" });
   });
 
   it("right domain, wrong local-part → email-no-signal", () => {
     const r = matchConfidence(
-      { provider: "email", email: "support@stripe.com" },
+      { provider: "email", email: "support@acme.com" },
       evalUrl,
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com" },
+      { fullName: "Jordan Lee", primaryCompanyDomain: "acme.com" },
     );
     expect(r).toEqual({ kind: "no-match", reason: "email-no-signal" });
   });
 
   it("no profile at all → email-no-signal", () => {
     const r = matchConfidence(
-      { provider: "email", email: "anyone@stripe.com" },
+      { provider: "email", email: "anyone@acme.com" },
       evalUrl,
       null,
     );
@@ -756,7 +756,7 @@ describe("matchConfidence — Email name+company tier", () => {
     const r = matchConfidence(
       { provider: "email" },
       evalUrl,
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com" },
+      { fullName: "Jordan Lee", primaryCompanyDomain: "acme.com" },
     );
     expect(r).toEqual({ kind: "no-match", reason: "email-no-domain" });
   });

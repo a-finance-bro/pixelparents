@@ -7,8 +7,8 @@ import {
 
 describe("scoreThemHref", () => {
   it("builds a /?home=1&name= link with the trimmed name", () => {
-    expect(scoreThemHref("Tristan Pollock")).toBe(
-      "/?home=1&name=Tristan%20Pollock",
+    expect(scoreThemHref("Jordan Mercer")).toBe(
+      "/?home=1&name=Jordan%20Mercer",
     );
   });
 
@@ -29,9 +29,9 @@ describe("scoreThemHref", () => {
 
 describe("parseNameParam", () => {
   it("round-trips a name written by scoreThemHref", () => {
-    const href = scoreThemHref("Tristan Pollock");
+    const href = scoreThemHref("Jordan Mercer");
     const search = href.slice(href.indexOf("?"));
-    expect(parseNameParam(search)).toBe("Tristan Pollock");
+    expect(parseNameParam(search)).toBe("Jordan Mercer");
   });
 
   it("returns the trimmed name when present and long enough", () => {

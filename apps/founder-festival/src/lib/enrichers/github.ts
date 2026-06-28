@@ -148,9 +148,9 @@ function guessHandlesFromContext(ctx: EnricherContext, knownUrls: string[]): str
   // NOTE: we deliberately do NOT try the LinkedIn vanity handle as a GitHub
   // username. A LinkedIn handle is not a GitHub handle — when it coincidentally
   // matches a DIFFERENT person's GitHub account who happens to share the full
-  // name, we attribute their repos to the wrong person. (Real case: Sir Richard
-  // Branson's LinkedIn `/in/rbranson` resolved to github.com/rbranson — a
-  // software engineer also named Richard Branson — inflating Sir Richard with a
+  // name, we attribute their repos to the wrong person. (Real case: a famous
+  // executive's LinkedIn `/in/jordan-lee` resolved to github.com/jordan-lee — a
+  // software engineer who shares the same name — inflating the executive with a
   // coder's repos. The name-match guard can't separate two real same-named
   // people.) Real github accounts are still found via Exa-surfaced URLs (1) and
   // name-derived handles (below); those go through isConfidentGithubMatch.
@@ -174,9 +174,9 @@ function guessHandlesFromContext(ctx: EnricherContext, knownUrls: string[]): str
 //   • COMPANY CORRELATION (strongest, ~certain): the GitHub account's stated
 //     company also appears in the subject's own LinkedIn data → 0.95. A company
 //     that does NOT appear is evidence of a DIFFERENT same-named person and
-//     penalizes the score (real case: Sir Richard Branson @ Virgin Group vs
-//     github.com/rbranson — "Rick Branson", company "@openai" — a coder who is
-//     not Sir Richard; names alone can't separate two real "Richard Branson"s).
+//     penalizes the score (real case: a famous executive @ a global brand vs
+//     github.com/jordan-lee — "Jordan Lee", company "@a-startup" — a coder who
+//     is not the executive; names alone can't separate two real same-named people).
 //   • Otherwise a heuristic sum: full first+last name match, plus the GitHub URL
 //     being surfaced in the subject's own Exa results, minus a company-mismatch
 //     penalty. A surfaced URL ALONE is NOT enough — for a well-known name the web
@@ -195,8 +195,8 @@ function companyTokens(company: string | null | undefined): string[] {
 // Does the GitHub LOGIN encode the subject's specific name? People build handles
 // from their names, so a login matching THIS name is strong ownership evidence —
 // and, crucially, it does NOT match a different-named person who shares the same
-// (mis-attached) handle: `zanesalim` encodes "Zane Salim" but not "Zane Qureshi";
-// `helsont` encodes "Helson Taveras" but not "Helison Tavares"; `kaito-project`
+// (mis-attached) handle: `jordankim` encodes "Jordan Kim" but not "Jordan Park";
+// `alext` encodes "Alex Tavares" but not "Alexa Travers"; `acme-org`
 // (an org) encodes none of its 5 victims. Returns 0 / 0.5 / 1.
 export function usernameEncodesName(
   fullName: string | undefined | null,
@@ -278,7 +278,7 @@ function subjectCompanyTokensFromContext(ctx: EnricherContext): Set<string> {
 // Resolve the GitHub account that confidently belongs to the subject — the SAME
 // confidence-gated logic enrichWithGithub uses (name match + company correlation;
 // a surfaced URL alone is NOT enough, because a well-known name surfaces a different
-// same-named person's GitHub — the rbranson case). Exported so OTHER enrichers (e.g.
+// same-named person's GitHub — the same-name collision case). Exported so OTHER enrichers (e.g.
 // Libraries.io) reuse the confirmed login instead of re-introducing same-name match
 // risk. Returns the matched GhUser, or null if no candidate clears the threshold.
 export async function resolveConfidentGithubUser(

@@ -12,7 +12,7 @@ Added founder + investor status markers next to the Founder/Investor numbers on 
 - `docs/coordination/leaderboard.md`: documented the status-marker split (scoring agent owns the LLM columns + `StatusMarker`; leaderboard renders them) and the darker-red change.
 
 ### Reconciliation note (important):
-The scoring agent merged `ab9899f` (per-role status markers + real `investor_status` column) and `2954a54` (#196 hotfix tolerating missing founder/investor status on rescore) while this was in flight. That #196 hotfix is the fix for the earlier **Patrick Collison rescore failure** (the pipeline had started requiring the new status fields). My originally-drafted interim investor heuristic + a duplicate marker component were dropped in favor of their LLM column + shared `StatusMarker` to avoid drift.
+The scoring agent merged `ab9899f` (per-role status markers + real `investor_status` column) and `2954a54` (#196 hotfix tolerating missing founder/investor status on rescore) while this was in flight. That #196 hotfix is the fix for the earlier **rescore failure on a high-presence founder** (the pipeline had started requiring the new status fields). My originally-drafted interim investor heuristic + a duplicate marker component were dropped in favor of their LLM column + shared `StatusMarker` to avoid drift.
 
 ### Verification:
 - `tsc --noEmit` clean.

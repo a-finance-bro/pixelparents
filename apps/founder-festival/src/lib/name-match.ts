@@ -1,6 +1,6 @@
 // Does a LinkedIn profile's display name plausibly belong to the person we
 // searched for? Used to reject blatantly-wrong auto-resolved handles (e.g. Exa
-// returning "Sergey E" for a "Garry Tan" search) WITHOUT over-rejecting correct
+// returning "Sam R" for a "Jordan Lee" search) WITHOUT over-rejecting correct
 // matches that merely look different — accents, nicknames, middle names, married
 // names, stylized handles (the handle is irrelevant here; we compare DISPLAY
 // names parsed from the LinkedIn title).

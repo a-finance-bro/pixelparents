@@ -49,7 +49,7 @@ function splitTitle(rawTitle: string): { name: string; headline: string } {
 
 // Derive a clean one-line headline from Exa's crawled page text. The text comes
 // back as markdown that starts with "# <Name>" then the headline line, e.g.:
-//   "# Peter Cho\n\nGTM @ Crunchbase | Marketing, Sales\n\n## About\n..."
+//   "# Jordan Lee\n\nGTM @ Acme | Marketing, Sales\n\n## About\n..."
 // We strip markdown links, drop the name header + obvious meta/location lines,
 // and return the first real content line.
 function headlineFromText(text: string): string {
@@ -63,7 +63,7 @@ function headlineFromText(text: string): string {
   for (let i = 0; i < lines.length; i++) {
     let l = lines[i];
     if (l.startsWith("#")) {
-      // "# Peter Cho - GTM @ Crunchbase..." sometimes carries the headline on
+      // "# Jordan Lee - GTM @ Acme..." sometimes carries the headline on
       // the same line as the name header — reuse splitTitle on it.
       const { headline } = splitTitle(l.replace(/^#+\s*/, ""));
       if (headline) return headline.slice(0, 160);
@@ -81,7 +81,7 @@ type RawResult = { url: string; title?: string; text?: string };
 // One handle-resolution search. Strategy (tuned against real Exa behavior):
 //   • category: "people"   — Exa's people-entity index has far better recall of
 //     same-name LinkedIn profiles than a plain web search (it found the correct
-//     "Peter Cho @ Crunchbase" that every other variant missed).
+//     "Jordan Lee @ Acme" that every other variant missed).
 //   • NO includeDomains    — counterintuitively, pinning to linkedin.com HURTS
 //     recall under category:people (it dropped the correct profile). Non-
 //     LinkedIn results are filtered out downstream by extractHandle anyway.
@@ -174,7 +174,7 @@ export async function findLinkedinHandles(
 // We pull several candidates and pick the first whose parsed display name
 // plausibly matches the searched person (see nameMatches). This avoids blindly
 // accepting Exa's top result when it's a same-search-but-different-person profile
-// (e.g. "Sergey E" surfacing for a "Garry Tan" search). Returning null — no
+// (e.g. "Sam R" surfacing for a "Jordan Lee" search). Returning null — no
 // handle — is better than persisting a wrong one. Pulling 5 instead of 1 is free
 // (one Exa search either way); it just lets a correct #2/#3 win over a wrong #1.
 export async function resolveLinkedinUrl(
@@ -192,8 +192,8 @@ const FREE_EMAIL_HOST =
   /^(gmail|googlemail|yahoo|ymail|hotmail|outlook|live|msn|icloud|me|mac|proton|protonmail|aol|gmx|hey|pm|zoho|fastmail|qq|163|126)\./i;
 
 // The brand token of an email's domain — the corroboration signal that the
-// resolved LinkedIn is the RIGHT same-named person. "mayank@pulse.qa" → "pulse",
-// "x@gentrace.ai" → "gentrace". Null for free providers, Apple relays, or junk.
+// resolved LinkedIn is the RIGHT same-named person. "user@acme.dev" → "acme",
+// "x@example.io" → "example". Null for free providers, Apple relays, or junk.
 export function emailDomainBrand(email?: string | null): string | null {
   if (!email) return null;
   const at = email.indexOf("@");

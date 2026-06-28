@@ -6,18 +6,18 @@ const co = (...tokens: string[]) => new Set(tokens);
 
 describe("githubMatchConfidence — company correlation (strongest)", () => {
   it("near-certain when the GitHub company appears in the subject's data", () => {
-    const c = githubMatchConfidence("Sam Altman", { name: "Sam Altman", company: "@openai" }, false, co("openai", "research"));
+    const c = githubMatchConfidence("Jordan Avery", { name: "Jordan Avery", company: "@openai" }, false, co("openai", "research"));
     expect(c).toBeGreaterThanOrEqual(0.9);
     expect(accept(c)).toBe(true);
   });
 
-  it("rejects a same-LAST-name coder whose company does NOT match (the Branson case)", () => {
-    // Sir Richard Branson (Virgin Group) vs github.com/rbranson = "Rick Branson" @openai.
+  it("rejects a same-LAST-name coder whose company does NOT match (the same-surname case)", () => {
+    // Marcus Hale (Brightwave Group) vs github.com/rhale = "Rick Hale" @openai.
     const c = githubMatchConfidence(
-      "Richard Branson",
-      { name: "Rick Branson", company: "@openai" },
+      "Marcus Hale",
+      { name: "Rick Hale", company: "@openai" },
       true, // surfaced in web results
-      co("virgin", "group"),
+      co("brightwave", "group"),
     );
     expect(accept(c)).toBe(false);
   });
@@ -35,7 +35,7 @@ describe("githubMatchConfidence — name + surfaced-URL fallback (no company)", 
   });
 
   it("rejects a shared-last-name-only account (famous-account-hijack vector)", () => {
-    expect(accept(githubMatchConfidence("Jane Torvalds", { name: "Linus Torvalds" }, false, co()))).toBe(false);
+    expect(accept(githubMatchConfidence("Jane Kellerman", { name: "Victor Kellerman" }, false, co()))).toBe(false);
     expect(accept(githubMatchConfidence("Jane Doe", { name: "Jane Smith" }, false, co()))).toBe(false);
   });
 
@@ -49,8 +49,8 @@ describe("githubMatchConfidence — name + surfaced-URL fallback (no company)", 
   });
 
   it("matches a single-token name on that one token", () => {
-    expect(accept(githubMatchConfidence("Cher", { name: "Cher" }, false, co()))).toBe(true);
-    expect(accept(githubMatchConfidence("Cher", { name: "Madonna" }, false, co()))).toBe(false);
+    expect(accept(githubMatchConfidence("Vega", { name: "Vega" }, false, co()))).toBe(true);
+    expect(accept(githubMatchConfidence("Vega", { name: "Nova" }, false, co()))).toBe(false);
   });
 
   it("rejects an unverifiable account (no name, no URL, no company)", () => {
@@ -61,40 +61,40 @@ describe("githubMatchConfidence — name + surfaced-URL fallback (no company)", 
 
 describe("usernameEncodesName", () => {
   it("strong (1) when the handle is first+last", () => {
-    expect(usernameEncodesName("Zane Salim", "zanesalim")).toBe(1);
-    expect(usernameEncodesName("Gowtham Sundaresan", "gowthamsundaresan")).toBe(1);
-    expect(usernameEncodesName("Alejandro (Al) Guerrero", "alejandroguerrero")).toBe(1);
+    expect(usernameEncodesName("Dale Mercer", "dalemercer")).toBe(1);
+    expect(usernameEncodesName("Pranav Iyer", "pranaviyer")).toBe(1);
+    expect(usernameEncodesName("Esteban (Eddie) Ramirez", "estebanramirez")).toBe(1);
   });
-  it("strong (1) for first + last-initial (helson + t = helsont)", () => {
-    expect(usernameEncodesName("Helson Taveras", "helsont")).toBe(1);
+  it("strong (1) for first + last-initial (marlon + t = marlont)", () => {
+    expect(usernameEncodesName("Marlon Tavish", "marlont")).toBe(1);
   });
   it("0 when the handle does NOT encode THIS name", () => {
-    // helsont encodes Helson Taveras, NOT Helison Tavares
-    expect(usernameEncodesName("Helison Tavares", "helsont")).toBe(0);
+    // marlont encodes Marlon Tavish, NOT Marlin Tavarez
+    expect(usernameEncodesName("Marlin Tavarez", "marlont")).toBe(0);
     // an org/unrelated handle on a mis-attach victim
-    expect(usernameEncodesName("Omar Mohtar", "kaito-project")).toBe(0);
-    // the OTHER Zane (different surname) is not the strong owner of zanesalim
-    expect(usernameEncodesName("Zane Qureshi", "zanesalim")).toBeLessThan(1);
+    expect(usernameEncodesName("Quinn Avery", "shared-org-bot")).toBe(0);
+    // the OTHER Dale (different surname) is not the strong owner of dalemercer
+    expect(usernameEncodesName("Dale Whitman", "dalemercer")).toBeLessThan(1);
   });
   it("0 with no handle or no name", () => {
-    expect(usernameEncodesName("Zane Salim", "")).toBe(0);
-    expect(usernameEncodesName(null, "zanesalim")).toBe(0);
+    expect(usernameEncodesName("Dale Mercer", "")).toBe(0);
+    expect(usernameEncodesName(null, "dalemercer")).toBe(0);
   });
 });
 
 describe("githubMatchConfidence — username rescues distinctive legit owners", () => {
   it("KEEPS an owner whose handle encodes their name despite a non-correlating company field", () => {
-    // Zane Salim — github 'zanesalim'; the company field isn't in his scraped data.
-    expect(accept(githubMatchConfidence("Zane Salim", { name: "Zane Salim", company: "Atlas", login: "zanesalim" }, false, co("pioneer", "fund")))).toBe(true);
-    expect(accept(githubMatchConfidence("Gowtham Sundaresan", { name: "Gowtham Sundaresan", company: "Infosys", login: "gowthamsundaresan" }, false, co("acme")))).toBe(true);
-    expect(accept(githubMatchConfidence("Alejandro (Al) Guerrero", { name: "Alejandro Guerrero", company: "ActOne", login: "alejandroguerrero" }, false, co("acme")))).toBe(true);
+    // Dale Mercer — github 'dalemercer'; the company field isn't in his scraped data.
+    expect(accept(githubMatchConfidence("Dale Mercer", { name: "Dale Mercer", company: "Atlas", login: "dalemercer" }, false, co("pioneer", "fund")))).toBe(true);
+    expect(accept(githubMatchConfidence("Pranav Iyer", { name: "Pranav Iyer", company: "Infosys", login: "pranaviyer" }, false, co("acme")))).toBe(true);
+    expect(accept(githubMatchConfidence("Esteban (Eddie) Ramirez", { name: "Esteban Ramirez", company: "ActOne", login: "estebanramirez" }, false, co("acme")))).toBe(true);
   });
   it("still REJECTS the mis-attach victim whose name the handle does NOT encode", () => {
-    // 'helsont' (Helson Taveras @ Keep) attached to Helison Tavares (Granorte).
-    expect(accept(githubMatchConfidence("Helison Tavares", { name: "Helson Taveras", company: "Keep Technologies", login: "helsont" }, false, co("granorte")))).toBe(false);
-    expect(accept(githubMatchConfidence("Omar Mohtar", { name: null, company: null, login: "kaito-project" }, false, co()))).toBe(false);
+    // 'marlont' (Marlon Tavish @ Beacon) attached to Marlin Tavarez (Greenfield).
+    expect(accept(githubMatchConfidence("Marlin Tavarez", { name: "Marlon Tavish", company: "Beacon Technologies", login: "marlont" }, false, co("greenfield")))).toBe(false);
+    expect(accept(githubMatchConfidence("Quinn Avery", { name: null, company: null, login: "shared-org-bot" }, false, co()))).toBe(false);
   });
-  it("the LEGIT Helson still wins via company correlation (strongest tier)", () => {
-    expect(githubMatchConfidence("Helson Taveras", { name: "Helson Taveras", company: "Keep Technologies", login: "helsont" }, false, co("keep"))).toBe(0.95);
+  it("the LEGIT Marlon still wins via company correlation (strongest tier)", () => {
+    expect(githubMatchConfidence("Marlon Tavish", { name: "Marlon Tavish", company: "Beacon Technologies", login: "marlont" }, false, co("beacon"))).toBe(0.95);
   });
 });

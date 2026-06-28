@@ -2,9 +2,9 @@
 //   npx tsx scripts/test-wikidata.mjs
 //
 // Proves four things:
-//   1. Rich structured data on Patrick Collison (name search path).
+//   1. Rich structured data via the name search path.
 //   2. Rich data via a known Wikidata URL (known-URL path).
-//   3. Rich data on Brian Chesky (name search path).
+//   3. Rich data on a second subject via the name search path.
 //   4. Bogus name returns empty (precision guard).
 
 import { enrichWithWikidata } from "../src/lib/enrichers/wikidata.ts";
@@ -13,26 +13,25 @@ function ctx(fullName, linkedinHandle = "") {
   return { linkedinUrl: "", linkedinHandle, linkedinPageText: "", searchHighlights: [], fullName };
 }
 
-// Patrick Collison's Wikidata Qid is Q7146257
-// https://www.wikidata.org/wiki/Q7146257
-const PATRICK_WIKIDATA_URL = "https://www.wikidata.org/wiki/Q7146257";
+// A subject's Wikidata Qid, e.g. https://www.wikidata.org/wiki/Q000000
+const SUBJECT_WIKIDATA_URL = "https://www.wikidata.org/wiki/Q000000";
 
 const CASES = [
   {
-    label: "Patrick Collison — name search (expect RICH structured data)",
-    ctx: ctx("Patrick Collison"),
+    label: "Jordan Lee — name search (expect RICH structured data)",
+    ctx: ctx("Jordan Lee"),
     urls: [],
     expect: "rich",
   },
   {
-    label: "Patrick Collison — known Wikidata URL (expect RICH, highest trust path)",
-    ctx: ctx("Patrick Collison"),
-    urls: [PATRICK_WIKIDATA_URL],
+    label: "Jordan Lee — known Wikidata URL (expect RICH, highest trust path)",
+    ctx: ctx("Jordan Lee"),
+    urls: [SUBJECT_WIKIDATA_URL],
     expect: "rich",
   },
   {
-    label: "Brian Chesky — name search (expect RICH structured data)",
-    ctx: ctx("Brian Chesky"),
+    label: "Alex Kim — name search (expect RICH structured data)",
+    ctx: ctx("Alex Kim"),
     urls: [],
     expect: "rich",
   },

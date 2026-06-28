@@ -3,7 +3,7 @@
 **Date:** 2026-05-25
 **Branch:** `founder-signals` (renamed from `nfx-direct-scraper`)
 **Author:** Claude (autonomous build, authorized by DROdio)
-**Source PRD:** Festival.so Founder Profile & Scoring Platform Improvements v0.2 (post-Swapnil feedback)
+**Source PRD:** Festival.so Founder Profile & Scoring Platform Improvements v0.2 (post-stakeholder feedback)
 
 ## Goal
 
@@ -40,7 +40,7 @@ jsonb; caching is in-memory per runtime instance (à la `yc.ts`).
 
 Half the new sources (HN, Stack Overflow, npm, Hugging Face) have **no name→account
 lookup**, so naive name-guessing would attribute a stranger's reputation to a founder
-(verified: HN handle `naval` ≠ Naval Ravikant, 113 karma). This module generalizes
+(verified: HN handle `jordan` ≠ a well-known investor of the same name, 113 karma). This module generalizes
 the confirmation logic already inline in `github.ts`:
 
 - `deriveHandleCandidates(ctx)` — generate plausible handles from fullName

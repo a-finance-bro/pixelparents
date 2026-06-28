@@ -6,9 +6,9 @@ Branched from `main` (post PR #57).
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Two follow-ups from QA on the "Peter Cho Crunchbase" search, which
+Two follow-ups from QA on the "Jordan Lee Crunchbase" search, which
 returned wrong people and missed the correct profile
-(linkedin.com/in/peter--cho):
+(linkedin.com/in/jordan-lee):
 
 **1. Search accuracy — switched to Exa's people-entity index.**
 Debugged directly against Exa 2.13 and found:
@@ -24,12 +24,12 @@ Debugged directly against Exa 2.13 and found:
   toward founders and buried GTM/eng/etc. profiles. Company is now a
   soft term in the query string, with a name-only retry if it yields
   nothing.
-Result: "Peter Cho" + "Crunchbase" now returns `peter--cho` as the
-#1 candidate (verified live against the API on :3004). Brian Chesky
-+ Airbnb → brianchesky #1.
+Result: "Jordan Lee" + "Crunchbase" now returns `jordan-lee` as the
+#1 candidate (verified live against the API on :3004). Alex Kim
++ a well-known consumer-marketplace company → alex-kim #1.
 
 **2. Show name + headline + handle.** FoundCandidate now carries
-`name` and `headline`. The title ("Peter Cho - GTM @ Crunchbase | …")
+`name` and `headline`. The title ("Jordan Lee - GTM @ Crunchbase | …")
 is parsed into name + headline; when the title is a bare name, the
 headline is derived from the crawled page text (markdown links
 stripped, name-header / "N connections" / location lines skipped).

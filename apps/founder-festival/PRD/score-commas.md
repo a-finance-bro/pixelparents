@@ -3,7 +3,7 @@
 ## Progress Update as of 2026-06-03 3:30 PM Pacific — comma-format profile scores
 
 ### Summary of changes since last update
-The big "Combined" score on the public profile (e.g. festival.so/profile/founder/marcos-galperin)
+The big "Combined" score on the public profile (e.g. festival.so/profile/founder/jordan-lee)
 rendered raw — "57112" instead of "57,112" — while the Founder / Investor
 labels next to it already used `.toLocaleString("en-US")`. Two parallel
 raw renderings in the Open Graph share-image had the same bug.

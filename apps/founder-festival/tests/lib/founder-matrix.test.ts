@@ -171,8 +171,8 @@ describe("dedupeByFullName", () => {
 
   it("collapses two candidates with the same fullName into one", () => {
     const out = dedupeByFullName([
-      c("e1", "Patrick Collison", 90),
-      c("e2", "Patrick Collison", 50),
+      c("e1", "Sam Rivera", 90),
+      c("e2", "Sam Rivera", 50),
     ]);
     expect(out).toHaveLength(1);
     expect(out[0]?.evalId).toBe("e1"); // higher score wins
@@ -180,8 +180,8 @@ describe("dedupeByFullName", () => {
 
   it("prefers the candidate with a claimer image even at lower score", () => {
     const out = dedupeByFullName([
-      c("e1", "Patrick Collison", 90),
-      c("e2", "Patrick Collison", 50, "img"),
+      c("e1", "Sam Rivera", 90),
+      c("e2", "Sam Rivera", 50, "img"),
     ]);
     expect(out).toHaveLength(1);
     expect(out[0]?.evalId).toBe("e2"); // image-having row wins
@@ -189,8 +189,8 @@ describe("dedupeByFullName", () => {
 
   it("compares case-insensitively and ignores surrounding whitespace", () => {
     const out = dedupeByFullName([
-      c("e1", "  patrick collison ", 50),
-      c("e2", "Patrick Collison", 90),
+      c("e1", "  sam rivera ", 50),
+      c("e2", "Sam Rivera", 90),
     ]);
     expect(out).toHaveLength(1);
   });

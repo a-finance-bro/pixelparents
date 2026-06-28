@@ -11,9 +11,9 @@ function makeGuest(answers: LumaGuest["registration_answers"]): LumaGuest {
 describe("linkedinUrlFromGuest", () => {
   it("finds linkedin by label containing 'linkedin' with /in/handle answer", () => {
     const g = makeGuest([
-      { label: "What is your LinkedIn profile?", question: null, answer: "/in/ebru-yildirim-ollang" },
+      { label: "What is your LinkedIn profile?", question: null, answer: "/in/casey-rivers" },
     ]);
-    expect(linkedinUrlFromGuest(g)).toBe("https://linkedin.com/in/ebru-yildirim-ollang");
+    expect(linkedinUrlFromGuest(g)).toBe("https://linkedin.com/in/casey-rivers");
   });
 
   it("normalizes a full https://www.linkedin.com/in/jane-doe/ URL", () => {

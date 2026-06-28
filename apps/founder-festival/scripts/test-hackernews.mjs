@@ -4,8 +4,8 @@
 // Proves two things:
 //   1. Rich data on a confirmed handle (karma, post/comment counts, top posts).
 //   2. The identity guard: a derived handle that doesn't corroborate is
-//      REJECTED (the `naval` handle has 113 karma + empty bio, and is NOT
-//      Naval Ravikant — we must not attribute it to him).
+//      REJECTED (a low-karma, empty-bio handle that merely resembles the name
+//      is NOT the same person — we must not attribute it to them).
 
 import { enrichWithHackerNews } from "../src/lib/enrichers/hackernews.ts";
 
@@ -15,21 +15,21 @@ function ctx(fullName, linkedinHandle = "") {
 
 const CASES = [
   {
-    label: "pg via Exa-surfaced HN URL — expect RICH data",
-    ctx: ctx("Paul Graham"),
-    urls: ["https://news.ycombinator.com/user?id=pg"],
+    label: "known handle via Exa-surfaced HN URL — expect RICH data",
+    ctx: ctx("Jordan Lee"),
+    urls: ["https://news.ycombinator.com/user?id=jordanlee"],
     expect: "rich",
   },
   {
-    label: "Naval derived, no URL — expect REJECTED (naval handle != Naval Ravikant)",
-    ctx: ctx("Naval Ravikant"),
+    label: "derived, no URL — expect REJECTED (derived handle != the person)",
+    ctx: ctx("Alex Kim"),
     urls: [],
     expect: "empty",
   },
   {
-    label: "Naval via Exa HN URL — expect data (we trust Exa-surfaced URLs)",
-    ctx: ctx("Naval Ravikant"),
-    urls: ["https://news.ycombinator.com/user?id=naval"],
+    label: "via Exa HN URL — expect data (we trust Exa-surfaced URLs)",
+    ctx: ctx("Alex Kim"),
+    urls: ["https://news.ycombinator.com/user?id=alexkim"],
     expect: "rich-ish",
   },
 ];

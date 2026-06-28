@@ -5,7 +5,7 @@
 
 ### Summary of changes since last update
 The /admin/sponsors list now shows each sponsor's **attached people's names** under the sponsor
-(e.g. "Jerel Lim, Shuo Chen"), or "No people attached". No schema/migration.
+(e.g. "Jordan Lee, Alex Kim"), or "No people attached". No schema/migration.
 
 ### Detail of changes made:
 - `src/app/(authed)/admin/sponsors/page.tsx`: fetch `getSponsorProfiles` per sponsor and pass

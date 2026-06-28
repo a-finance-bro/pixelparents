@@ -10,16 +10,17 @@ prestige facts to score. Added prestige terms to the query.
 - `src/lib/exa.ts` `researchLinkedinProfile` — query now also names awards / honors /
   Forbes / Fortune / TIME / 30-under-30 / fellowship / Thiel / Rhodes / MacArthur /
   press. `numResults` unchanged (10) → no cost change.
-- Root cause found by dev rescore: Brian Chesky scored ZERO prestige rows despite
-  TIME100/Forbes coverage; his 33k-char research blob contained no award facts.
+- Root cause found by dev rescore: a well-known consumer-marketplace founder scored
+  ZERO prestige rows despite TIME100/Forbes coverage; his 33k-char research blob
+  contained no award facts.
 - Validated by dev rescore AFTER the change: blob now contains forbes/time/fortune/
-  award/honor/recognized/named, and Chesky scores "Named to Fortune's 40 Under 40
+  award/honor/recognized/named, and the founder scores "Named to Fortune's 40 Under 40
   (+8, T2)" — correctly OFF-RADAR (bare recognition counts in total, not on the
   spider graph). Funding recall unharmed (SEC Form D $201.6M + structured fields).
 
 ### Potential concerns to address:
 - Broadening the single shared research query slightly trades funding-result slots
-  for prestige slots (numResults=10). Empirically funding recall held (Chesky kept
+  for prestige slots (numResults=10). Empirically funding recall held (the founder kept
   all funding facts), because SEC EDGAR + LinkedIn text + structured fields also
   feed funding. Monitor; if a non-prestige founder loses funding recall, bump
   numResults or split into a second small prestige search.

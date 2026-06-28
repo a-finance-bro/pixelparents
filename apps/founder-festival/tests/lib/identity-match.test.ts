@@ -9,14 +9,14 @@ import {
 
 describe("matchConfidence — LinkedIn", () => {
   const profile = {
-    fullName: "Patrick Collison",
+    fullName: "Sam Rivera",
     primaryCompanyDomain: "stripe.com",
-    publicEmail: "patrick@stripe.com",
+    publicEmail: "sam@stripe.com",
   };
 
   it("linkedin email exact match → linkedin-email-exact", () => {
     const r = matchConfidence(
-      { provider: "linkedin", email: "patrick@stripe.com", firstName: "Patrick", lastName: "Collison" },
+      { provider: "linkedin", email: "sam@stripe.com", firstName: "Sam", lastName: "Rivera" },
       "https://linkedin.com/in/pc",
       profile,
     );
@@ -25,18 +25,18 @@ describe("matchConfidence — LinkedIn", () => {
 
   it("linkedin email name+company match → linkedin-email-name-company", () => {
     const r = matchConfidence(
-      { provider: "linkedin", email: "patrick.collison@stripe.com", firstName: "Patrick", lastName: "Collison" },
+      { provider: "linkedin", email: "sam.rivera@stripe.com", firstName: "Sam", lastName: "Rivera" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com" },
+      { fullName: "Sam Rivera", primaryCompanyDomain: "stripe.com" },
     );
     expect(r).toEqual({ kind: "match", signal: "linkedin-email-name-company" });
   });
 
   it("linkedin firstName+lastName matches fullName → linkedin-name-match", () => {
     const r = matchConfidence(
-      { provider: "linkedin", email: "anything@example.com", firstName: "Patrick", lastName: "Collison" },
+      { provider: "linkedin", email: "anything@example.com", firstName: "Sam", lastName: "Rivera" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison" },
+      { fullName: "Sam Rivera" },
     );
     expect(r).toEqual({ kind: "match", signal: "linkedin-name-match" });
   });
@@ -88,7 +88,7 @@ describe("matchConfidence — LinkedIn", () => {
     const r = matchConfidence(
       { provider: "linkedin", email: "x@y.com", firstName: "Foo", lastName: "Bar" },
       "https://linkedin.com/in/x",
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com" },
+      { fullName: "Sam Rivera", primaryCompanyDomain: "stripe.com" },
     );
     expect(r).toEqual({ kind: "no-match", reason: "linkedin-no-signal" });
   });
@@ -106,18 +106,18 @@ describe("matchConfidence — LinkedIn", () => {
 describe("matchConfidence — GitHub", () => {
   it("stored username matches claim username → github-username", () => {
     const r = matchConfidence(
-      { provider: "github", githubUsername: "patrickc" },
+      { provider: "github", githubUsername: "samr" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison", githubUsername: "patrickc" },
+      { fullName: "Sam Rivera", githubUsername: "samr" },
     );
     expect(r).toEqual({ kind: "match", signal: "github-username" });
   });
 
   it("case-insensitive github match", () => {
     const r = matchConfidence(
-      { provider: "github", githubUsername: "PatrickC" },
+      { provider: "github", githubUsername: "SamR" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison", githubUsername: "patrickc" },
+      { fullName: "Sam Rivera", githubUsername: "samr" },
     );
     expect(r).toEqual({ kind: "match", signal: "github-username" });
   });
@@ -126,7 +126,7 @@ describe("matchConfidence — GitHub", () => {
     const r = matchConfidence(
       { provider: "github", githubUsername: "anyone" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison" },
+      { fullName: "Sam Rivera" },
     );
     expect(r).toEqual({ kind: "no-match", reason: "github-no-stored-username" });
   });
@@ -135,7 +135,7 @@ describe("matchConfidence — GitHub", () => {
     const r = matchConfidence(
       { provider: "github", githubUsername: "imposter" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison", githubUsername: "patrickc" },
+      { fullName: "Sam Rivera", githubUsername: "samr" },
     );
     expect(r).toEqual({ kind: "no-match", reason: "github-username-mismatch" });
   });
@@ -144,7 +144,7 @@ describe("matchConfidence — GitHub", () => {
     const r = matchConfidence(
       { provider: "github" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison", githubUsername: "patrickc" },
+      { fullName: "Sam Rivera", githubUsername: "samr" },
     );
     expect(r).toEqual({ kind: "no-match", reason: "github-username-mismatch" });
   });
@@ -153,45 +153,45 @@ describe("matchConfidence — GitHub", () => {
 describe("matchConfidence — Email (standalone provider)", () => {
   it("exact publicEmail match → email-exact", () => {
     const r = matchConfidence(
-      { provider: "email", email: "Patrick@Stripe.com" },
+      { provider: "email", email: "Sam@Stripe.com" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com", publicEmail: "patrick@stripe.com" },
+      { fullName: "Sam Rivera", primaryCompanyDomain: "stripe.com", publicEmail: "sam@stripe.com" },
     );
     expect(r).toEqual({ kind: "match", signal: "email-exact" });
   });
 
   it("non-matching publicEmail falls through to name+company tier", () => {
     const r = matchConfidence(
-      { provider: "email", email: "patrick.collison@stripe.com" },
+      { provider: "email", email: "sam.rivera@stripe.com" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com", publicEmail: "patrick@stripe.com" },
+      { fullName: "Sam Rivera", primaryCompanyDomain: "stripe.com", publicEmail: "sam@stripe.com" },
     );
     expect(r).toEqual({ kind: "match", signal: "email-name-company" });
   });
 
   it("first.last@company → email-name-company", () => {
     const r = matchConfidence(
-      { provider: "email", email: "patrick.collison@stripe.com" },
+      { provider: "email", email: "sam.rivera@stripe.com" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com" },
+      { fullName: "Sam Rivera", primaryCompanyDomain: "stripe.com" },
     );
     expect(r).toEqual({ kind: "match", signal: "email-name-company" });
   });
 
   it("subdomain of stored domain matches", () => {
     const r = matchConfidence(
-      { provider: "email", email: "patrick.collison@eu.stripe.com" },
+      { provider: "email", email: "sam.rivera@eu.stripe.com" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com" },
+      { fullName: "Sam Rivera", primaryCompanyDomain: "stripe.com" },
     );
     expect(r).toEqual({ kind: "match", signal: "email-name-company" });
   });
 
   it("wrong domain → email-no-signal", () => {
     const r = matchConfidence(
-      { provider: "email", email: "patrick.collison@google.com" },
+      { provider: "email", email: "sam.rivera@google.com" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com" },
+      { fullName: "Sam Rivera", primaryCompanyDomain: "stripe.com" },
     );
     expect(r).toEqual({ kind: "no-match", reason: "email-no-signal" });
   });
@@ -200,7 +200,7 @@ describe("matchConfidence — Email (standalone provider)", () => {
     const r = matchConfidence(
       { provider: "email", email: "support@stripe.com" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com" },
+      { fullName: "Sam Rivera", primaryCompanyDomain: "stripe.com" },
     );
     expect(r).toEqual({ kind: "no-match", reason: "email-no-signal" });
   });
@@ -218,7 +218,7 @@ describe("matchConfidence — Email (standalone provider)", () => {
     const r = matchConfidence(
       { provider: "email" },
       "https://linkedin.com/in/pc",
-      { fullName: "Patrick Collison", primaryCompanyDomain: "stripe.com" },
+      { fullName: "Sam Rivera", primaryCompanyDomain: "stripe.com" },
     );
     expect(r).toEqual({ kind: "no-match", reason: "email-no-domain" });
   });
@@ -260,23 +260,23 @@ describe("isOwningConfidence — only 'high' grants mutation ownership", () => {
 
 describe("localPartMatchesName", () => {
   it.each([
-    ["patrick", "Patrick Collison"],
-    ["collison", "Patrick Collison"],
-    ["patrickcollison", "Patrick Collison"],
-    ["patrick.collison", "Patrick Collison"],
-    ["patrick_collison", "Patrick Collison"],
-    ["patrick-collison", "Patrick Collison"],
-    ["pcollison", "Patrick Collison"],
-    ["p.collison", "Patrick Collison"],
-    ["p_collison", "Patrick Collison"],
-    ["collisonpatrick", "Patrick Collison"],
-    ["collison.patrick", "Patrick Collison"],
+    ["sam", "Sam Rivera"],
+    ["rivera", "Sam Rivera"],
+    ["samrivera", "Sam Rivera"],
+    ["sam.rivera", "Sam Rivera"],
+    ["sam_rivera", "Sam Rivera"],
+    ["sam-rivera", "Sam Rivera"],
+    ["srivera", "Sam Rivera"],
+    ["s.rivera", "Sam Rivera"],
+    ["s_rivera", "Sam Rivera"],
+    ["riverasam", "Sam Rivera"],
+    ["rivera.sam", "Sam Rivera"],
   ])("'%s' matches '%s'", (local, name) => {
     expect(localPartMatchesName(local, name)).toBe(true);
   });
 
   it.each([
-    ["patrick", "Patrick"], // single-token name — must still match "patrick"
+    ["sam", "Sam"], // single-token name — must still match "sam"
     ["smith", "Mary Jane Smith"], // multi-token: only first+last considered
     ["mary.smith", "Mary Jane Smith"],
   ])("'%s' matches '%s'", (local, name) => {
@@ -288,11 +288,11 @@ describe("localPartMatchesName", () => {
   });
 
   it("strips +suffix", () => {
-    expect(localPartMatchesName("patrick.collison+spam", "Patrick Collison")).toBe(true);
+    expect(localPartMatchesName("sam.rivera+spam", "Sam Rivera")).toBe(true);
   });
 
   it("is case-insensitive", () => {
-    expect(localPartMatchesName("PATRICK", "patrick collison")).toBe(true);
+    expect(localPartMatchesName("SAM", "sam rivera")).toBe(true);
   });
 
   it("normalizes diacritics (José → jose)", () => {
@@ -301,15 +301,15 @@ describe("localPartMatchesName", () => {
   });
 
   it("rejects unrelated local-parts", () => {
-    expect(localPartMatchesName("admin", "Patrick Collison")).toBe(false);
-    expect(localPartMatchesName("info", "Patrick Collison")).toBe(false);
-    expect(localPartMatchesName("xyz", "Patrick Collison")).toBe(false);
+    expect(localPartMatchesName("admin", "Sam Rivera")).toBe(false);
+    expect(localPartMatchesName("info", "Sam Rivera")).toBe(false);
+    expect(localPartMatchesName("xyz", "Sam Rivera")).toBe(false);
   });
 
   it("returns false on empty inputs", () => {
-    expect(localPartMatchesName("", "Patrick Collison")).toBe(false);
-    expect(localPartMatchesName("patrick", "")).toBe(false);
-    expect(localPartMatchesName("patrick", "   ")).toBe(false);
+    expect(localPartMatchesName("", "Sam Rivera")).toBe(false);
+    expect(localPartMatchesName("sam", "")).toBe(false);
+    expect(localPartMatchesName("sam", "   ")).toBe(false);
   });
 });
 

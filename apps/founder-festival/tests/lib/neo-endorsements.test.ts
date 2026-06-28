@@ -3,7 +3,7 @@ import { neoInvestorUrl } from "@/components/NeoEndorsements";
 
 describe("neoInvestorUrl", () => {
   it("builds the neo.com investor deep link from a slug", () => {
-    expect(neoInvestorUrl("02-suzanne-xie")).toBe("https://neo.com/investor/02-suzanne-xie");
+    expect(neoInvestorUrl("02-dana-cole")).toBe("https://neo.com/investor/02-dana-cole");
   });
 
   it("encodes unexpected characters so the URL stays valid", () => {

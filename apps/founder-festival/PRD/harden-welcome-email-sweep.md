@@ -14,9 +14,9 @@ sweep so a single bad recipient can no longer wedge the whole queue.
   marked in `sent_emails`, delivery confirmed by the operator's inbox (CC to
   founder@festival.so). The 2 unsent rows are stale duplicate "Daniel R. Odio"
   Clerk accounts with no Clerk info → correctly skipped (`if (!info) continue`).
-  Maneesh Sahu WAS sent (8:28 PM PT May 27). Ramesh Raskar is NOT in `users` —
-  he has an `evaluations` row (profile page) but never completed a claim, so no
-  email was ever queued. "Last email at 6:54 AM" = Dan Whaley was the most recent
+  Jordan Lee WAS sent (8:28 PM PT May 27). Alex Kim is NOT in `users` —
+  they have an `evaluations` row (profile page) but never completed a claim, so no
+  email was ever queued. "Last email at 6:54 AM" = Sam Rivera was the most recent
   claim; there have simply been no new claims since. Cron scheduler liveness
   confirmed via `app_stats`/`score_items` (scoring-tick runs every minute).
 - **Fix (`src/lib/welcome-email-sweep.ts`):** wrapped each recipient's

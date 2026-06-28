@@ -16,7 +16,7 @@ What I did while you slept, what's live, what needs you. Newest decisions first.
 ---
 
 ## 1. Chief / Twitter test — works, but async-only
-Real X data came back (actual @paulg tweets w/ dates; **research** mode even returned
+Real X data came back (actual public tweets w/ dates; **research** mode even returned
 engagement stats — "15,016 likes, 1.4M views"). **But latency is multi-minute**
 (both modes >3.5 min). Auth = `X-API-Key` + `X-Project-Id`. Token is in Vercel
 (Prod/Dev).
@@ -27,7 +27,7 @@ pattern**: fire Chief searches → store → fold into score on a later cron swe
 already have that pattern). Spec'd, not built — it's an architecture decision for you.
 
 ## 2. Audit of existing data (`2026-06-06-scoring-data-audit.md`)
-- **P1 (fixed in #225):** founder score was ~pure company market cap (Microsoft =
+- **P1 (fixed in #225):** founder score was ~pure company market cap (a mega-cap =
   1.74M pts; all skill tops out ~255).
 - **P2:** **Neo structured investor facets are 0% populated in prod** → the industry
   filter is empty AND the capital axis is dead. Highest-ROI investor fix. Needs you/me
@@ -41,9 +41,9 @@ already have that pattern). Spec'd, not built — it's an architecture decision 
 ## 3. Calibration — PR #225 (draft, gated on you)
 Log curve `points = max(1, round(k·(log10(usd)−6)))`, k=40 outcome / 20 raise.
 **Preview over 872 prod profiles** (credibility now beats size):
-- Bill Gates 1,737,155 → **505** (#1→#2, still elite).
-- **mitchell-hashimoto #31→#6**, **geoff-schmidt #75→#12**, garry-tan ▲121,
-  joe-gebbia ▲110, max-stoiber / daniel-stenberg (curl) / sarah-guo all climbing.
+- Jordan Lee 1,737,155 → **505** (#1→#2, still elite).
+- **alex-kim #31→#6**, **sam-rivera #75→#12**, taylor-morgan ▲121,
+  jordan-park ▲110, casey-brooks / riley-shah (OSS maintainer) / robin-diaz all climbing.
 - To ship: approve `k` → I merge + `recompute-dollar-curve.ts --apply` (recalibrates
   all 359 affected rows with **no rescore**). Must go together.
 

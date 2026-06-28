@@ -27,9 +27,9 @@ describe("buildIssuerFacts", () => {
   });
 
   it("renders a founder-raise fact for an operating company", () => {
-    const [fact] = buildIssuerFacts(operating(), "Patrick Collison");
+    const [fact] = buildIssuerFacts(operating(), "Sam Rivera");
     expect(fact).toContain(
-      "Patrick Collison is a named related person on an exempt-offering filing by Stripe, Inc.",
+      "Sam Rivera is a named related person on an exempt-offering filing by Stripe, Inc.",
     );
     expect(fact).toContain("largest offering $200M sold");
     expect(fact).toContain("most recent 2024-01-01");
@@ -44,7 +44,7 @@ describe("buildIssuerFacts", () => {
   });
 
   it("adds an authoritative IPO/exit fact when the operating company has gone public", () => {
-    const facts = buildIssuerFacts(operating({ isIpo: true }), "Patrick Collison");
+    const facts = buildIssuerFacts(operating({ isIpo: true }), "Sam Rivera");
     expect(facts).toHaveLength(2);
     expect(facts[1]).toContain("gone public");
     expect(facts[1]).toContain("Stripe, Inc.");
@@ -58,7 +58,7 @@ describe("buildIssuerFacts", () => {
       isIpo: false,
       filings: [{ date: "2023-06-01", sold: 10_000_000, offering: 25_000_000, url: "u" }],
     };
-    const [fact] = buildIssuerFacts(fund, "Jenny Fielding");
+    const [fact] = buildIssuerFacts(fund, "Robin Hartley");
     expect(fact).toContain("fund manager / GP");
     expect(fact).toContain("pooled investment fund");
     // fund size prefers the offering amount (fund target) over committed-to-date

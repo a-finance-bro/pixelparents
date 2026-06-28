@@ -5,7 +5,7 @@
 
 ### Summary of changes since last update
 Attendee hub directory is now a single column (one attendee per full-width row) instead of a
-2-col grid — the two columns were too narrow and badges (e.g. Dan Whaley's) overflowed the card.
+2-col grid — the two columns were too narrow and badges (e.g. Jordan Lee's) overflowed the card.
 One-line change. No schema/migration.
 
 ### Detail of changes made:

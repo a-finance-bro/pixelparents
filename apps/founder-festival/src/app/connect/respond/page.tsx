@@ -16,7 +16,7 @@ export default async function ConnectRespondPage({ searchParams }: PageProps) {
   const action = sp.action === "approved" ? "approved" : sp.action === "denied" ? "denied" : null;
 
   // Resolve the requester's name so the heading names who's asking, e.g.
-  // "Approve Jensen Huang's Connection Request". Falls back to a generic heading
+  // "Approve Jordan Lee's Connection Request". Falls back to a generic heading
   // when the token is unknown (already handled / invalid link). The name links to
   // their festival profile.
   const request = token ? await getConnectionRequestByToken(token) : null;

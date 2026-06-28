@@ -26,5 +26,5 @@ UI entirely).
 ### Side task done in the same session (not in this commit):
 - Deleted Daniel R. Odio's single claim row on the dev Neon branch
   (eval `ffbc7bf1-4376-4321-97c1-74ea87e0753e`, clerk_user_id
-  `user_3E5tmyP6TiI5MQlxOH2hGD25lAr`) so the user can re-test the
+  `user_EXAMPLE0000000000000000000`) so the user can re-test the
   claim flow from scratch. Eval row preserved.

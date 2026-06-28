@@ -52,8 +52,9 @@ Made NFX resolution robust to name variants by anchoring on the LinkedIn handle.
 - TDD: `tests/lib/nfx-resolution.test.ts` (5 tests, RED→GREEN). tsc + eslint clean.
 - Live: fed the failing name "Daniel Rubén Odio" → now **9 facts, authoritative
   (LinkedIn match), slug drodio, portfolio 5** (Magic, CloudApp, Roadie,
-  AltSchool, AngelList), claimed, leads rounds. Negative control (Linus Torvalds)
-  → 0 facts. Investor signal is now deterministic, no longer dependent on Exa.
+  AltSchool, AngelList), claimed, leads rounds. Negative control (a well-known
+  open-source maintainer) → 0 facts. Investor signal is now deterministic, no
+  longer dependent on Exa.
 
 ### Potential concerns to address:
 - This fixes RECALL/consistency of the NFX source. The broader scoring

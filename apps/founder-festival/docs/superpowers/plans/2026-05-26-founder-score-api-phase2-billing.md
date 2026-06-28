@@ -532,7 +532,7 @@ export async function GET(req: Request) {
   `DOTENV_CONFIG_PATH=.env.local pnpm exec tsx -e "import('@/db').then(async({db})=>{const{creditBalances}=await import('@/db/schema');await db.insert(creditBalances).values({clerkUserId:'dev-test-user',balanceCents:100000}).onConflictDoUpdate({target:creditBalances.clerkUserId,set:{balanceCents:100000}});console.log('seeded');process.exit(0)})"`
   Then with `KEY` = the Phase-1 dev key:
   - `GET /api/v1/credits` with the key → `{ balance_cents: 100000 }`.
-  - `POST /api/v1/score` `{linkedin_url:"https://linkedin.com/in/barmstrong"}` (cached) → 200, `cached:true`, no charge.
+  - `POST /api/v1/score` `{linkedin_url:"https://linkedin.com/in/jordan-lee"}` (cached) → 200, `cached:true`, no charge.
   - `POST` `{linkedin_url:"https://linkedin.com/in/<someone-NOT-scored>", mode:"score_if_needed"}` → 200 with a fresh score, `cost.charged_cents > 0`; `GET /api/v1/credits` shows the balance dropped by that amount.
   - Set balance to 0, repeat the paid call → `402 payment_required`.
   Report the actual outputs.

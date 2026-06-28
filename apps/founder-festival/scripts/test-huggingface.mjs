@@ -3,10 +3,10 @@
 //
 // Proves four things:
 //   1. Known-URL path: trusts a bare huggingface.co/<username> URL from Exa.
-//   2. Clement Delangue (CEO, handle "clem") via known URL.
-//   3. Derived-candidate precision guard: julien-c cannot be derived from
-//      "Julien Chaumond" alone — correct that we return 0 facts (recall loss
-//      is acceptable; false attribution is worse).
+//   2. A platform CEO (handle that differs from the name) via known URL.
+//   3. Derived-candidate precision guard: a username that cannot be derived from
+//      the name alone — correct that we return 0 facts (recall loss is
+//      acceptable; false attribution is worse).
 //   4. Bogus name guard: totally unknown person returns 0 facts.
 
 import { enrichWithHuggingFace } from "../src/lib/enrichers/huggingface.ts";
@@ -17,20 +17,20 @@ function ctx(fullName, linkedinHandle = "") {
 
 const CASES = [
   {
-    label: "Julien Chaumond via known URL — expect RICH data",
-    ctx: ctx("Julien Chaumond"),
-    urls: ["https://huggingface.co/julien-c"],
+    label: "Jordan Lee via known URL — expect RICH data",
+    ctx: ctx("Jordan Lee"),
+    urls: ["https://huggingface.co/jordanlee"],
     expect: "rich",
   },
   {
-    label: "Clement Delangue (CEO) via known URL — expect RICH data",
-    ctx: ctx("Clement Delangue"),
-    urls: ["https://huggingface.co/clem"],
+    label: "Alex Kim (CEO) via known URL — expect RICH data",
+    ctx: ctx("Alex Kim"),
+    urls: ["https://huggingface.co/alexkim"],
     expect: "rich",
   },
   {
-    label: "Julien Chaumond derived only (no URL) — expect EMPTY (precision guard: 'julien-c' not derivable from name)",
-    ctx: ctx("Julien Chaumond", "julienchaumond"),
+    label: "Jordan Lee derived only (no URL) — expect EMPTY (precision guard: handle not derivable from name)",
+    ctx: ctx("Jordan Lee", "jordanleehf"),
     urls: [],
     expect: "empty",
   },

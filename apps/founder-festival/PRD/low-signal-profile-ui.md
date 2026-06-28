@@ -2,7 +2,7 @@
 *(Most recent updates at top)*
 
 ### Summary of changes since last update
-Cleaned up the low-signal profile page (e.g. festival.so/profile/founder/aman-sharma — an eval without enough public data to score). Removed the placeholder "0", de-boxed and enlarged the "not enough data" message, turned the claim CTA into a gold link, and dropped the unclaimed-notice + events button on this view.
+Cleaned up the low-signal profile page (e.g. festival.so/profile/founder/jordan-lee — an eval without enough public data to score). Removed the placeholder "0", de-boxed and enlarged the "not enough data" message, turned the claim CTA into a gold link, and dropped the unclaimed-notice + events button on this view.
 
 ### Detail of changes made:
 - `src/components/LowSignalProfile.tsx`:

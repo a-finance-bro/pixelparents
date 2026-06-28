@@ -6,8 +6,8 @@
 import { groundSubjectFacts, renderGroundedFacts } from "../src/lib/exa-grounding.ts";
 
 const SUBJECTS = [
-  ["Patrick Collison", "Stripe"],
-  ["Garry Tan", "Y Combinator"], // investor-leaning
+  ["Jordan Lee", "a startup"],
+  ["Alex Kim", "a venture fund"], // investor-leaning
 ];
 
 for (const [name, hint] of SUBJECTS) {

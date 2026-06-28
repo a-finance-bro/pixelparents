@@ -75,10 +75,10 @@ describe("parsePasteInput — inline phone extraction", () => {
 });
 
 describe("parsePasteInput — YC-style multi-line paste", () => {
-  const ycPaste = `Joe Gebbia
+  const ycPaste = `Avery Quinn
 W09
 Founder/CPO at
-Airbnb (W09)
+Skylight (W09)
 Jan 2008 - Present
 ·
 United States
@@ -87,24 +87,24 @@ Previously at
 Chronicle Books
 ,
 7 more
-Brian Chesky
-Brian Chesky
+Jordan Blake
+Jordan Blake
 W09
 Founder/CEO at
-Airbnb (W09)
+Skylight (W09)
 Sep 2007 - Present
 ·
 San Francisco, CA, USA
 ·
 Previously at
-Brian Chesky
+Jordan Blake
 ,
 1 more
-Andy Fang
-Andy Fang
+Casey Tran
+Casey Tran
 S13
 Founder at
-DoorDash (S13)
+Dashwave (S13)
 Jan 2013 - Present
 ·
 San Francisco, CA, USA
@@ -113,11 +113,11 @@ Previously at
 Stanford University
 ,
 2 more
-Tony Xu
-Tony Xu
+Devon Park
+Devon Park
 S13
 Founder/CEO at
-DoorDash (S13)
+Dashwave (S13)
 May 2013 - Present
 ·
 San Francisco, CA, USA
@@ -126,63 +126,63 @@ Previously at
 Square
 ,
 5 more
-Stanley Tang
-Stanley Tang
+Riley Soto
+Riley Soto
 S13
 Founder at
-DoorDash (S13)
+Dashwave (S13)
 Dec 2012 - Present
 ·
 San Francisco, CA, USA
 ·
 Previously at
 Facebook
-Brian Armstrong
-Brian Armstrong
+Morgan Ellis
+Morgan Ellis
 S12
 Founder/CEO at
-Coinbase (S12)
+Chainbase (S12)
 May 2012 - Present
 ·
 Los Angeles, CA, USA
 ·
 Previously at
-Airbnb (W09)
+Skylight (W09)
 ,
 3 more
-Neeraj Singh
-Neeraj Singh
+Aarav Mehta
+Aarav Mehta
 W18
 Founder at
-Groww (W18)
+Sprout (W18)
 Bengaluru, India
 ·
 Previously at
 Ivy Comptech
-Ishan Bansal
-Ishan Bansal
+Vikram Rao
+Vikram Rao
 W18
 Founder at
-Groww (W18)
+Sprout (W18)
 Apr 2016 - Present
 ·
 Bengaluru, KA, India
 ·
 Previously at
-Groww (W18)
+Sprout (W18)
 ,
 7 more
-Harsh Jain
-Harsh Jain
+Rohan Iyer
+Rohan Iyer
 W18
 Founder/COO at
-Groww (W18)
+Sprout (W18)
 Apr 2016 - Present
 ·
 Bengaluru, India
 ·
 Previously at
-Groww (W18)`;
+Sprout (W18)`;
 
   it("extracts (name, company) for every entry", () => {
     const r = parsePasteInput(ycPaste);
@@ -190,15 +190,15 @@ Groww (W18)`;
       p.kind === "nameCompany" ? { name: p.name, company: p.company } : null,
     );
     expect(pairs).toEqual([
-      { name: "Joe Gebbia", company: "Airbnb" },
-      { name: "Brian Chesky", company: "Airbnb" },
-      { name: "Andy Fang", company: "DoorDash" },
-      { name: "Tony Xu", company: "DoorDash" },
-      { name: "Stanley Tang", company: "DoorDash" },
-      { name: "Brian Armstrong", company: "Coinbase" },
-      { name: "Neeraj Singh", company: "Groww" },
-      { name: "Ishan Bansal", company: "Groww" },
-      { name: "Harsh Jain", company: "Groww" },
+      { name: "Avery Quinn", company: "Skylight" },
+      { name: "Jordan Blake", company: "Skylight" },
+      { name: "Casey Tran", company: "Dashwave" },
+      { name: "Devon Park", company: "Dashwave" },
+      { name: "Riley Soto", company: "Dashwave" },
+      { name: "Morgan Ellis", company: "Chainbase" },
+      { name: "Aarav Mehta", company: "Sprout" },
+      { name: "Vikram Rao", company: "Sprout" },
+      { name: "Rohan Iyer", company: "Sprout" },
     ]);
   });
 
@@ -244,14 +244,14 @@ Acme (W22)`;
 // split), which corrupted LinkedIn resolution — see the duplicate-profile bug.
 describe("parsePasteInput — tab-separated rows (Sheets/Excel paste)", () => {
   it("takes the first tab field as the name, not the whole row", () => {
-    const r = parsePasteInput("Mayank Mehta\tMayank\tMehta\tmayank@pulse.qa");
+    const r = parsePasteInput("Jordan Lee\tJordan\tLee\tjordan@northwind.io");
     expect(r).toEqual([
       {
         kind: "nameCompany",
-        raw: "Mayank Mehta\tMayank\tMehta\tmayank@pulse.qa",
-        name: "Mayank Mehta",
+        raw: "Jordan Lee\tJordan\tLee\tjordan@northwind.io",
+        name: "Jordan Lee",
         company: null,
-        email: "mayank@pulse.qa",
+        email: "jordan@northwind.io",
       },
     ]);
   });
