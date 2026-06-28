@@ -32,16 +32,9 @@ export default async function ThanksPage({
   const firstName = signup?.firstName ?? null;
   const kids = editData?.kids ?? [];
 
-  // Presign already-saved (private) family photos so the editor can show them
-  // and resubmitting keeps them instead of wiping them.
+  // Family-level photos are now collected on the first signup form; the thanks
+  // page only needs whether any exist (to vary the heading), not their URLs.
   const initialPhotos = signup?.photos ?? [];
-  const photoUrls = initialPhotos.length
-    ? await signedPhotoUrls(initialPhotos.map((p) => p.pathname))
-    : [];
-  const initialPhotoPreviews: Record<string, string> = {};
-  initialPhotos.forEach((p, i) => {
-    if (photoUrls[i]) initialPhotoPreviews[p.pathname] = photoUrls[i]!;
-  });
 
   // Presign each child's photos too, keyed by child id — all children in
   // parallel so render latency doesn't grow with the number of children.
@@ -129,11 +122,6 @@ export default async function ThanksPage({
           <FamilyForm
             signupId={id ?? ""}
             suggestedInterests={interestPool}
-            initialCity={signup?.city ?? ""}
-            initialUsState={signup?.state ?? ""}
-            initialParentInterests={signup?.parentInterests ?? []}
-            initialPhotos={initialPhotos}
-            initialPhotoPreviews={initialPhotoPreviews}
             existingChildren={kids.map((k) => ({
               id: k.id,
               firstName: k.firstName,

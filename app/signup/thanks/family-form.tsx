@@ -9,7 +9,6 @@ import { MentionCaptionInput, type MentionCandidate } from "@/components/mention
 import { iconForInterest } from "@/lib/interest-icons";
 import { useAutoSave } from "@/lib/use-auto-save";
 import { SaveStatus } from "@/components/save-status";
-import { patchSignup, type SignupPatch } from "../actions";
 import { addChild, patchChild, removeChild, type ChildPatch } from "./actions";
 
 const MAX_PHOTOS = 200;
@@ -433,32 +432,12 @@ function ChildCard({
 export default function FamilyForm({
   signupId,
   suggestedInterests,
-  initialCity = "",
-  initialUsState = "",
-  initialParentInterests = [],
-  initialPhotos = [],
-  initialPhotoPreviews = {},
   existingChildren = [],
 }: {
   signupId: string;
   suggestedInterests: string[];
-  initialCity?: string;
-  initialUsState?: string;
-  initialParentInterests?: string[];
-  initialPhotos?: Photo[];
-  initialPhotoPreviews?: Record<string, string>;
   existingChildren?: ExistingChild[];
 }) {
-  const saveFamily = useCallback(
-    async (patch: SignupPatch) => {
-      const r = await patchSignup(signupId, patch);
-      if (!r.ok) throw new Error("save failed");
-    },
-    [signupId],
-  );
-  const { queue, status } = useAutoSave<SignupPatch>(saveFamily);
-
-  const [parentInterests, setParentInterests] = useState<string[]>(initialParentInterests);
   const [children, setChildren] = useState<ExistingChild[]>(existingChildren);
   const [adding, setAdding] = useState(false);
 
@@ -483,10 +462,6 @@ export default function FamilyForm({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-center justify-end">
-        <SaveStatus status={status} />
-      </div>
-
       {/* Children */}
       <section className="flex flex-col gap-4">
         <div>
