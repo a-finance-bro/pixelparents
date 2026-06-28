@@ -17,6 +17,20 @@ const inputCls =
   "mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-white/30 outline-none focus:border-white/40 focus:ring-1 focus:ring-white/40";
 const h3Cls = "text-base font-semibold text-white";
 
+// Highlights the typed portion of a suggestion in gold as it matches.
+function HighlightedText({ text, query }: { text: string; query: string }) {
+  if (!query) return <>{text}</>;
+  const i = text.toLowerCase().indexOf(query.toLowerCase());
+  if (i === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, i)}
+      <span className="text-amber-400">{text.slice(i, i + query.length)}</span>
+      {text.slice(i + query.length)}
+    </>
+  );
+}
+
 export function TagPicker({
   value,
   onChange,
@@ -29,14 +43,28 @@ export function TagPicker({
   placeholder: string;
 }) {
   const [draft, setDraft] = useState("");
+  const q = draft.trim();
+  const ql = q.toLowerCase();
+
+  // Add a tag — preferring an existing suggestion's exact spelling so typing
+  // "biking" selects the existing "Biking" rather than creating a near-duplicate.
   const add = (raw: string) => {
     const t = raw.trim();
     if (!t) return;
-    if (!value.some((v) => v.toLowerCase() === t.toLowerCase())) onChange([...value, t]);
+    const canonical = suggestions.find((s) => s.toLowerCase() === t.toLowerCase()) ?? t;
+    if (!value.some((v) => v.toLowerCase() === canonical.toLowerCase())) {
+      onChange([...value, canonical]);
+    }
     setDraft("");
   };
   const remove = (t: string) => onChange(value.filter((v) => v !== t));
-  const available = suggestions.filter((s) => !value.some((v) => v.toLowerCase() === s.toLowerCase()));
+
+  const notSelected = suggestions.filter(
+    (s) => !value.some((v) => v.toLowerCase() === s.toLowerCase()),
+  );
+  // As you type, only keep suggestions that contain the typed text.
+  const available = ql ? notSelected.filter((s) => s.toLowerCase().includes(ql)) : notSelected;
+
   return (
     <div className="mt-1">
       {value.length > 0 && (
@@ -74,15 +102,23 @@ export function TagPicker({
         <div className="mt-2 flex flex-wrap gap-2">
           {available.map((s) => {
             const Icon = iconForInterest(s);
+            const exact = ql !== "" && s.toLowerCase() === ql;
             return (
               <button
                 type="button"
                 key={s}
+                // Stop the input's onBlur (which would add the raw draft) from
+                // firing before this click registers.
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => add(s)}
-                className="inline-flex items-center gap-1.5 rounded-md border border-white/20 px-3 py-1 text-sm text-white/70 transition-colors hover:bg-white/10"
+                className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-sm transition-colors hover:bg-white/10 ${
+                  exact
+                    ? "border-amber-400 text-amber-400"
+                    : "border-white/20 text-white/70"
+                }`}
               >
                 <Icon className="h-3.5 w-3.5" strokeWidth={2} />
-                {s}
+                {exact ? s : <HighlightedText text={s} query={q} />}
               </button>
             );
           })}
