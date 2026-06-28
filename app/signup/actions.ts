@@ -294,6 +294,11 @@ export async function submitSignup(
 // single UPDATE with a `FOR UPDATE` row lock, so concurrent calls serialize on
 // the row and cannot race past the cap. We count ATTEMPTS (not just successful
 // sends) toward the cap — that's what actually bounds outbound relay volume.
+//
+// The granted count is `LEAST(cap, used+want) - used`. That clamp is the
+// canonical spec captured by the pure, unit-tested `grantedQuota()` in
+// lib/invite.ts — keep the SQL below and that helper in lockstep (they must
+// agree for the same inputs).
 async function reserveInviteQuota(signupId: string, want: number): Promise<number> {
   const sql = getSql();
   const rows = (await sql`
@@ -313,6 +318,7 @@ async function reserveInviteQuota(signupId: string, want: number): Promise<numbe
               LEAST(${INVITE_LIFETIME_CAP}, locked.used + ${want}) AS used_after
   `) as Array<{ used_before: number; used_after: number }>;
   if (rows.length === 0) return 0;
+  // Mirrors grantedQuota(used_before, want): used_after - used_before.
   return Math.max(0, Number(rows[0].used_after) - Number(rows[0].used_before));
 }
 
