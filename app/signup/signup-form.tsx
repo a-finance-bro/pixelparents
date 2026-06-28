@@ -100,9 +100,14 @@ export default function SignupForm({ joinToken }: { joinToken?: string } = {}) {
     if (res.ok && res.sent > 0) {
       setInviteState("sent");
       setInviteRaw("");
+      const capped = res.sent < res.requested;
       setInviteNote(
-        `Sent ${res.sent} invite${res.sent === 1 ? "" : "s"}. They'll get a link to fill out their info.`,
+        `Sent ${res.sent} invite${res.sent === 1 ? "" : "s"}. They'll get a link to fill out their info.` +
+          (capped ? ` (${res.requested - res.sent} not sent — invite limit reached.)` : ""),
       );
+    } else if (res.error === "limit") {
+      setInviteState("error");
+      setInviteNote("You've reached the invite limit for this signup.");
     } else {
       setInviteState("error");
       setInviteNote("We couldn't send those invites. Please try again.");
