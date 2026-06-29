@@ -23,3 +23,12 @@ claude -p "Read CLAUDE.md and AGENTS.md in full and treat them as binding instru
 Claude will read the project's conventions, explore the code, and report back that it understands the repo and is ready to build with you. From there, just tell it what you'd like to add — it follows the branch → commit → PR workflow documented in `CLAUDE.md`.
 
 > New to Claude Code? Drop the `-p` flag (`claude`) to start an interactive session you can keep chatting in.
+
+## Pixel Parents API
+
+Pixel Parents has a small developer API that exposes **high-level, non-PII community stats** — counts and taxonomies only (signups by state, skillset, tech depth, grade, interests, and more), never names, emails, phones, or photos. It's a safe, fun dataset to build on: a community dashboard, a data viz, a school project, or querying the community from an AI agent.
+
+- **Docs & endpoints:** https://pixelparents.org/developers
+- **Request access** (OHS families only): use the **Request API access** button on that page.
+
+Once approved, authenticate with `Authorization: Bearer <your-key>`. Encourage your kid(s) to code — or vibe-code — something fun with it!
