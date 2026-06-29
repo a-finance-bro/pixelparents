@@ -64,9 +64,14 @@ export function geocodeLocation(query: string | null | undefined): LatLng | null
   if (lastUpper.length === 2 && STATE_CENTROIDS[lastUpper]) {
     abbr = lastUpper;
   } else {
-    // Full state name → abbr (STATE_ABBR is keyed by Title Case full names).
-    const titled = last.replace(/\b\w/g, (c) => c.toUpperCase());
-    abbr = STATE_ABBR[titled] ?? null;
+    // Full state name → abbr, matched case-insensitively so "new york",
+    // "NEW YORK", and "District of Columbia" all resolve regardless of casing
+    // or lowercase connector words.
+    const lastLower = last.toLowerCase();
+    const fullKey = Object.keys(STATE_ABBR).find(
+      (k) => k.toLowerCase() === lastLower,
+    );
+    abbr = fullKey ? STATE_ABBR[fullKey] : null;
   }
   if (!abbr) return null;
 
@@ -78,4 +83,33 @@ export function geocodeLocation(query: string | null | undefined): LatLng | null
   }
   // Fall back to the state centroid.
   return STATE_CENTROIDS[abbr] ?? null;
+}
+
+// A family matches the age-range filter if ANY of its (shown) children's derived
+// ages falls in [lower, upper]. `upper >= ageMax` means "ageMax+" (no upper
+// bound). Children with a null age (no birthYear and a non-numeric grade) never
+// match, so a family that shared no age-derivable children is excluded while the
+// filter is active — by design (the UI surfaces this). Pure + testable.
+export function familyMatchesAgeRange(
+  childAges: (number | null)[],
+  lower: number,
+  upper: number,
+  ageMax: number,
+): boolean {
+  const hiBound = upper >= ageMax ? Infinity : upper;
+  return childAges.some((a) => a != null && a >= lower && a <= hiBound);
+}
+
+// A family matches the radius filter if its coordinate is within `miles` of the
+// origin. `miles === Infinity` ("Worldwide") matches everyone, including
+// families that couldn't be geocoded. Otherwise a null coordinate (location not
+// shared, or ungeocodable) is excluded. Pure + testable.
+export function familyWithinRadius(
+  coords: LatLng | null,
+  origin: LatLng,
+  miles: number,
+): boolean {
+  if (miles === Infinity) return true;
+  if (!coords) return false;
+  return haversineMiles(origin, coords) <= miles;
 }

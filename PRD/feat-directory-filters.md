@@ -1,3 +1,35 @@
+## Progress Update as of June 28, 2026 — 7:27 PM Pacific
+
+### Summary of changes since last update
+Drained the roborev review loop for the initial commit (two reviews, all
+Low/Medium, no blockers). Applied the valuable findings and declined the rest
+with recorded reasons.
+
+### Detail of changes made
+- **Extracted pure, unit-tested filter predicates** (`familyMatchesAgeRange`,
+  `familyWithinRadius`) into `lib/directory-filters.ts` and rewired the client to
+  use them — addresses the "new filter logic untested" finding. +7 tests (39 total).
+- **Perf**: the client now precomputes each card's coordinate once
+  (`coordsByToken` `useMemo` keyed on `cards`) instead of re-geocoding every card
+  on each keystroke / filter change.
+- **Geocoding robustness**: full state-name lookup is now case-insensitive (so
+  "district of columbia" / odd casing resolve; previously a naive title-case could
+  mismatch keys with lowercase connectors).
+- **UX**: a typed location that can't be placed now sets a distinct `"notfound"`
+  status with its own message (no longer conflated with browser geolocation
+  "denied"); added a small note "(only families who shared child ages)" next to the
+  age slider so its exclusion of age-less families is explicit.
+- **Declined (recorded via `roborev comment` then closed)**: lowering `AGE_MIN`
+  to 0 — the task spec mandates the 1…18 range; generic `DualRange` aria-labels —
+  single age-only call site (YAGNI).
+
+### Verification
+- `npx tsc --noEmit` clean; `npx eslint` clean on changed files;
+  `npx vitest run lib/directory.test.ts` → 39 passing. roborev open list drained
+  to zero (jobs 14446, 14447 closed).
+
+---
+
 ## Progress Update as of June 28, 2026 — 7:22 PM Pacific
 
 ### Summary of changes since last update

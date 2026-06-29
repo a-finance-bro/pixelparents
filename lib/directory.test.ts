@@ -7,6 +7,7 @@ import {
   haversineMiles,
   isDirectoryVisible,
 } from "@/lib/directory";
+import { familyMatchesAgeRange, familyWithinRadius } from "@/lib/directory-filters";
 import type { SignupRow, ChildRow } from "@/lib/db/schema/signups";
 
 // Fixed "current year" so age derivation is deterministic in tests.
@@ -276,5 +277,49 @@ describe("geocodeLocation (offline static geocoding)", () => {
     expect(geocodeLocation("")).toBeNull();
     expect(geocodeLocation(null)).toBeNull();
     expect(geocodeLocation("Atlantis")).toBeNull();
+  });
+});
+
+describe("familyMatchesAgeRange (age filter predicate)", () => {
+  const MAX = 18;
+
+  it("matches when any child's age is in [lower, upper]", () => {
+    expect(familyMatchesAgeRange([8, 14], 12, 16, MAX)).toBe(true);
+    expect(familyMatchesAgeRange([8], 12, 16, MAX)).toBe(false);
+  });
+
+  it("treats upper at AGE_MAX as '18+' (no upper bound)", () => {
+    expect(familyMatchesAgeRange([25], 8, 18, MAX)).toBe(true); // 18+ catches 25
+    expect(familyMatchesAgeRange([25], 8, 17, MAX)).toBe(false); // capped at 17
+  });
+
+  it("ignores null ages and excludes families with no derivable ages", () => {
+    expect(familyMatchesAgeRange([null, 10], 8, 12, MAX)).toBe(true);
+    expect(familyMatchesAgeRange([null, null], 8, 12, MAX)).toBe(false);
+    expect(familyMatchesAgeRange([], 8, 12, MAX)).toBe(false);
+  });
+
+  it("matches a single age at the boundaries", () => {
+    expect(familyMatchesAgeRange([12], 12, 12, MAX)).toBe(true);
+  });
+});
+
+describe("familyWithinRadius (radius filter predicate)", () => {
+  const sf: [number, number] = [37.7749, -122.4194];
+  const la: [number, number] = [34.0522, -118.2437];
+
+  it("includes a family inside the radius and excludes one outside", () => {
+    expect(familyWithinRadius(sf, sf, 10)).toBe(true);
+    expect(familyWithinRadius(la, sf, 100)).toBe(false); // ~347 mi apart
+    expect(familyWithinRadius(la, sf, 400)).toBe(true);
+  });
+
+  it("Worldwide (Infinity) matches everyone, including ungeocodable", () => {
+    expect(familyWithinRadius(null, sf, Infinity)).toBe(true);
+    expect(familyWithinRadius(la, sf, Infinity)).toBe(true);
+  });
+
+  it("excludes ungeocodable families under a finite radius", () => {
+    expect(familyWithinRadius(null, sf, 50)).toBe(false);
   });
 });

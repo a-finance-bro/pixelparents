@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { iconForInterest } from "@/lib/interest-icons";
-import { geocodeLocation, haversineMiles } from "@/lib/directory-filters";
+import {
+  familyMatchesAgeRange,
+  familyWithinRadius,
+  geocodeLocation,
+} from "@/lib/directory-filters";
+import type { LatLng } from "@/lib/data/us-geo";
 import type { DirectoryCard } from "@/lib/directory";
 
 export type { DirectoryCard };
@@ -230,7 +235,17 @@ export function DirectoryClient({ cards }: { cards: DirectoryCard[] }) {
   const [origin, setOrigin] = useState<[number, number] | null>(null);
   const [originLabel, setOriginLabel] = useState<string>("");
   const [locInput, setLocInput] = useState("");
-  const [geoStatus, setGeoStatus] = useState<"idle" | "locating" | "denied">("idle");
+  const [geoStatus, setGeoStatus] = useState<
+    "idle" | "locating" | "denied" | "notfound"
+  >("idle");
+
+  // Geocode each card's location ONCE (locations never change), so the radius
+  // filter doesn't re-parse the whole list on every keystroke / filter change.
+  const coordsByToken = useMemo(() => {
+    const m = new Map<string, LatLng | null>();
+    for (const c of cards) m.set(c.token, geocodeLocation(c.location));
+    return m;
+  }, [cards]);
 
   const requestGeolocation = () => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -265,7 +280,9 @@ export function DirectoryClient({ cards }: { cards: DirectoryCard[] }) {
       setOriginLabel(locInput.trim());
       setGeoStatus("idle");
     } else {
-      setGeoStatus("denied");
+      // Distinct from a browser "denied" so the message can speak to the typed
+      // value rather than geolocation permission.
+      setGeoStatus("notfound");
     }
   };
 
@@ -325,21 +342,28 @@ export function DirectoryClient({ cards }: { cards: DirectoryCard[] }) {
           .toLowerCase();
         if (!haystack.includes(q)) return false;
       }
-      // Age range: a family matches if ANY shown child's derived age is within
-      // [ageLower, ageUpper] (ageUpper === AGE_MAX means "18+", no upper bound).
-      if (ageActive) {
-        const hiBound = ageUpper >= AGE_MAX ? Infinity : ageUpper;
-        const anyInRange = c.children.some(
-          (k) => k.age != null && k.age >= ageLower && k.age <= hiBound,
-        );
-        if (!anyInRange) return false;
+      // Age range: any shown child's derived age within [lower, upper] (upper at
+      // AGE_MAX means "18+"). Families with no age-derivable children don't match.
+      if (
+        ageActive &&
+        !familyMatchesAgeRange(
+          c.children.map((k) => k.age),
+          ageLower,
+          ageUpper,
+          AGE_MAX,
+        )
+      ) {
+        return false;
       }
-      // Radius: only families that shared a geocodable location qualify. When the
-      // radius is active but a family can't be placed, it's excluded.
-      if (radiusOn && origin && radiusMiles !== Infinity) {
-        const coords = geocodeLocation(c.location);
-        if (!coords) return false;
-        if (haversineMiles(origin, coords) > radiusMiles) return false;
+      // Radius: ungeocodable / location-not-shared families are excluded when a
+      // finite radius is active (Worldwide keeps everyone).
+      if (
+        radiusOn &&
+        origin &&
+        radiusMiles !== Infinity &&
+        !familyWithinRadius(coordsByToken.get(c.token) ?? null, origin, radiusMiles)
+      ) {
+        return false;
       }
       return true;
     });
@@ -365,6 +389,7 @@ export function DirectoryClient({ cards }: { cards: DirectoryCard[] }) {
     radiusOn,
     origin,
     radiusMiles,
+    coordsByToken,
   ]);
 
   const controlCls =
@@ -447,6 +472,11 @@ export function DirectoryClient({ cards }: { cards: DirectoryCard[] }) {
                 ✕
               </button>
             )}
+            {ageActive && (
+              <span className="text-xs text-white/35">
+                (only families who shared child ages)
+              </span>
+            )}
           </div>
 
           {/* Location radius filter (opt-in) */}
@@ -516,6 +546,11 @@ export function DirectoryClient({ cards }: { cards: DirectoryCard[] }) {
                 {geoStatus === "denied" && !origin && (
                   <span className="text-xs text-amber-400/80">
                     Couldn&apos;t locate you — type a city/state or ZIP.
+                  </span>
+                )}
+                {geoStatus === "notfound" && (
+                  <span className="text-xs text-amber-400/80">
+                    Couldn&apos;t place that — try &ldquo;City, State&rdquo; or a ZIP.
                   </span>
                 )}
               </>
