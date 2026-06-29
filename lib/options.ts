@@ -6,6 +6,7 @@ export const OHS_AFFILIATIONS = [
   "New parent (child(ren) just starting at OHS)",
   "Existing parent (child(ren) currently enrolled at OHS)",
   "Previous parent (child(ren) have graduated from OHS)",
+  "Current OHS student (I'm currently enrolled at OHS)",
   "Alumni student (I graduated from OHS)",
 ] as const;
 // Alias used by the developer API (kept in sync — same underlying list).
