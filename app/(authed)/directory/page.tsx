@@ -128,8 +128,15 @@ export default async function DirectoryPage() {
     if (signed[i]) urlByPath.set(p, signed[i]);
   });
 
+  const currentYear = new Date().getFullYear();
   const cards: DirectoryCard[] = included.map((row) =>
-    buildDirectoryCard(row, kidsByFamily.get(row.familyId) ?? [], urlByPath, MAX_THUMBS),
+    buildDirectoryCard(
+      row,
+      kidsByFamily.get(row.familyId) ?? [],
+      urlByPath,
+      MAX_THUMBS,
+      currentYear,
+    ),
   );
 
   return (

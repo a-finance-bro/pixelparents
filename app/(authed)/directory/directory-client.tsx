@@ -3,12 +3,38 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { iconForInterest } from "@/lib/interest-icons";
+import {
+  familyMatchesAgeRange,
+  familyWithinRadius,
+  geocodeLocation,
+} from "@/lib/directory-filters";
+import type { LatLng } from "@/lib/data/us-geo";
 import type { DirectoryCard } from "@/lib/directory";
 
 export type { DirectoryCard };
 
 type SortKey = "name" | "child";
 type SortDir = "asc" | "desc";
+
+// Age slider bounds. AGE_MAX is rendered as "18+" — a family with any shown
+// child AGE_MAX or older matches the top of the range.
+const AGE_MIN = 1;
+const AGE_MAX = 18;
+
+// Radius slider stops (miles). The final stop means "no limit" (Worldwide).
+const RADIUS_STOPS = [1, 5, 10, 25, 50, 100, 250, 500, 1000, Infinity];
+const DEFAULT_RADIUS_IDX = 2; // 10 miles
+
+function radiusLabel(miles: number): string {
+  return miles === Infinity ? "Worldwide" : `${miles} mi`;
+}
+
+function ageLabel(lower: number, upper: number): string {
+  const hi = upper >= AGE_MAX ? `${AGE_MAX}+` : `${upper}`;
+  return lower === upper && upper < AGE_MAX
+    ? `Age ${lower}`
+    : `Ages ${lower}–${hi}`;
+}
 
 // Cap the user's chosen column count so cards stay readable on smaller screens.
 function maxColsForWidth(width: number): number {
@@ -126,12 +152,139 @@ function Card({ card, wide }: { card: DirectoryCard; wide: boolean }) {
   );
 }
 
+// A dual-thumb range slider built from two overlaid native range inputs. The
+// thumbs stay grabbable because each input only owns its half of the track via
+// pointer-events toggling, and the active fill is drawn between them.
+function DualRange({
+  min,
+  max,
+  lower,
+  upper,
+  onChange,
+}: {
+  min: number;
+  max: number;
+  lower: number;
+  upper: number;
+  onChange: (lower: number, upper: number) => void;
+}) {
+  const pct = (v: number) => ((v - min) / (max - min)) * 100;
+  const lowPct = pct(lower);
+  const highPct = pct(upper);
+
+  const thumb =
+    "pointer-events-none absolute h-2 w-full appearance-none bg-transparent " +
+    "[&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none " +
+    "[&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full " +
+    "[&::-webkit-slider-thumb]:bg-amber-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-black " +
+    "[&::-webkit-slider-thumb]:cursor-pointer " +
+    "[&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 " +
+    "[&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-amber-400 [&::-moz-range-thumb]:border-2 " +
+    "[&::-moz-range-thumb]:border-black [&::-moz-range-thumb]:cursor-pointer";
+
+  return (
+    <div className="relative h-4 w-48 select-none">
+      {/* track */}
+      <div className="absolute top-1/2 h-1 w-full -translate-y-1/2 rounded-full bg-white/15" />
+      {/* active fill */}
+      <div
+        className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-amber-400/80"
+        style={{ left: `${lowPct}%`, right: `${100 - highPct}%` }}
+      />
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={lower}
+        aria-label="Minimum age"
+        onChange={(e) => onChange(Math.min(Number(e.target.value), upper), upper)}
+        className={`${thumb} top-1/2 -translate-y-1/2`}
+        // Keep the higher thumb clickable when both sit at the same spot.
+        style={{ zIndex: lower >= max ? 5 : 3 }}
+      />
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={upper}
+        aria-label="Maximum age"
+        onChange={(e) => onChange(lower, Math.max(Number(e.target.value), lower))}
+        className={`${thumb} top-1/2 -translate-y-1/2`}
+        style={{ zIndex: 4 }}
+      />
+    </div>
+  );
+}
+
 export function DirectoryClient({ cards }: { cards: DirectoryCard[] }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [density, setDensity] = useState(2);
+
+  // Age-range filter. Inactive until a thumb moves off the extremes.
+  const [ageLower, setAgeLower] = useState(AGE_MIN);
+  const [ageUpper, setAgeUpper] = useState(AGE_MAX);
+  const ageActive = ageLower > AGE_MIN || ageUpper < AGE_MAX;
+
+  // Radius filter (opt-in). Origin is the viewer's geolocated or typed location.
+  const [radiusOn, setRadiusOn] = useState(false);
+  const [radiusIdx, setRadiusIdx] = useState(DEFAULT_RADIUS_IDX);
+  const radiusMiles = RADIUS_STOPS[radiusIdx];
+  const [origin, setOrigin] = useState<[number, number] | null>(null);
+  const [originLabel, setOriginLabel] = useState<string>("");
+  const [locInput, setLocInput] = useState("");
+  const [geoStatus, setGeoStatus] = useState<
+    "idle" | "locating" | "denied" | "notfound"
+  >("idle");
+
+  // Geocode each card's location ONCE (locations never change), so the radius
+  // filter doesn't re-parse the whole list on every keystroke / filter change.
+  const coordsByToken = useMemo(() => {
+    const m = new Map<string, LatLng | null>();
+    for (const c of cards) m.set(c.token, geocodeLocation(c.location));
+    return m;
+  }, [cards]);
+
+  const requestGeolocation = () => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoStatus("denied");
+      return;
+    }
+    setGeoStatus("locating");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setOrigin([pos.coords.latitude, pos.coords.longitude]);
+        setOriginLabel("your location");
+        setGeoStatus("idle");
+      },
+      () => setGeoStatus("denied"),
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
+    );
+  };
+
+  const toggleRadius = () => {
+    setRadiusOn((on) => {
+      const next = !on;
+      // Ask for the browser location the first time it's switched on.
+      if (next && !origin) requestGeolocation();
+      return next;
+    });
+  };
+
+  const applyTypedLocation = () => {
+    const coords = geocodeLocation(locInput);
+    if (coords) {
+      setOrigin(coords);
+      setOriginLabel(locInput.trim());
+      setGeoStatus("idle");
+    } else {
+      // Distinct from a browser "denied" so the message can speak to the typed
+      // value rather than geolocation permission.
+      setGeoStatus("notfound");
+    }
+  };
 
   const viewportWidth = useViewportWidth();
   const maxCols = maxColsForWidth(viewportWidth);
@@ -189,6 +342,29 @@ export function DirectoryClient({ cards }: { cards: DirectoryCard[] }) {
           .toLowerCase();
         if (!haystack.includes(q)) return false;
       }
+      // Age range: any shown child's derived age within [lower, upper] (upper at
+      // AGE_MAX means "18+"). Families with no age-derivable children don't match.
+      if (
+        ageActive &&
+        !familyMatchesAgeRange(
+          c.children.map((k) => k.age),
+          ageLower,
+          ageUpper,
+          AGE_MAX,
+        )
+      ) {
+        return false;
+      }
+      // Radius: ungeocodable / location-not-shared families are excluded when a
+      // finite radius is active (Worldwide keeps everyone).
+      if (
+        radiusOn &&
+        origin &&
+        radiusMiles !== Infinity &&
+        !familyWithinRadius(coordsByToken.get(c.token) ?? null, origin, radiusMiles)
+      ) {
+        return false;
+      }
       return true;
     });
 
@@ -201,7 +377,20 @@ export function DirectoryClient({ cards }: { cards: DirectoryCard[] }) {
       return av.localeCompare(bv) * dir;
     });
     return sorted;
-  }, [cards, query, selected, sortKey, sortDir]);
+  }, [
+    cards,
+    query,
+    selected,
+    sortKey,
+    sortDir,
+    ageActive,
+    ageLower,
+    ageUpper,
+    radiusOn,
+    origin,
+    radiusMiles,
+    coordsByToken,
+  ]);
 
   const controlCls =
     "rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-amber-400/50";
@@ -252,6 +441,123 @@ export function DirectoryClient({ cards }: { cards: DirectoryCard[] }) {
           </label>
         </div>
 
+        {/* Age range + location radius filters */}
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+          {/* Child age-range slider */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-white/60">Child age</span>
+            <DualRange
+              min={AGE_MIN}
+              max={AGE_MAX}
+              lower={ageLower}
+              upper={ageUpper}
+              onChange={(lo, hi) => {
+                setAgeLower(lo);
+                setAgeUpper(hi);
+              }}
+            />
+            <span className="min-w-[5.5rem] text-sm tabular-nums text-white/80">
+              {ageActive ? ageLabel(ageLower, ageUpper) : "All ages"}
+            </span>
+            {ageActive && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAgeLower(AGE_MIN);
+                  setAgeUpper(AGE_MAX);
+                }}
+                className="text-xs text-white/45 hover:text-white/80"
+                aria-label="Reset age filter"
+              >
+                ✕
+              </button>
+            )}
+            {ageActive && (
+              <span className="text-xs text-white/35">
+                (only families who shared child ages)
+              </span>
+            )}
+          </div>
+
+          {/* Location radius filter (opt-in) */}
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-2 text-sm text-white/60">
+              <input
+                type="checkbox"
+                checked={radiusOn}
+                onChange={toggleRadius}
+                className="h-4 w-4 accent-amber-400"
+              />
+              Near me
+            </label>
+            {radiusOn && (
+              <>
+                <input
+                  type="range"
+                  min={0}
+                  max={RADIUS_STOPS.length - 1}
+                  value={radiusIdx}
+                  onChange={(e) => setRadiusIdx(Number(e.target.value))}
+                  aria-label="Radius"
+                  className="h-1 w-40 accent-amber-400"
+                />
+                <span className="min-w-[5rem] text-sm tabular-nums text-white/80">
+                  {radiusLabel(radiusMiles)}
+                </span>
+                {origin ? (
+                  <span className="text-xs text-white/45">
+                    from {originLabel}
+                    <button
+                      type="button"
+                      onClick={requestGeolocation}
+                      className="ml-2 text-amber-400/80 hover:text-amber-300"
+                    >
+                      use my location
+                    </button>
+                  </span>
+                ) : (
+                  <span className="text-xs text-white/45">
+                    {geoStatus === "locating"
+                      ? "locating…"
+                      : "set an origin →"}
+                  </span>
+                )}
+                <span className="flex items-center gap-1">
+                  <input
+                    value={locInput}
+                    onChange={(e) => setLocInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        applyTypedLocation();
+                      }
+                    }}
+                    placeholder="City, State or ZIP"
+                    className={`${controlCls} w-40`}
+                  />
+                  <button
+                    type="button"
+                    onClick={applyTypedLocation}
+                    className={`${controlCls} hover:bg-white/10`}
+                  >
+                    Set
+                  </button>
+                </span>
+                {geoStatus === "denied" && !origin && (
+                  <span className="text-xs text-amber-400/80">
+                    Couldn&apos;t locate you — type a city/state or ZIP.
+                  </span>
+                )}
+                {geoStatus === "notfound" && (
+                  <span className="text-xs text-amber-400/80">
+                    Couldn&apos;t place that — try &ldquo;City, State&rdquo; or a ZIP.
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
         {/* Interest filter chips */}
         {allInterests.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
@@ -289,7 +595,12 @@ export function DirectoryClient({ cards }: { cards: DirectoryCard[] }) {
 
       <p className="text-sm text-white/45">
         {visible.length} {visible.length === 1 ? "family" : "families"}
-        {selected.size > 0 || query.trim() ? " match your filters" : " shared with OHS families"}
+        {selected.size > 0 ||
+        query.trim() ||
+        ageActive ||
+        (radiusOn && origin && radiusMiles !== Infinity)
+          ? " match your filters"
+          : " shared with OHS families"}
       </p>
 
       {visible.length === 0 ? (
