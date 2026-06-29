@@ -62,3 +62,37 @@ export function ensureApiKeysTable(): Promise<void> {
   }
   return ensured;
 }
+
+// Self-healing guard for the families / co-parent schema (same rationale as
+// ensureApiKeysTable above). The signup save path inserts into `families` and
+// sets `signups.family_id` / `children.family_id`; on a database that hasn't had
+// the families migration applied, those writes throw and EVERY new signup fails
+// to save. We create the table + columns idempotently on the first family op per
+// cold start so signups work even before a human runs the migration.
+//
+// Columns are added NULLABLE here on purpose: it's safe on pre-existing rows, and
+// new inserts always supply family_id, so nullable is enough to unblock saves.
+// The proper migration (0001_supreme_mephisto) still owns the backfill + NOT NULL
+// + FK constraints. Statements mirror lib/db/schema/signups.ts and are idempotent.
+let familiesEnsured: Promise<void> | null = null;
+
+export function ensureFamiliesSchema(): Promise<void> {
+  if (!familiesEnsured) {
+    familiesEnsured = (async () => {
+      const sql = getSql();
+      await sql`
+        CREATE TABLE IF NOT EXISTS families (
+          id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+          created_at timestamptz NOT NULL DEFAULT now(),
+          invite_token text NOT NULL UNIQUE
+        )
+      `;
+      await sql`ALTER TABLE signups ADD COLUMN IF NOT EXISTS family_id uuid`;
+      await sql`ALTER TABLE children ADD COLUMN IF NOT EXISTS family_id uuid`;
+    })().catch((e) => {
+      familiesEnsured = null;
+      throw e;
+    });
+  }
+  return familiesEnsured;
+}

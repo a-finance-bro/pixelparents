@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { families, type FamilyRow } from "@/lib/db/schema/signups";
+import { ensureFamiliesSchema } from "@/lib/db/ensure";
 import { getBaseUrl } from "@/lib/url";
 
 // Hard-to-guess invite token — same unguessable-token recipe as the secret
@@ -12,6 +13,7 @@ export function generateFamilyInviteToken(): string {
 
 // Create a brand-new family with a fresh invite token and return its row.
 export async function createFamily(): Promise<FamilyRow> {
+  await ensureFamiliesSchema();
   const [row] = await getDb()
     .insert(families)
     .values({ inviteToken: generateFamilyInviteToken() })
@@ -21,6 +23,7 @@ export async function createFamily(): Promise<FamilyRow> {
 
 // Resolve a family by its invite token (used by the co-parent join flow).
 export async function getFamilyByInviteToken(token: string): Promise<FamilyRow | null> {
+  await ensureFamiliesSchema();
   const [row] = await getDb()
     .select()
     .from(families)
