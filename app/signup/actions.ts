@@ -15,7 +15,13 @@ import {
 } from "@/lib/options";
 import { signupSchema, linkedinUrlFromHandle } from "@/lib/validation";
 import { generateShareToken } from "@/lib/share";
-import { notifyNewSignup, notifyApplicantWelcome, notifyCoParentInvite } from "@/lib/email";
+import {
+  notifyNewSignup,
+  notifyApplicantWelcome,
+  notifyCoParentInvite,
+  notifyAdminsVerifyProfile,
+} from "@/lib/email";
+import { getAdminRecipients } from "@/lib/admin";
 import { createFamily, getFamilyByInviteToken, joinUrlFor } from "@/lib/family";
 import { parseInviteEmails, INVITE_LIFETIME_CAP } from "@/lib/invite";
 
@@ -224,15 +230,29 @@ export async function completeSignup(id: string): Promise<SignupState> {
     await notifyApplicantWelcome({ to: row.email, firstName: row.firstName, id: row.id });
     // Default a newly-completed profile to OHS-directory visible (they can switch
     // to "Just me" on the thanks page). Mirrors setShareVisibility("ohs").
+    // Seed approvalStatus=pending here, BEFORE emailing admins — otherwise an
+    // admin who acts on an early email (the fan-out below awaits per recipient)
+    // could have their decision clobbered by this wholesale `extra` write.
     await getDb()
       .update(signups)
       .set({
-        extra: { ...extra, notified: true },
+        extra: { ...extra, notified: true, approvalStatus: extra.approvalStatus ?? "pending" },
         shareEnabled: true,
         shareVisibility: "ohs",
         shareToken: row.shareToken ?? generateShareToken(),
       })
       .where(eq(signups.id, id));
+    // Email every admin to verify this profile's OHS-directory access. The first
+    // admin to act resolves it for everyone (see lib/approval). Best-effort.
+    try {
+      const recipients = await getAdminRecipients();
+      await notifyAdminsVerifyProfile({
+        applicant: { id: row.id, firstName: row.firstName, lastName: row.lastName },
+        admins: recipients,
+      });
+    } catch (err) {
+      console.error("notifyAdminsVerifyProfile failed:", err);
+    }
   }
   return { ok: true };
 }

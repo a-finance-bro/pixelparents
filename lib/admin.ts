@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray, sql, desc } from "drizzle-orm";
 import { getSql, getDb, hasDatabase } from "./db";
 import { admins } from "./db/schema/admins";
+import { signups } from "./db/schema/signups";
 import { getSignupByEmail } from "./db/signups";
 import { addRepoCollaborator, removeRepoCollaborator } from "./github";
 
@@ -62,6 +63,43 @@ export async function dbAdminEmails(): Promise<Set<string>> {
   await ensureAdminsTable();
   const rows = await getDb().select({ email: admins.email }).from(admins);
   return new Set(rows.map((r) => r.email.toLowerCase()));
+}
+
+// Every admin recipient (env superadmins + `admins` table rows), deduped, with a
+// best-effort first name resolved from their own signup. Used to fan out the
+// new-signup "verify this profile" email to all admins.
+export async function getAdminRecipients(): Promise<{ email: string; firstName: string }[]> {
+  const emails = new Set<string>(envAdminEmails());
+  if (hasDatabase()) {
+    await ensureAdminsTable();
+    const rows = await getDb().select({ email: admins.email }).from(admins);
+    for (const r of rows) emails.add(r.email.toLowerCase());
+  }
+  const list = Array.from(emails);
+  if (list.length === 0) return [];
+
+  // Resolve first names in ONE query (most-recent signup per email) — this runs
+  // on the signup-completion hot path, so avoid an N+1 per admin. Use Drizzle's
+  // inArray (-> `lower(email) IN (...)`); the raw `= ANY(${array})` form is broken
+  // on the Neon HTTP driver (it expands the array into a param tuple). Ordered
+  // newest-first, so the first row seen per email is the most recent signup.
+  const byEmail = new Map<string, string>();
+  if (hasDatabase()) {
+    try {
+      const rows = await getDb()
+        .select({ email: signups.email, firstName: signups.firstName })
+        .from(signups)
+        .where(inArray(sql`lower(${signups.email})`, list))
+        .orderBy(desc(signups.createdAt));
+      for (const r of rows) {
+        const key = r.email.toLowerCase();
+        if (!byEmail.has(key)) byEmail.set(key, r.firstName?.trim() ?? "");
+      }
+    } catch (err) {
+      console.error("getAdminRecipients: name lookup failed:", err);
+    }
+  }
+  return list.map((email) => ({ email, firstName: byEmail.get(email) ?? "" }));
 }
 
 export async function addAdmin(email: string, by: string | null): Promise<void> {
