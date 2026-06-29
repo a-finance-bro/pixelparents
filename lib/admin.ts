@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray, sql, desc } from "drizzle-orm";
 import { getSql, getDb, hasDatabase } from "./db";
 import { admins } from "./db/schema/admins";
+import { signups } from "./db/schema/signups";
 import { getSignupByEmail } from "./db/signups";
 import { addRepoCollaborator, removeRepoCollaborator } from "./github";
 
@@ -78,17 +79,22 @@ export async function getAdminRecipients(): Promise<{ email: string; firstName: 
   if (list.length === 0) return [];
 
   // Resolve first names in ONE query (most-recent signup per email) — this runs
-  // on the signup-completion hot path, so avoid an N+1 per admin.
+  // on the signup-completion hot path, so avoid an N+1 per admin. Use Drizzle's
+  // inArray (-> `lower(email) IN (...)`); the raw `= ANY(${array})` form is broken
+  // on the Neon HTTP driver (it expands the array into a param tuple). Ordered
+  // newest-first, so the first row seen per email is the most recent signup.
   const byEmail = new Map<string, string>();
   if (hasDatabase()) {
     try {
-      const rows = (await getSql()`
-        SELECT DISTINCT ON (lower(email)) lower(email) AS email, first_name AS "firstName"
-        FROM signups
-        WHERE lower(email) = ANY(${list})
-        ORDER BY lower(email), created_at DESC
-      `) as Array<{ email: string; firstName: string | null }>;
-      for (const r of rows) byEmail.set(r.email, r.firstName?.trim() ?? "");
+      const rows = await getDb()
+        .select({ email: signups.email, firstName: signups.firstName })
+        .from(signups)
+        .where(inArray(sql`lower(${signups.email})`, list))
+        .orderBy(desc(signups.createdAt));
+      for (const r of rows) {
+        const key = r.email.toLowerCase();
+        if (!byEmail.has(key)) byEmail.set(key, r.firstName?.trim() ?? "");
+      }
     } catch (err) {
       console.error("getAdminRecipients: name lookup failed:", err);
     }

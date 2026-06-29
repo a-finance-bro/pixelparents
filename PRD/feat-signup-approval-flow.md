@@ -1,3 +1,24 @@
+## Progress Update as of June 28, 2026 — 5:13 PM Pacific
+
+### Summary of changes since last update
+Second roborev pass on commit d5b005b caught a real regression: my N+1 fix used
+`lower(email) = ANY(${list})`, which the Neon HTTP driver can't bind (documented
+broken in this repo) — it would have thrown and silently resolved ZERO admin
+first names. Replaced it with Drizzle's `inArray(sql\`lower(email)\`, list)` →
+`lower(email) IN (...)`, ordered newest-first with first-seen-per-email dedupe.
+
+### Detail of changes made:
+- `lib/admin.ts` — `getAdminRecipients` now uses Drizzle `inArray` (neon-http safe)
+  instead of a raw `= ANY(array)` query; dedupes most-recent signup per email in JS.
+
+### Decisions (declined findings)
+- **Unguarded `notify*` awaits in completeSignup**: declined. `notifyNewSignup` /
+  `notifyApplicantWelcome` are contractually best-effort — `sendEmail` catches all
+  errors internally and returns `false`, so they never throw; the seed write is not
+  at risk. Wrapping them would be defensive code for a case that can't occur.
+
+---
+
 ## Progress Update as of June 28, 2026 — 5:06 PM Pacific
 
 ### Summary of changes since last update
