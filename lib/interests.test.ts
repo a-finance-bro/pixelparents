@@ -33,6 +33,30 @@ describe("pickCanonicalFromCounts", () => {
     ]);
     expect(pickCanonicalFromCounts(a)).toBe(pickCanonicalFromCounts(b));
   });
+
+  // The pool comes from an unordered SQL result set, so the winner must not
+  // depend on insertion order even when 3+ equal-frequency variants tie. The
+  // tie-break is a strict (leading-capital, localeCompare) total order, so the
+  // pairwise "keep the better" reduction is order-independent — assert that
+  // every permutation of a 3-way tie yields the same canonical spelling.
+  it("picks the same winner for every order of a 3-variant equal-frequency tie", () => {
+    const variants: Array<[string, number]> = [
+      ["soccer", 2],
+      ["Soccer", 2],
+      ["SOCCER", 2],
+    ];
+    const permutations: Array<Array<[string, number]>> = [
+      [variants[0], variants[1], variants[2]],
+      [variants[0], variants[2], variants[1]],
+      [variants[1], variants[0], variants[2]],
+      [variants[1], variants[2], variants[0]],
+      [variants[2], variants[0], variants[1]],
+      [variants[2], variants[1], variants[0]],
+    ];
+    const winners = permutations.map((p) => pickCanonicalFromCounts(new Map(p)));
+    expect(new Set(winners).size).toBe(1);
+    expect(winners[0]).toBe("Soccer");
+  });
 });
 
 describe("buildCanonicalMap", () => {
