@@ -1,5 +1,41 @@
 # feat: Gold Login button + IRL tooltip
 
+## Progress Update as of June 28, 2026 — 7:55 PM Pacific
+
+### Summary of changes since last update
+New branch `feat/login-admin-buttons` off latest `origin/main`. Adds an Admin
+button + auth-aware top-right corner, points login at `/directory`, and squares
+off the corner button. IMPORTANT context: PR #67 was merged into `main` at
+commit 1232880 ONLY — my follow-up commit 7bcd006 (the gold "create new"
+interest chip + the tooltip `aria-describedby` fix) never landed in main. This
+branch cherry-picks 7bcd006 so those ship too. Headed to a new PR + production
+deploy.
+
+### Detail of changes made:
+- `app/page.tsx`: reads auth server-side via `auth()` (cheap cookie read) and
+  only calls `currentUser()` when signed in, so the public splash stays Clerk-JS
+  free and logged-out visitors pay no extra cost. Top-right now renders: admin →
+  "Admin" (→ `/admin`); logged-out → "Log in" (→ `/sign-in?redirect_url=/directory`);
+  signed-in non-admin → nothing. Admin check reuses `isAdminEmail()` from
+  `@/lib/admin` (env `ADMIN_EMAILS` + `admins` table; safe when no DB).
+- Login redirect: the button now carries `?redirect_url=/directory`. The sign-in
+  page already honors a relative `redirect_url` via `forceRedirectUrl`, so login
+  lands on `/directory` instead of `/` (the reported bug). The /developers
+  `redirect_url=/account` flow is unaffected.
+- Corner button corners: `rounded-full` → `rounded-lg` (8px), shared via the new
+  `cornerBtnCls` const so Log in and Admin match.
+- Cherry-picked 7bcd006: gold "create new" TagPicker chip + tooltip
+  `aria-describedby`.
+- Verified: `npm run typecheck` clean, `eslint` clean on changed files, full
+  `npm run build` green (main already carries the `/preview/throw` force-dynamic
+  fix, so the build no longer aborts).
+
+### Potential concerns to address:
+- Admin/Login button only on the homepage (mirrors where the Log in button
+  already lived). Not yet site-wide.
+- `currentUser()` adds one Clerk API call per homepage load for signed-in users
+  only; logged-out (majority) skip it via the `auth()` short-circuit.
+
 ## Progress Update as of June 28, 2026 — 7:37 PM Pacific
 
 ### Summary of changes since last update
