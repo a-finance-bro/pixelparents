@@ -1,5 +1,12 @@
 import { canViewProfile, coerceShareVisibility, shareFieldsOrDefault } from "@/lib/share";
+import { childAge } from "@/lib/directory-filters";
 import type { SignupRow, ChildRow } from "@/lib/db/schema/signups";
+
+// Re-export the pure, client-safe filter helpers so server code and tests can
+// keep importing them from "@/lib/directory". The client imports them straight
+// from "@/lib/directory-filters" to avoid pulling node:crypto (via lib/share)
+// into the browser bundle.
+export { childAge, haversineMiles, geocodeLocation } from "@/lib/directory-filters";
 
 // One card's worth of data for the OHS directory. Every field present here is one
 // the parent opted into sharing — phone/email are NEVER included (detail-only on
@@ -9,9 +16,10 @@ export type DirectoryCard = {
   name: string;
   firstName: string;
   location: string | null;
-  // Children the parent chose to share (name/grade/interests). Empty when the
-  // "children" field wasn't shared.
-  children: { firstName: string; grade: string | null; interests: string[] }[];
+  // Children the parent chose to share (name/grade/interests/derived age). Empty
+  // when the "children" field wasn't shared. `age` is null when neither a
+  // birthYear nor a numeric grade is available to derive it from.
+  children: { firstName: string; grade: string | null; interests: string[]; age: number | null }[];
   // Deduped parent + child interests the parent chose to share — drives the
   // chips and the interest filter. Empty when neither field was shared.
   interests: string[];
@@ -53,13 +61,14 @@ export function directoryPhotoPaths(
 
 // Project a signup + its family's children into a card, exposing ONLY the fields
 // the parent opted into via shareFieldsOrDefault. Pure: callers presign photos
-// and pass the pathname→url map in. Assumes isDirectoryVisible(row) is true
-// (so shareToken is set).
+// and pass the pathname→url map in (plus currentYear for age derivation).
+// Assumes isDirectoryVisible(row) is true (so shareToken is set).
 export function buildDirectoryCard(
   row: SignupRow,
   familyKids: ChildRow[],
   urlByPath: Map<string, string>,
   maxThumbs: number,
+  currentYear: number,
 ): DirectoryCard {
   const fields = new Set(shareFieldsOrDefault(row.shareFields));
 
@@ -74,6 +83,7 @@ export function buildDirectoryCard(
         firstName: k.firstName,
         grade: k.grade ?? null,
         interests: k.interests ?? [],
+        age: childAge(k, currentYear),
       }))
     : [];
 
