@@ -5,6 +5,7 @@ import { getDb, getSql } from "@/lib/db";
 import { signups } from "@/lib/db/schema/signups";
 import { ensureFamiliesSchema } from "@/lib/db/ensure";
 import { readApprovalStatus, type ApprovalStatus } from "@/lib/approval";
+import { mergeFamiliesByVerifiedEmail } from "@/lib/family-merge";
 import { sendStudentVerificationCode } from "@/lib/email";
 import {
   CODE_TTL_MS,
@@ -231,6 +232,19 @@ export async function confirmStudentCode(
         WHERE family_id = ${row.familyId}
           AND (student_email IS NULL OR student_email = '')
       `;
+      // Auto-link by shared OHS email: if ANOTHER family already carries this
+      // student email, merge them into the oldest family. Flagged OFF by default
+      // (FAMILY_AUTOLINK_ENABLED) so merging this branch changes nothing until
+      // the flag is set. Runs AFTER the approve/append/children UPDATEs above and
+      // is best-effort: a merge failure never blocks the primary approval the
+      // parent just completed. See lib/family-merge.ts.
+      if (process.env.FAMILY_AUTOLINK_ENABLED === "true") {
+        try {
+          await mergeFamiliesByVerifiedEmail(row.familyId, email);
+        } catch (err) {
+          console.error("mergeFamiliesByVerifiedEmail failed:", err);
+        }
+      }
       return { ok: true, status: "approved" };
     }
 
