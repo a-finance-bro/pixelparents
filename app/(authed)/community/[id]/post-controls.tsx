@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { IconPencil, IconTrash, IconCircleCheck } from "@/components/icons";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { IconPencil, IconTrash, IconCircleCheck, IconCheck } from "@/components/icons";
 import { deleteAskAction, setAskResolvedAction } from "../actions";
 
 // Creator-only management bar for an Community post: edit (link to the edit page),
@@ -17,16 +18,29 @@ export function PostControls({
   resolved: boolean;
 }) {
   const router = useRouter();
+  const reduce = useReducedMotion();
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Optimistic "just resolved" flag — drives the checkmark morph + glow sweep
+  // before the refresh reveals the resolved state. Only set when resolving (not
+  // when reopening), since the celebratory moment is the resolution itself.
+  const [justResolved, setJustResolved] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const toggleResolved = () => {
     setError(null);
+    const willResolve = !resolved;
+    if (willResolve) setJustResolved(true); // optimistic morph
     startTransition(async () => {
-      const res = await setAskResolvedAction({ id, resolved: !resolved });
-      if (res.ok) router.refresh();
-      else setError(res.error);
+      const res = await setAskResolvedAction({ id, resolved: willResolve });
+      if (res.ok) {
+        const reveal = () => router.refresh();
+        if (reduce || !willResolve) reveal();
+        else setTimeout(reveal, 620); // let the sweep play
+      } else {
+        setJustResolved(false); // roll back
+        setError(res.error);
+      }
     });
   };
 
@@ -54,15 +68,49 @@ export function PostControls({
           <IconPencil className="h-4 w-4" /> Edit
         </Link>
 
-        <button
-          type="button"
-          onClick={toggleResolved}
-          disabled={pending}
-          className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 px-3 py-1.5 text-sm text-emerald-200 transition hover:bg-emerald-400/10 disabled:opacity-50"
-        >
-          <IconCircleCheck className="h-4 w-4" />
-          {resolved ? "Reopen" : "Mark resolved"}
-        </button>
+        <div className="relative">
+          {/* Emerald glow sweep when a post is resolved. */}
+          <AnimatePresence>
+            {justResolved && !reduce && (
+              <motion.span
+                aria-hidden
+                initial={{ x: "-120%", opacity: 0 }}
+                animate={{ x: "120%", opacity: [0, 1, 0] }}
+                transition={{ duration: 0.7, ease: "easeInOut" }}
+                className="pointer-events-none absolute inset-y-0 left-0 z-0 w-1/2 rounded-full bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent blur-sm"
+              />
+            )}
+          </AnimatePresence>
+          <button
+            type="button"
+            onClick={toggleResolved}
+            disabled={pending}
+            className={`relative z-10 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition disabled:opacity-50 ${
+              justResolved
+                ? "border-emerald-400/60 bg-emerald-400/15 text-emerald-100"
+                : "border-emerald-400/30 text-emerald-200 hover:bg-emerald-400/10"
+            }`}
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              {justResolved ? (
+                <motion.span
+                  key="done"
+                  initial={reduce ? false : { scale: 0, rotate: -30 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 600, damping: 18 }}
+                  className="inline-flex items-center gap-1.5"
+                >
+                  <IconCheck className="h-4 w-4" strokeWidth={3} /> Resolved
+                </motion.span>
+              ) : (
+                <motion.span key="idle" initial={false} className="inline-flex items-center gap-1.5">
+                  <IconCircleCheck className="h-4 w-4" />
+                  {resolved ? "Reopen" : "Mark resolved"}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+        </div>
 
         <button
           type="button"

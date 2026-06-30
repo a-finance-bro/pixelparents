@@ -23,14 +23,14 @@ const ITEMS: { key: string; label: string; Icon: IconType }[] = [
 const COUNT_UP_MS = 750;
 
 function useCountUp(target: number, enabled: boolean): number {
-  const [value, setValue] = useState(enabled ? 0 : target);
+  // Animated value only matters when enabled; when disabled (reduced motion) we
+  // bypass state entirely and return the final target so nothing animates and no
+  // setState runs in the effect.
+  const [value, setValue] = useState(0);
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!enabled) {
-      setValue(target);
-      return;
-    }
+    if (!enabled) return;
     const start = performance.now();
     const from = 0;
     const tick = (now: number) => {
@@ -46,7 +46,7 @@ function useCountUp(target: number, enabled: boolean): number {
     };
   }, [target, enabled]);
 
-  return value;
+  return enabled ? value : target;
 }
 
 function StatChip({ label, value, Icon, animate }: {

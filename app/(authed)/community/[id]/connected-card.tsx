@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   IconCircleCheck,
   IconArrowRight,
@@ -92,12 +93,23 @@ function CopyRow({ method }: { method: ConnectedMethod }) {
 // derived; for a minor it clearly routes through the parent; if nothing is
 // shareable it shows the message-channel hint instead of leaking anything.
 export function ConnectedCard({ data }: { data: ConnectedCardData }) {
+  const reduce = useReducedMotion();
   return (
-    <div className="mt-3 overflow-hidden rounded-2xl border border-emerald-400/30 bg-gradient-to-b from-emerald-400/[0.10] to-emerald-400/[0.03]">
+    <motion.div
+      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 10, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={reduce ? { duration: 0.15 } : { type: "spring", stiffness: 380, damping: 30 }}
+      className="mt-3 overflow-hidden rounded-2xl border border-emerald-400/30 bg-gradient-to-b from-emerald-400/[0.10] to-emerald-400/[0.03]"
+    >
       <div className="flex items-start gap-3 border-b border-emerald-400/15 px-4 py-3">
-        <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400/15">
+        <motion.span
+          initial={reduce ? false : { scale: 0, rotate: -25 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 600, damping: 16, delay: 0.1 }}
+          className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-400/15"
+        >
           <IconCircleCheck className="h-4 w-4 text-emerald-300" />
-        </span>
+        </motion.span>
         <div className="min-w-0">
           <p className="font-semibold text-emerald-100">
             You&apos;re connected with {data.name}
@@ -141,6 +153,6 @@ export function ConnectedCard({ data }: { data: ConnectedCardData }) {
           We also emailed you both a warm intro. Only what each of you chose to share is revealed.
         </p>
       </div>
-    </div>
+    </motion.div>
   );
 }
