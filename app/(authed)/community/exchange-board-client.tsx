@@ -310,8 +310,9 @@ export function ExchangeBoardClient({
         </button>
       </div>
 
-      {/* Desktop: secondary controls inline. */}
-      <div className="hidden md:block">{secondaryControls}</div>
+      {/* Desktop: secondary controls inline. Rendered only when NOT mobile so
+          the shared `secondaryControls` element never mounts twice. */}
+      {!isMobile && <div className="hidden md:block">{secondaryControls}</div>}
 
       {/* Mobile: secondary controls in a bottom sheet. */}
       {isMobile && (

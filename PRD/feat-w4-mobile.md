@@ -1,3 +1,23 @@
+## Progress Update as of [June 30, 2026 — 7:40 AM Pacific]
+
+### Summary of changes since last update
+Hardening pass on the filter-sheet pattern + full build verification. The shared
+controls element (directory/community/events) is now rendered in exactly ONE
+place at a time — desktop inline copy is gated on `!isMobile` so the same JSX
+never mounts twice (it previously rendered in both the hidden md:block wrapper
+and the sheet on phones). Verified `next build` passes in the main checkout with
+ALL changes applied; restored main pristine afterward.
+
+### Detail of changes made:
+- directory/community/events clients: desktop inline secondary controls wrapped in
+  `{!isMobile && ...}` (isMobile defaults false → SSR/first-paint still renders
+  the desktop copy, so hydration matches; on a phone it unmounts once the media
+  watcher flips and only the sheet copy remains). No duplicate form controls.
+- Build verification: copied all 9 changed files into the main checkout, ran
+  `next build` (Compiled successfully), then `git checkout -- .` + removed the new
+  mobile-sheet.tsx + .next to leave main spotless. (Worktree build can't run —
+  Turbopack rejects the cross-FS node_modules symlink.)
+
 ## Progress Update as of [June 30, 2026 — 7:34 AM Pacific]
 
 ### Summary of changes since last update

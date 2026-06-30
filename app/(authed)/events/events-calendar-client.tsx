@@ -190,8 +190,11 @@ export function EventsCalendarClient({ events }: { events: CalendarEvent[] }) {
           ))}
         </div>
 
-        {/* Desktop filters inline. */}
-        <div className="hidden flex-wrap items-center gap-2 md:flex">{filterControls}</div>
+        {/* Desktop filters inline. Rendered only when NOT mobile so the shared
+            `filterControls` element never mounts twice. */}
+        {!isMobile && (
+          <div className="hidden flex-wrap items-center gap-2 md:flex">{filterControls}</div>
+        )}
 
         {/* Mobile Filters trigger. */}
         <button

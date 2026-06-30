@@ -829,8 +829,11 @@ export function ShowcaseClient({ cards }: { cards: DirectoryCard[] }) {
           </button>
         </div>
 
-        {/* Desktop: secondary filters inline. */}
-        <div className="hidden md:block">{secondaryControls}</div>
+        {/* Desktop: secondary filters inline. Rendered only when NOT on a phone
+            (isMobile defaults to false so SSR/first paint matches), so the same
+            `secondaryControls` element never mounts twice. The md:hidden on the
+            wrapper additionally guards the brief pre-mount window. */}
+        {!isMobile && <div className="hidden md:block">{secondaryControls}</div>}
       </div>
 
       {/* Mobile: secondary filters in a bottom sheet. Rendered only when on a
