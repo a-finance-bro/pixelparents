@@ -27,12 +27,14 @@ export type DirectoryCard = {
   thumbUrls: string[];
 };
 
-// Families that signed up BEFORE student-email verification shipped are
-// grandfathered into the directory so the live directory isn't suddenly emptied;
-// everyone who joins after must verify (approvalStatus="approved", set by the
-// student-email flow or an admin) to be listed. Drop this cutoff for a hard gate
-// once existing families have had a chance to verify.
-export const VERIFICATION_CUTOFF = Date.parse("2026-06-30T00:00:00Z");
+// Families that signed up BEFORE this cutoff are grandfathered into the directory
+// so the live directory isn't suddenly emptied; everyone who joins after must
+// verify (approvalStatus="approved", set by the student-email flow, an admin, or
+// API approval) to be listed. The date is a fixed compare, so a grandfathered
+// family NEVER drops out over time — only genuinely new (post-cutoff) unverified
+// families are gated. Set generously past the rollout window; drop it entirely for
+// a hard gate once existing families have had a chance to verify.
+export const VERIFICATION_CUTOFF = Date.parse("2026-08-01T00:00:00Z");
 
 // A family counts as verified for the directory if an admin/student-email flow
 // approved them, OR they predate verification (grandfathered).

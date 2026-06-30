@@ -17,14 +17,16 @@ type NavItem = {
   href: string;
   label: string;
   Icon: (p: { className?: string }) => React.ReactElement;
-  // Some areas require a family signup; we still show them but dim non-members.
+  // `external` items open in a new tab — used for the public /developers docs,
+  // which live outside the (authed) shell, so we never make the sidebar vanish.
+  external?: boolean;
 };
 
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", Icon: IconGrid },
   { href: "/directory", label: "Directory", Icon: IconUsers },
   { href: "/community", label: "Community", Icon: IconGlobe },
-  { href: "/developers", label: "Developers", Icon: IconCode },
+  { href: "/developers", label: "Developers", Icon: IconCode, external: true },
 ];
 
 // Persistent app shell: an icon rail on mobile that expands to a labelled
@@ -44,7 +46,7 @@ export function DashboardShell({
 }) {
   const pathname = usePathname();
   const initial = (firstName?.[0] ?? email?.[0] ?? "?").toUpperCase();
-  const items = isAdmin
+  const items: NavItem[] = isAdmin
     ? [...NAV, { href: "/admin", label: "Admin", Icon: IconSettings }]
     : NAV;
 
@@ -69,13 +71,15 @@ export function DashboardShell({
         </Link>
 
         <nav className="flex flex-1 flex-col gap-1 px-2 py-3 md:px-3">
-          {items.map(({ href, label, Icon }) => {
-            const active = pathname === href || pathname.startsWith(`${href}/`);
+          {items.map(({ href, label, Icon, external }) => {
+            const active =
+              !external && (pathname === href || (pathname?.startsWith(`${href}/`) ?? false));
             return (
               <Link
                 key={href}
                 href={href}
                 title={label}
+                {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   active
                     ? "bg-amber-400/15 text-amber-300"
@@ -93,6 +97,9 @@ export function DashboardShell({
           <div className="mb-2 hidden md:block">
             <VerifiedBadge status={status} />
           </div>
+          <div className="mb-2 flex justify-center md:hidden">
+            <VerifiedBadge status={status} compact />
+          </div>
           <Link
             href="/account"
             title="Account settings"
@@ -105,7 +112,7 @@ export function DashboardShell({
               <span className="block truncate font-medium text-white">
                 {firstName ?? "Account"}
               </span>
-              <span className="block truncate text-xs text-white/45">{email ?? "Settings"}</span>
+              <span className="block truncate text-xs text-white/55">{email ?? "Settings"}</span>
             </span>
             <IconSettings className="hidden h-4 w-4 shrink-0 text-white/40 md:block" />
           </Link>

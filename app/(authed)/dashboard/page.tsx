@@ -41,15 +41,18 @@ function LinkCard({
   title,
   desc,
   Icon,
+  external = false,
 }: {
   href: string;
   title: string;
   desc: string;
   Icon: (p: { className?: string }) => React.ReactElement;
+  external?: boolean;
 }) {
   return (
     <Link
       href={href}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       className="group flex items-start gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-colors hover:border-amber-400/40 hover:bg-white/[0.05]"
     >
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-400/15 text-amber-300">
@@ -182,6 +185,7 @@ export default async function DashboardPage() {
               title="Developers"
               desc="Build on the Pixel Parents API — request a key and read the docs."
               Icon={IconCode}
+              external
             />
           </div>
         </section>
