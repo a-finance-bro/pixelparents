@@ -384,14 +384,18 @@ function ContributionForm({ boardId, onDone }: { boardId: string; onDone: () => 
     try {
       const fd = new FormData();
       fd.append("file", file);
+      // Board file contributions accept PDFs/docs + images (server allow-lists
+      // the type and stores them publicly so members can download).
+      fd.append("purpose", "board-file");
       const res = await fetch("/api/blob/upload", { method: "POST", body: fd });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        // The shared upload route currently accepts images only; surface its error.
         setError(
-          data?.error === "not an image"
-            ? "Only image files can be uploaded right now (PDF support coming soon)."
-            : "Upload failed. Please try again.",
+          data?.error === "unsupported file type"
+            ? "That file type isn't supported. Try a PDF, document, or image."
+            : data?.error === "file too large"
+              ? "That file is too large (20 MB max)."
+              : "Upload failed. Please try again.",
         );
         setFilePath(null);
         setFileName(null);
@@ -493,12 +497,16 @@ function ContributionForm({ boardId, onDone }: { boardId: string; onDone: () => 
           <input
             ref={fileInputRef}
             type="file"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.md,image/*"
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) void onPickFile(f);
             }}
             className="block w-full text-sm text-white/70 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-white/15"
           />
+          {!uploading && !filePath && (
+            <p className="text-xs text-white/45">PDFs, documents, or images — up to 20 MB.</p>
+          )}
           {uploading && <p className="text-xs text-white/50">Uploading…</p>}
           {filePath && !uploading && (
             <p className="text-xs text-amber-200">Attached: {fileName}</p>
