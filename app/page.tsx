@@ -3,7 +3,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import InterestTiles from "./signup/interest-tiles";
 import { PixelMascot } from "@/components/pixel-mascot";
 import { IrlTooltip } from "@/components/irl-tooltip";
-import { IconHeart } from "@/components/icons";
+import { IconHeart, IconArrowRight } from "@/components/icons";
 import { isAdminEmail } from "@/lib/admin";
 import {
   getSignupCount,
@@ -97,6 +97,14 @@ export default async function Home() {
           <span className="text-amber-400">{interestsCount.toLocaleString()}</span>{" "}
           shared interests, <IrlTooltip />
         </h2>
+        {signedIn && (
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-6 py-3 text-base font-semibold text-black shadow-sm transition hover:bg-amber-300"
+          >
+            Open dashboard <IconArrowRight className="h-5 w-5" />
+          </Link>
+        )}
       </div>
 
       <footer className="relative z-10 mt-8 text-center text-sm text-white/50">
