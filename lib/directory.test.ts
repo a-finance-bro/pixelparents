@@ -6,6 +6,7 @@ import {
   geocodeLocation,
   haversineMiles,
   isDirectoryVisible,
+  hasShareableProfile,
   isFamilyVerified,
   VERIFICATION_CUTOFF,
   childFullName,
@@ -107,6 +108,46 @@ describe("isDirectoryVisible (directory inclusion gate)", () => {
         signup({ extra: { approvalStatus: "approved" }, createdAt: new Date(VERIFICATION_CUTOFF + 86_400_000) }),
       ),
     ).toBe(true);
+  });
+});
+
+describe("hasShareableProfile (profile-link gate, student-inclusive)", () => {
+  it("returns true for a student with shareEnabled + ohs (but isDirectoryVisible is false)", () => {
+    const student = signup({
+      extra: { approvalStatus: "approved", accountType: "student" },
+    });
+    // The whole point of the bug fix: a student CAN share a profile (linkable from
+    // a board post / responder card) even though they get no standalone grid card.
+    expect(hasShareableProfile(student)).toBe(true);
+    expect(isDirectoryVisible(student)).toBe(false);
+  });
+
+  it("agrees with isDirectoryVisible for a non-student parent", () => {
+    expect(hasShareableProfile(signup())).toBe(true);
+    expect(isDirectoryVisible(signup())).toBe(true);
+  });
+
+  it("excludes private profiles (student or not)", () => {
+    expect(hasShareableProfile(signup({ shareVisibility: "private" }))).toBe(false);
+    expect(
+      hasShareableProfile(
+        signup({ shareVisibility: "private", extra: { approvalStatus: "approved", accountType: "student" } }),
+      ),
+    ).toBe(false);
+  });
+
+  it("excludes when sharing is disabled, there's no token, or the name is blank", () => {
+    expect(hasShareableProfile(signup({ shareEnabled: false }))).toBe(false);
+    expect(hasShareableProfile(signup({ shareToken: null }))).toBe(false);
+    expect(hasShareableProfile(signup({ firstName: "  " }))).toBe(false);
+  });
+
+  it("excludes an unverified family that joined after the cutoff", () => {
+    expect(
+      hasShareableProfile(
+        signup({ extra: {}, createdAt: new Date(VERIFICATION_CUTOFF + 86_400_000) }),
+      ),
+    ).toBe(false);
   });
 });
 
