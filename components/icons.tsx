@@ -125,3 +125,94 @@ export function IconSparkles(props: IconProps) {
     </Icon>
   );
 }
+
+// Clock — "pending / under review".
+export function IconClock(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7.5v5l3.3 2" />
+    </Icon>
+  );
+}
+
+// --- Dashboard navigation ---------------------------------------------------
+
+// Grid of four tiles — the dashboard / overview.
+export function IconGrid(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.6" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.6" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.6" />
+    </Icon>
+  );
+}
+
+// Two people — the family directory.
+export function IconUsers(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" />
+      <path d="M16 5.2a3.2 3.2 0 0 1 0 5.7" />
+      <path d="M17.6 14.2c2 .6 3.4 2.3 3.4 4.8" />
+    </Icon>
+  );
+}
+
+// Globe — the community map.
+export function IconGlobe(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3c2.6 2.5 3.9 5.7 3.9 9s-1.3 6.5-3.9 9c-2.6-2.5-3.9-5.7-3.9-9S9.4 5.5 12 3Z" />
+    </Icon>
+  );
+}
+
+// Angle brackets — the developer / API area.
+export function IconCode(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 8 5 12l4 4" />
+      <path d="M15 8l4 4-4 4" />
+    </Icon>
+  );
+}
+
+// Sliders — account / settings.
+export function IconSettings(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 7h9" />
+      <path d="M17 7h3" />
+      <circle cx="15" cy="7" r="2" />
+      <path d="M4 12h3" />
+      <path d="M11 12h9" />
+      <circle cx="9" cy="12" r="2" />
+      <path d="M4 17h7" />
+      <path d="M15 17h5" />
+      <circle cx="13" cy="17" r="2" />
+    </Icon>
+  );
+}
+
+export function IconArrowRight(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5 12h13" />
+      <path d="M12 6l6 6-6 6" />
+    </Icon>
+  );
+}
+
+export function IconChevronRight(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 6l6 6-6 6" />
+    </Icon>
+  );
+}

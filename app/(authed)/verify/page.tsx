@@ -81,16 +81,16 @@ export default async function VerifyPage() {
           {status === "approved" && (
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                href="/directory"
+                href="/dashboard"
                 className="rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-black transition hover:bg-amber-300"
               >
-                Open the family directory
+                Open dashboard
               </Link>
               <Link
-                href="/community"
+                href="/directory"
                 className="rounded-full border border-white/20 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
               >
-                See the community
+                Family directory
               </Link>
             </div>
           )}

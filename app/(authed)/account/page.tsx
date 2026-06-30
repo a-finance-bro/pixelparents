@@ -7,6 +7,7 @@ import { hasDatabase } from "@/lib/db";
 import { shareFieldsOrDefault, coerceShareVisibility } from "@/lib/share";
 import { shareUrlFor } from "@/lib/url";
 import { ShareSettings } from "@/app/signup/thanks/share-settings";
+import { IconClock } from "@/components/icons";
 import { KeyPanel } from "./key-panel";
 import { RequestForm } from "./request-form";
 
@@ -72,7 +73,9 @@ export default async function AccountPage() {
         </section>
       ) : status === "pending" ? (
         <section className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-5">
-          <p className="font-semibold">Your request is under review ⏳</p>
+          <p className="flex items-center gap-1.5 font-semibold">
+            <IconClock className="h-4 w-4 text-white/70" /> Your request is under review
+          </p>
           <p className="text-sm text-white/60">
             We review every request by hand. You&apos;ll get an email when it&apos;s approved, and
             your API key will show up right here.
