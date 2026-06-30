@@ -7,9 +7,12 @@ import { shareFieldsOrDefault, coerceShareVisibility } from "@/lib/share";
 import { shareUrlFor } from "@/lib/url";
 import { signedPhotoUrls } from "@/lib/blob";
 import FamilyForm from "./family-form";
+import StudentParentForm from "./student-parent-form";
 import { ShareSettings } from "./share-settings";
 import { getVerifyState } from "./verify-actions";
+import { getStudentParentLinkStatus } from "./actions";
 import { StudentVerify } from "@/components/student-verify";
+import { isStudentAccount } from "@/lib/family-display";
 
 export const metadata: Metadata = {
   title: "Welcome — Pixel Parents",
@@ -34,6 +37,13 @@ export default async function ThanksPage({
   const signup = editData?.signup ?? null;
   const firstName = signup?.firstName ?? null;
   const kids = editData?.kids ?? [];
+
+  // Student accounts (extra.accountType === "student") get a DIFFERENT step-2:
+  // "add your parent / guardian" instead of "add children". The parent path is
+  // untouched. We fetch the family-link status only for student accounts.
+  const isStudent = signup ? isStudentAccount({ extra: signup.extra }) : false;
+  const studentLinkStatus =
+    validId && isStudent ? await getStudentParentLinkStatus(validId) : null;
 
   // Family-level photos are now collected on the first signup form; the thanks
   // page only needs whether any exist (to vary the heading), not their URLs.
@@ -85,7 +95,7 @@ export default async function ThanksPage({
 
   const subheading = (
     <h2 className="text-xl font-semibold text-white/90 sm:text-2xl">
-      Tell us about your child(ren)
+      {isStudent ? "Add your parent / guardian" : "Tell us about your child(ren)"}
     </h2>
   );
 
@@ -122,21 +132,29 @@ export default async function ThanksPage({
         )}
 
         <div className="mt-10">
-          <FamilyForm
-            signupId={id ?? ""}
-            suggestedInterests={interestPool}
-            existingChildren={kids.map((k) => ({
-              id: k.id,
-              firstName: k.firstName,
-              grade: k.grade,
-              birthYear: k.birthYear,
-              interests: k.interests,
-              notes: k.notes,
-              studentEmail: k.studentEmail,
-              photos: k.photos ?? [],
-              photoPreviews: childPreviewsById[k.id] ?? {},
-            }))}
-          />
+          {isStudent && validId && studentLinkStatus ? (
+            // STUDENT path: the required step-2 action is "invite your parent /
+            // guardian" (reusing the co-parent invite mechanism). Students do
+            // NOT add children.
+            <StudentParentForm signupId={validId} initialStatus={studentLinkStatus} />
+          ) : (
+            // PARENT path: unchanged — add children + the existing UI.
+            <FamilyForm
+              signupId={id ?? ""}
+              suggestedInterests={interestPool}
+              existingChildren={kids.map((k) => ({
+                id: k.id,
+                firstName: k.firstName,
+                grade: k.grade,
+                birthYear: k.birthYear,
+                interests: k.interests,
+                notes: k.notes,
+                studentEmail: k.studentEmail,
+                photos: k.photos ?? [],
+                photoPreviews: childPreviewsById[k.id] ?? {},
+              }))}
+            />
+          )}
         </div>
 
         {validId && signup && verifyState && (

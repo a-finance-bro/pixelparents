@@ -30,7 +30,16 @@ describe("isStudentAccount", () => {
     expect(isStudentAccount(student("s", []))).toBe(true);
     expect(isStudentAccount(parent("p"))).toBe(false);
     expect(isStudentAccount(parent("p", { accountType: "parent" }))).toBe(false);
-    expect(isStudentAccount({ id: "x", extra: null })).toBe(false);
+    expect(isStudentAccount({ extra: null })).toBe(false);
+  });
+
+  // The thanks page classifies a raw signup row by its `extra` alone (no id), so
+  // the widened signature must accept an extra-only shape.
+  it("classifies an extra-only signup-row shape (no id)", () => {
+    expect(isStudentAccount({ extra: { accountType: "student" } })).toBe(true);
+    expect(isStudentAccount({ extra: { accountType: "parent" } })).toBe(false);
+    expect(isStudentAccount({ extra: {} })).toBe(false);
+    expect(isStudentAccount({ extra: undefined })).toBe(false);
   });
 });
 
