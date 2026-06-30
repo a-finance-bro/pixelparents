@@ -15,7 +15,7 @@
 // ONLY as a deterministic tiebreak (more enriched/expert signals rank first).
 export type HelperCandidate = {
   signupId: string;
-  token: string | null; // /community/<token> link, when the member shares
+  token: string | null; // /directory/<token> link, when the member shares
   name: string | null;
   // Carried for display only. In the Exchange model anyone (parent OR student)
   // can help, so this no longer excludes the candidate — kept for the card badge.

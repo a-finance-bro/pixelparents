@@ -28,7 +28,7 @@ import {
   validateValidUntil,
 } from "@/lib/ask-validate";
 
-// Server actions for the OHS "Exchange" connector. Every action authorizes
+// Server actions for the OHS "Community" connector. Every action authorizes
 // ENTIRELY server-side from the Clerk session (never a client-supplied identity),
 // and every actor must be a VERIFIED OHS family. Anyone — parent OR student — can
 // post Asks AND Offers, and respond to either (the #109 "students can't help"
@@ -103,7 +103,7 @@ export async function createAskAction(input: {
       urgency: urgency.value,
       validUntil: validUntil.value,
     });
-    revalidatePath("/exchange");
+    revalidatePath("/community");
     return { ok: true, id: ask.id };
   } catch (err) {
     console.error("createAskAction failed:", err);
@@ -152,8 +152,8 @@ export async function updateAskAction(input: {
       validUntil: validUntil.value,
     });
     if (!updated) return { ok: false, error: "You can only edit your own posts." };
-    revalidatePath("/exchange");
-    revalidatePath(`/exchange/${input.id}`);
+    revalidatePath("/community");
+    revalidatePath(`/community/${input.id}`);
     return { ok: true, id: updated.id };
   } catch (err) {
     console.error("updateAskAction failed:", err);
@@ -171,7 +171,7 @@ export async function deleteAskAction(input: { id: string }): Promise<ActionResu
   try {
     const ok = await deleteAsk({ id: input.id, authorSignupId: caller.user.id });
     if (!ok) return { ok: false, error: "You can only delete your own posts." };
-    revalidatePath("/exchange");
+    revalidatePath("/community");
     return { ok: true };
   } catch (err) {
     console.error("deleteAskAction failed:", err);
@@ -196,8 +196,8 @@ export async function setAskResolvedAction(input: {
       resolved: input.resolved,
     });
     if (!updated) return { ok: false, error: "You can only update your own posts." };
-    revalidatePath("/exchange");
-    revalidatePath(`/exchange/${input.id}`);
+    revalidatePath("/community");
+    revalidatePath(`/community/${input.id}`);
     return { ok: true };
   } catch (err) {
     console.error("setAskResolvedAction failed:", err);
@@ -242,7 +242,7 @@ export async function respondToAskAction(input: {
       offer: offer.value,
       proposes: proposes.value,
     });
-    revalidatePath(`/exchange/${input.askId}`);
+    revalidatePath(`/community/${input.askId}`);
     return { ok: true };
   } catch (err) {
     console.error("respondToAskAction failed:", err);
@@ -272,7 +272,7 @@ export async function decideResponseAction(input: {
       decision: input.decision,
     });
     if (!updated) return { ok: false, error: "You can only decide on responses to your own posts." };
-    revalidatePath(`/exchange/${updated.askId}`);
+    revalidatePath(`/community/${updated.askId}`);
     return { ok: true };
   } catch (err) {
     console.error("decideResponseAction failed:", err);

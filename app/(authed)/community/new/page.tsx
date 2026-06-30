@@ -51,8 +51,8 @@ export default async function NewExchangePostPage() {
         <h2 className="text-lg font-semibold">Verify to post</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-white/55">
           {viewerSignup
-            ? "Confirm your OHS student's Stanford email to post on the Exchange."
-            : "Join Pixel Parents to post on the Exchange."}
+            ? "Confirm your OHS student's Stanford email to post on the Community."
+            : "Join Pixel Parents to post on the Community."}
         </p>
         <Link
           href={viewerSignup ? "/verify" : "/signup"}
@@ -72,10 +72,10 @@ export default async function NewExchangePostPage() {
     <>
       <header className="mb-8">
         <Link
-          href="/exchange"
+          href="/community"
           className="mb-3 inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-white/80"
         >
-          <IconArrowRight className="h-4 w-4 rotate-180" /> Back to Exchange
+          <IconArrowRight className="h-4 w-4 rotate-180" /> Back to Community
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">New post</h1>
         <p className="mt-1 text-sm text-white/55">

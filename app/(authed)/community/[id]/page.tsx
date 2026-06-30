@@ -35,7 +35,7 @@ import { PostControls } from "./post-controls";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Exchange post — Pixel Parents",
+  title: "Community post — Pixel Parents",
   robots: { index: false, follow: false },
 };
 
@@ -97,11 +97,11 @@ export default async function ExchangePostPage({
   if (!isVerified) {
     return shell(
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-10 text-center">
-        <h2 className="text-lg font-semibold">Verify to view the Exchange</h2>
+        <h2 className="text-lg font-semibold">Verify to view the Community</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-white/55">
           {viewerSignup
             ? "Confirm your OHS student's Stanford email to view and respond to posts."
-            : "Join Pixel Parents to view the Exchange."}
+            : "Join Pixel Parents to view the Community."}
         </p>
         <Link
           href={viewerSignup ? "/verify" : "/signup"}
@@ -173,10 +173,10 @@ export default async function ExchangePostPage({
   return shell(
     <>
       <Link
-        href="/exchange"
+        href="/community"
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-white/80"
       >
-        <IconArrowRight className="h-4 w-4 rotate-180" /> Back to Exchange
+        <IconArrowRight className="h-4 w-4 rotate-180" /> Back to Community
       </Link>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_18rem]">
@@ -332,7 +332,7 @@ export default async function ExchangePostPage({
                           {accepted && isOwnResponse && !isAuthor && <p>You were accepted. </p>}
                           {display?.token ? (
                             <Link
-                              href={`/community/${display.token}`}
+                              href={`/directory/${display.token}`}
                               className="mt-1 inline-flex items-center gap-1.5 font-medium text-emerald-200 underline-offset-2 hover:underline"
                             >
                               View {display.name}&apos;s profile to connect{" "}
@@ -390,7 +390,7 @@ export default async function ExchangePostPage({
             )}
             {authorToken ? (
               <Link
-                href={`/community/${authorToken}`}
+                href={`/directory/${authorToken}`}
                 className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-amber-300 hover:text-amber-200"
               >
                 View profile <IconArrowRight className="h-4 w-4" />
@@ -432,7 +432,7 @@ export default async function ExchangePostPage({
                   return m.token ? (
                     <Link
                       key={m.signupId}
-                      href={`/community/${m.token}`}
+                      href={`/directory/${m.token}`}
                       className="rounded-xl border border-white/10 bg-white/[0.02] p-3 transition-colors hover:border-amber-400/40 hover:bg-white/[0.04]"
                     >
                       {inner}

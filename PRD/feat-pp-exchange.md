@@ -1,3 +1,19 @@
+## Progress Update as of June 30, 2026 — 3:19 AM Pacific
+
+### Summary of changes since last update
+Renamed the two surfaces per request: the member **showcase** moved /community → **/directory** (label "Directory"), and the bidirectional **help board** moved /exchange → **/community** (label "Community"), placed right below Family in the nav. Routes physically moved (git mv); all internal links, redirects, and display copy updated; the existing `/asks` post stays reachable via redirects.
+
+### Detail of changes made:
+- `git mv app/(authed)/community → app/(authed)/directory` (showcase) and `app/(authed)/exchange → app/(authed)/community` (board). Removed the old /directory→/community redirect stub.
+- Order-sensitive, boundary-anchored route-string swap (Phase 1 `/community`→`/directory`, then Phase 2 `/exchange`→`/community`) so `@/lib/exchange` and `@/lib/community-map` imports were preserved.
+- next.config redirects: `/asks`, `/asks/:path*`, `/exchange`, `/exchange/:path*` → `/community(/:path*)` so old links + the existing /asks post keep working.
+- Display copy: board "Exchange"→"Community" (word-boundary, identifiers preserved); showcase H1/title/desc + breadcrumbs + dashboard card + verify/account/share-settings copy → "Directory".
+- Nav: Community (board, /community) right below Family, then Directory (/directory).
+
+### Potential concerns to address:
+- Old external `/community/<token>` profile links now resolve to the board route; the canonical profile share link is `/p/<token>` (unchanged), and in-app links were repointed to `/directory/<token>`.
+- Code identifiers/filenames (ExchangePost, exchange-board-client.tsx, lib/exchange.ts) kept their names intentionally (internal only) to avoid churn.
+
 # PRD — feat/pp-exchange (bidirectional "Exchange")
 
 ## Progress Update as of [June 30, 2026 — 2:57 AM Pacific]

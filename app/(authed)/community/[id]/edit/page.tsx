@@ -72,7 +72,7 @@ export default async function EditExchangePostPage({
   // Author-only: a non-author trying to reach the edit page is bounced back to
   // the post (the server action also re-checks, so this is purely UX).
   if (ask.authorSignupId !== viewerSignup!.id) {
-    redirect(`/exchange/${id}`);
+    redirect(`/community/${id}`);
   }
 
   const suggestedTags = expertiseSignalsOf(viewerSignup!).slice(0, 12);
@@ -81,7 +81,7 @@ export default async function EditExchangePostPage({
     <>
       <header className="mb-8">
         <Link
-          href={`/exchange/${id}`}
+          href={`/community/${id}`}
           className="mb-3 inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-white/80"
         >
           <IconArrowRight className="h-4 w-4 rotate-180" /> Back to post

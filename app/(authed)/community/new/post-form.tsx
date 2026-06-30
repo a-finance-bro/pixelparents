@@ -21,7 +21,7 @@ const URGENCY_LABEL: Record<AskUrgency, string> = {
   high: "High",
 };
 
-// Shared create/edit form for an Exchange post. When `initial` is provided it
+// Shared create/edit form for an Community post. When `initial` is provided it
 // edits that post (via updateAskAction); otherwise it creates a new one. Kind,
 // title, body, expertise tags, urgency, and an optional "valid until" date.
 export function PostForm({
@@ -80,7 +80,7 @@ export function PostForm({
         ? await updateAskAction({ id: initial!.id, ...payload })
         : await createAskAction(payload);
       if (res.ok) {
-        router.push(res.id ? `/exchange/${res.id}` : "/exchange");
+        router.push(res.id ? `/community/${res.id}` : "/community");
         router.refresh();
       } else {
         setError(res.error);

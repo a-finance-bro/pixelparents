@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { IconPencil, IconTrash, IconCircleCheck } from "@/components/icons";
 import { deleteAskAction, setAskResolvedAction } from "../actions";
 
-// Creator-only management bar for an Exchange post: edit (link to the edit page),
+// Creator-only management bar for an Community post: edit (link to the edit page),
 // mark resolved / reopen (toggles status), and delete (behind a confirm dialog).
 // All three server actions re-check authorship server-side; this is just the UI.
 export function PostControls({
@@ -35,7 +35,7 @@ export function PostControls({
     startTransition(async () => {
       const res = await deleteAskAction({ id });
       if (res.ok) {
-        router.push("/exchange");
+        router.push("/community");
         router.refresh();
       } else {
         setError(res.error);
@@ -48,7 +48,7 @@ export function PostControls({
     <div className="mt-4 flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
         <Link
-          href={`/exchange/${id}/edit`}
+          href={`/community/${id}/edit`}
           className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-sm text-white/75 transition hover:bg-white/5"
         >
           <IconPencil className="h-4 w-4" /> Edit

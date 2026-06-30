@@ -16,7 +16,7 @@ import {
   type StatusFilter,
 } from "@/lib/exchange";
 
-// The Exchange board: a list of posts that are either Asks ("I need help") or
+// The Community board: a list of posts that are either Asks ("I need help") or
 // Offers ("I can help"). The server hands us a flat list (created_at ASC); ALL
 // filtering + sorting is pure and lives in lib/exchange.ts so it's unit-tested.
 // Default view: open posts, oldest first (the longest-waiting post on top).
@@ -256,7 +256,7 @@ export function ExchangeBoardClient({
             return (
               <Link
                 key={p.id}
-                href={`/exchange/${p.id}`}
+                href={`/community/${p.id}`}
                 className={`group rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-colors hover:border-amber-400/40 hover:bg-white/[0.04] ${
                   expired || resolved ? "opacity-60" : ""
                 }`}
