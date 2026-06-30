@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { gridContainer, gridItem, staticContainer, staticItem } from "../directory/motion";
 import { iconForInterest } from "@/lib/interest-icons";
 import { IconX, IconClock, IconCircleCheck } from "@/components/icons";
 import { TagList } from "@/components/tag-list";
@@ -82,6 +84,8 @@ function UrgencyBadge({ urgency }: { urgency: ExchangePost["urgency"] }) {
   );
 }
 
+const MotionLink = motion.create(Link);
+
 function fmtDate(iso: string): string {
   const d = new Date(iso);
   return Number.isFinite(d.getTime())
@@ -98,6 +102,7 @@ export function ExchangeBoardClient({
   myPostIds: string[];
   viewerSignupId: string | null;
 }) {
+  const reduce = useReducedMotion();
   const [kind, setKind] = useState<KindFilter>("ask");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("open");
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
@@ -132,6 +137,22 @@ export function ExchangeBoardClient({
         myPostIds: mineOnly ? myIds : null,
       }),
     [posts, kind, statusFilter, selectedTags, sortKey, sortDir, showExpired, mineOnly, myIds, viewerSignupId],
+  );
+
+  // Filter signature — when it changes the motion list remounts so the staggered
+  // reveal replays as the board's contents update.
+  const boardKey = useMemo(
+    () =>
+      [
+        kind,
+        statusFilter,
+        Array.from(selectedTags).sort().join(","),
+        sortKey,
+        sortDir,
+        showExpired ? "exp" : "",
+        mineOnly ? "mine" : "",
+      ].join("|"),
+    [kind, statusFilter, selectedTags, sortKey, sortDir, showExpired, mineOnly],
   );
 
   const sortLabel =
@@ -255,70 +276,93 @@ export function ExchangeBoardClient({
           No posts match your filters.
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {visible.map((p) => {
-            const expired = isExpired(p);
-            const soon = !expired && isExpiringSoon(p);
-            const resolved = p.status === "resolved";
-            return (
-              <Link
-                key={p.id}
-                href={`/community/${p.id}`}
-                className={`group rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-colors hover:border-amber-400/40 hover:bg-white/[0.04] ${
-                  expired || resolved ? "opacity-60" : ""
-                }`}
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <KindBadge kind={p.kind} />
-                  <UrgencyBadge urgency={p.urgency} />
-                  {resolved && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[11px] text-emerald-200">
-                      <IconCircleCheck className="h-3 w-3" /> Resolved
-                    </span>
+        // Animated board: posts stagger in on mount and animate in/out when the
+        // Asks/Offers/status/tag filters change (keyed on the filter signature)
+        // instead of hard-cutting. Reduced-motion → present/absent variants only.
+        <motion.div
+          key={reduce ? undefined : boardKey}
+          variants={reduce ? staticContainer : gridContainer}
+          initial="hidden"
+          animate="show"
+          className="flex flex-col gap-3"
+        >
+          <AnimatePresence mode="popLayout" initial={false}>
+            {visible.map((p) => {
+              const expired = isExpired(p);
+              const soon = !expired && isExpiringSoon(p);
+              const resolved = p.status === "resolved";
+              // 3px left accent border by kind so the board is scannable at a
+              // glance: Ask = amber, Offer = violet.
+              const accent = p.kind === "offer" ? "border-l-violet-400/70" : "border-l-amber-400/70";
+              // Dim ONLY the title/body on resolved/expired posts so the status
+              // pill (Resolved / Expired) stays at full opacity and legible.
+              const dim = expired || resolved;
+              return (
+                <MotionLink
+                  key={p.id}
+                  layout={!reduce}
+                  variants={reduce ? staticItem : gridItem}
+                  whileHover={reduce ? undefined : { y: -3 }}
+                  transition={
+                    reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 32 }
+                  }
+                  href={`/community/${p.id}`}
+                  className={`group rounded-2xl border border-l-[3px] border-white/10 ${accent} bg-white/[0.02] p-5 transition-[border-color,background-color,box-shadow] hover:border-amber-400/40 hover:bg-white/[0.04] hover:shadow-lg hover:shadow-amber-400/5`}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <KindBadge kind={p.kind} />
+                    <UrgencyBadge urgency={p.urgency} />
+                    {resolved && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[11px] text-emerald-200">
+                        <IconCircleCheck className="h-3 w-3" /> Resolved
+                      </span>
+                    )}
+                    {expired ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/[0.05] px-2 py-0.5 text-[11px] text-white/45">
+                        <IconClock className="h-3 w-3" /> Expired
+                      </span>
+                    ) : soon ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[11px] text-amber-200">
+                        <IconClock className="h-3 w-3" /> Expires soon
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className={dim ? "opacity-60" : ""}>
+                    <h3 className="mt-2 font-semibold text-white">{p.title}</h3>
+                    <p className="mt-1 line-clamp-2 text-sm text-white/60">{p.body}</p>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-white/45">
+                    <span className="text-white/70">{p.authorName || "A community member"}</span>
+                    <MemberTypeBadge isStudent={p.isStudent} />
+                    {p.validUntil && !expired && <span>· valid until {fmtDate(p.validUntil)}</span>}
+                  </div>
+
+                  {p.tags.length > 0 && (
+                    <TagList
+                      tags={p.tags}
+                      max={6}
+                      className="mt-3 flex flex-wrap items-center gap-1.5"
+                      renderTag={(t) => {
+                        const Icon = iconForInterest(t);
+                        return (
+                          <span
+                            key={t}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-2.5 py-1 text-xs text-white/80"
+                          >
+                            <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+                            {t}
+                          </span>
+                        );
+                      }}
+                    />
                   )}
-                  {expired ? (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/[0.05] px-2 py-0.5 text-[11px] text-white/45">
-                      <IconClock className="h-3 w-3" /> Expired
-                    </span>
-                  ) : soon ? (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[11px] text-amber-200">
-                      <IconClock className="h-3 w-3" /> Expires soon
-                    </span>
-                  ) : null}
-                </div>
-
-                <h3 className="mt-2 font-semibold text-white">{p.title}</h3>
-                <p className="mt-1 line-clamp-2 text-sm text-white/60">{p.body}</p>
-
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-white/45">
-                  <span className="text-white/70">{p.authorName || "A community member"}</span>
-                  <MemberTypeBadge isStudent={p.isStudent} />
-                  {p.validUntil && !expired && <span>· valid until {fmtDate(p.validUntil)}</span>}
-                </div>
-
-                {p.tags.length > 0 && (
-                  <TagList
-                    tags={p.tags}
-                    max={6}
-                    className="mt-3 flex flex-wrap items-center gap-1.5"
-                    renderTag={(t) => {
-                      const Icon = iconForInterest(t);
-                      return (
-                        <span
-                          key={t}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-2.5 py-1 text-xs text-white/80"
-                        >
-                          <Icon className="h-3.5 w-3.5" strokeWidth={2} />
-                          {t}
-                        </span>
-                      );
-                    }}
-                  />
-                )}
-              </Link>
-            );
-          })}
-        </div>
+                </MotionLink>
+              );
+            })}
+          </AnimatePresence>
+        </motion.div>
       )}
     </div>
   );
