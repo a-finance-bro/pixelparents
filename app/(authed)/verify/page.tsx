@@ -35,9 +35,19 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default async function VerifyPage() {
+export default async function VerifyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ required?: string }>;
+}) {
   const viewer = await currentUser();
   if (!viewer) redirect("/sign-in");
+
+  // The forced-verification gate (FAMILY_FORCE_VERIFY) redirects here with
+  // ?required=1. In that mode we show a "Verify to continue" banner and suppress
+  // any "verify later" escape hatch — the family must verify to proceed.
+  const { required } = await searchParams;
+  const isRequired = required === "1";
 
   const email = primaryEmail(viewer);
   const signup = email ? await getSignupByEmail(email) : null;
@@ -77,6 +87,18 @@ export default async function VerifyPage() {
         </div>
       ) : (
         <>
+          {isRequired && status !== "approved" && (
+            <div className="mb-5 rounded-2xl border border-amber-400/40 bg-amber-400/[0.08] p-4">
+              <h2 className="text-sm font-semibold text-amber-200">
+                Verify your OHS student to continue
+              </h2>
+              <p className="mt-1 text-sm text-white/65">
+                Your family needs a verified OHS student to access Pixel Parents.
+                Confirm your student&apos;s Stanford email below to unlock the rest
+                of the site.
+              </p>
+            </div>
+          )}
           <StudentVerify signupId={signup.id} initial={state} />
           {status === "approved" && (
             <div className="mt-6 flex flex-wrap gap-3">
