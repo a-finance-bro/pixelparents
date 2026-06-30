@@ -18,8 +18,10 @@ export function ensureApiKeysTable(): Promise<void> {
   if (!ensured) {
     ensured = (async () => {
       const sql = getSql();
-      // Fresh table (post-drop): create with the full current shape.
-      await sql`
+      // All idempotent DDL in ONE round-trip (was ~11 sequential ~1s on cold start).
+      // CREATE handles a dropped table; the ALTERs upgrade an older table in place.
+      await sql.transaction([
+        sql`
         CREATE TABLE IF NOT EXISTS api_keys (
           id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
           created_at timestamptz NOT NULL DEFAULT now(),
@@ -41,20 +43,20 @@ export function ensureApiKeysTable(): Promise<void> {
           label text,
           approved_at timestamptz
         )
-      `;
-      // Upgrade an existing (older) table in place — each is a no-op if already applied.
-      await sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS clerk_user_id text`;
-      await sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'pending'`;
-      await sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS decided_at timestamptz`;
-      await sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS decided_by text`;
-      await sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS reject_reason text`;
-      await sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS revealed_at timestamptz`;
-      await sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS request_count integer NOT NULL DEFAULT 0`;
-      // Keys no longer exist at request time, so these must be nullable.
-      await sql`ALTER TABLE api_keys ALTER COLUMN key_hash DROP NOT NULL`;
-      await sql`ALTER TABLE api_keys ALTER COLUMN key_prefix DROP NOT NULL`;
-      // Legacy `tier` was NOT NULL DEFAULT 'public'; relax it (one gate now).
-      await sql`ALTER TABLE api_keys ALTER COLUMN tier DROP NOT NULL`;
+      `,
+        sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS clerk_user_id text`,
+        sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'pending'`,
+        sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS decided_at timestamptz`,
+        sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS decided_by text`,
+        sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS reject_reason text`,
+        sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS revealed_at timestamptz`,
+        sql`ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS request_count integer NOT NULL DEFAULT 0`,
+        // Keys no longer exist at request time, so these must be nullable.
+        sql`ALTER TABLE api_keys ALTER COLUMN key_hash DROP NOT NULL`,
+        sql`ALTER TABLE api_keys ALTER COLUMN key_prefix DROP NOT NULL`,
+        // Legacy `tier` was NOT NULL DEFAULT 'public'; relax it (one gate now).
+        sql`ALTER TABLE api_keys ALTER COLUMN tier DROP NOT NULL`,
+      ]);
     })().catch((e) => {
       // Reset so a transient failure (e.g. a concurrent DDL race) retries on the
       // next call rather than caching the rejection forever.
@@ -82,22 +84,23 @@ export function ensureFamiliesSchema(): Promise<void> {
   if (!familiesEnsured) {
     familiesEnsured = (async () => {
       const sql = getSql();
-      await sql`
+      // All idempotent DDL in ONE round-trip (was 5 sequential ~750ms on cold
+      // start, on the dashboard/directory hot read path via getSignupByEmail).
+      await sql.transaction([
+        sql`
         CREATE TABLE IF NOT EXISTS families (
           id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
           created_at timestamptz NOT NULL DEFAULT now(),
           invite_token text NOT NULL UNIQUE
         )
-      `;
-      await sql`ALTER TABLE signups ADD COLUMN IF NOT EXISTS family_id uuid`;
-      await sql`ALTER TABLE children ADD COLUMN IF NOT EXISTS family_id uuid`;
-      // Country (lib/db/schema/signups.ts): optional, plotted on the global
-      // community map. Nullable + idempotent, same rationale as the columns above.
-      await sql`ALTER TABLE signups ADD COLUMN IF NOT EXISTS country text`;
-      // Student-email verification (lib/verify.ts): the confirmed OHS student
-      // email is recorded per child. Nullable + idempotent, same rationale as
-      // the family_id columns above.
-      await sql`ALTER TABLE children ADD COLUMN IF NOT EXISTS student_email text`;
+      `,
+        sql`ALTER TABLE signups ADD COLUMN IF NOT EXISTS family_id uuid`,
+        sql`ALTER TABLE children ADD COLUMN IF NOT EXISTS family_id uuid`,
+        // Country: optional, plotted on the global community map. Nullable + idempotent.
+        sql`ALTER TABLE signups ADD COLUMN IF NOT EXISTS country text`,
+        // Student-email verification: confirmed OHS student email, recorded per child.
+        sql`ALTER TABLE children ADD COLUMN IF NOT EXISTS student_email text`,
+      ]);
     })().catch((e) => {
       familiesEnsured = null;
       throw e;
