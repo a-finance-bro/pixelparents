@@ -8,9 +8,11 @@ import { readApprovalStatus, type ApprovalStatus } from "@/lib/approval";
 import { isAdminEmail } from "@/lib/admin";
 import {
   isFamilyVerified,
-  isDirectoryVisible,
+  hasShareableProfile,
   expertiseSignalsOf,
 } from "@/lib/directory";
+import { shareFieldsOrDefault } from "@/lib/share";
+import { websiteUrlOf } from "@/lib/enrichment/profile";
 import { isStudentAccount } from "@/lib/family-display";
 import {
   getAskById,
@@ -26,7 +28,16 @@ import { getDb } from "@/lib/db";
 import { signups } from "@/lib/db/schema/signups";
 import { inArray, eq } from "drizzle-orm";
 import { DashboardShell } from "@/components/dashboard-shell";
-import { IconArrowRight, IconClock, IconCircleCheck } from "@/components/icons";
+import {
+  IconArrowRight,
+  IconClock,
+  IconCircleCheck,
+  IconPhone,
+  IconMail,
+  IconGlobe,
+  IconLinkedin,
+  IconGithub,
+} from "@/components/icons";
 import { iconForInterest } from "@/lib/interest-icons";
 import { OfferHelpForm } from "./offer-help-form";
 import { ResponseDecision } from "./response-decision";
@@ -133,10 +144,13 @@ export default async function ExchangePostPage({
     getDb().select().from(signups).where(eq(signups.id, ask.authorSignupId)).limit(1),
   ]);
 
-  // Author profile card data. The profile LINK is gated by the author's directory
-  // visibility (the same single-source-of-truth gate the directory/`/p` uses), so
-  // we never leak a path to a private profile. Student authors are coarsened
-  // (first name only). Expertise/enrichment tags come from the shared signal set.
+  // Author profile card data. The profile LINK is gated by whether the author has
+  // a SHAREABLE profile — hasShareableProfile, NOT isDirectoryVisible. The latter
+  // wrongly excludes every student author (students get no standalone directory
+  // grid card, but they CAN share a profile), which made a student author's card
+  // always read "hasn't shared a public profile." Student authors are still
+  // coarsened (first name only). Expertise/enrichment tags come from the shared
+  // signal set.
   const authorRow = authorRows[0] ?? null;
   const authorIsStudent = authorRow ? isStudentAccount(authorRow) : false;
   const authorName = authorRow
@@ -144,8 +158,34 @@ export default async function ExchangePostPage({
       ? authorRow.firstName
       : [authorRow.firstName, authorRow.lastName].filter(Boolean).join(" ")
     : "A community member";
-  const authorToken = authorRow && isDirectoryVisible(authorRow) ? authorRow.shareToken : null;
+  // The viewer has already passed the verified-OHS-family gate above, so the
+  // author's "ohs" visibility resolves; hasShareableProfile applies the rest of
+  // the share preconditions (enabled + token + name + family verified).
+  const authorShareable = authorRow ? hasShareableProfile(authorRow) : false;
+  const authorToken = authorShareable ? authorRow!.shareToken : null;
   const authorTags = authorRow ? expertiseSignalsOf(authorRow).slice(0, 8) : [];
+
+  // The author's SHARED contact + professional links, honoring exactly the same
+  // per-field share gates the /p profile uses (shareFieldsOrDefault): email/phone
+  // behind the "phone"/"email" fields; LinkedIn/GitHub/website behind the NEW,
+  // default-OFF "links" field. Only computed for a shareable profile, and only
+  // ever rendered to this already-OHS-family viewer. Empty for a private/unshared
+  // author so the "hasn't shared a public profile" copy stays correct.
+  const authorShareFields =
+    authorShareable && authorRow ? new Set(shareFieldsOrDefault(authorRow.shareFields)) : new Set<string>();
+  const authorEmail = authorShareFields.has("email") ? authorRow?.email?.trim() || null : null;
+  const authorPhone = authorShareFields.has("phone") ? authorRow?.phone?.trim() || null : null;
+  const authorLinkedin = authorShareFields.has("links") ? authorRow?.linkedinUrl?.trim() || null : null;
+  const authorGithub =
+    authorShareFields.has("links") && authorRow?.githubUsername?.trim()
+      ? `https://github.com/${authorRow.githubUsername.trim()}`
+      : null;
+  const authorWebsite = authorShareFields.has("links")
+    ? websiteUrlOf((authorRow?.extra ?? {}) as Record<string, unknown>)
+    : null;
+  const authorHasInlineContact = Boolean(
+    authorEmail || authorPhone || authorLinkedin || authorGithub || authorWebsite,
+  );
 
   // Resolve display info (name + visibility-gated link) for every responder.
   const responderIds = Array.from(new Set(responses.map((r) => r.responderSignupId)));
@@ -157,7 +197,7 @@ export default async function ExchangePostPage({
         name: isStudentAccount(r)
           ? r.firstName
           : [r.firstName, r.lastName].filter(Boolean).join(" "),
-        token: isDirectoryVisible(r) ? r.shareToken : null,
+        token: hasShareableProfile(r) ? r.shareToken : null,
       });
     }
   }
@@ -386,6 +426,64 @@ export default async function ExchangePostPage({
                     </span>
                   );
                 })}
+              </div>
+            )}
+            {/* The author's SHARED contact + professional links, inline — each
+                gated by the author's own per-field share selection (and only ever
+                shown to this already-OHS-family viewer). */}
+            {authorHasInlineContact && (
+              <div className="mt-4 flex flex-col gap-1.5 text-sm">
+                {authorEmail && (
+                  <a
+                    href={`mailto:${authorEmail}`}
+                    className="inline-flex items-center gap-1.5 text-white/75 hover:text-white"
+                  >
+                    <IconMail className="h-4 w-4 text-white/45" />
+                    {authorEmail}
+                  </a>
+                )}
+                {authorPhone && (
+                  <a
+                    href={`tel:${authorPhone}`}
+                    className="inline-flex items-center gap-1.5 text-white/75 hover:text-white"
+                  >
+                    <IconPhone className="h-4 w-4 text-white/45" />
+                    {authorPhone}
+                  </a>
+                )}
+                {authorWebsite && (
+                  <a
+                    href={authorWebsite}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-white/75 hover:text-white"
+                  >
+                    <IconGlobe className="h-4 w-4 text-white/45" />
+                    Website
+                  </a>
+                )}
+                {authorLinkedin && (
+                  <a
+                    href={authorLinkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-white/75 hover:text-white"
+                  >
+                    <IconLinkedin className="h-4 w-4 text-white/45" />
+                    LinkedIn
+                  </a>
+                )}
+                {authorGithub && (
+                  <a
+                    href={authorGithub}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-white/75 hover:text-white"
+                  >
+                    <IconGithub className="h-4 w-4 text-white/45" />
+                    GitHub
+                  </a>
+                )}
               </div>
             )}
             {authorToken ? (

@@ -146,6 +146,26 @@ export function isDirectoryVisible(row: SignupRow): boolean {
   );
 }
 
+// Whether a member has a profile they've opted to SHARE with OHS families —
+// independent of whether they also earn a standalone directory grid card. This is
+// EVERYTHING isDirectoryVisible checks EXCEPT the `!isStudentAccount` exclusion: a
+// student CAN share a profile (and link to it from a board post / responder card),
+// they just don't appear as their own card in the directory grid. Use this — NOT
+// isDirectoryVisible — whenever you want to know "does a link to this member's
+// profile resolve?" rather than "does this member belong in the directory grid?".
+export function hasShareableProfile(row: SignupRow): boolean {
+  return (
+    row.shareEnabled === true &&
+    Boolean(row.shareToken) &&
+    Boolean(row.firstName?.trim()) &&
+    isFamilyVerified(row) &&
+    canViewProfile(coerceShareVisibility(row.shareVisibility), {
+      isOwner: false,
+      isOhsFamily: true,
+    })
+  );
+}
+
 // The ordered photo pathnames for a card (family photos first, then each shared
 // child's), gated behind the "photos" field. The first is the hero; the rest are
 // thumbnails. Returns [] when photos weren't shared.
