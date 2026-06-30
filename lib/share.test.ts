@@ -78,3 +78,21 @@ describe("generateShareToken", () => {
     expect(a).not.toBe(b);
   });
 });
+
+describe("profile_enrichment share field (default OFF)", () => {
+  it("is a known, sanitizable field", () => {
+    expect(sanitizeShareFields(["profile_enrichment"])).toEqual(["profile_enrichment"]);
+  });
+
+  it("is absent from DEFAULT_SHARE_FIELDS so it is OFF by default", () => {
+    expect(DEFAULT_SHARE_FIELDS).not.toContain("profile_enrichment");
+  });
+
+  it("a member who never picked fields does NOT get profile_enrichment", () => {
+    expect(shareFieldsOrDefault(null)).not.toContain("profile_enrichment");
+  });
+
+  it("an explicit empty selection keeps it off (no PII leak)", () => {
+    expect(shareFieldsOrDefault([])).toEqual([]);
+  });
+});

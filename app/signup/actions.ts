@@ -27,6 +27,9 @@ import { getAdminRecipients } from "@/lib/admin";
 import { createFamily, getFamilyByInviteToken, joinUrlFor } from "@/lib/family";
 import { parseInviteEmails, INVITE_LIFETIME_CAP } from "@/lib/invite";
 import { canonicalizeAgainstPool } from "@/lib/interests";
+import { normalizeWebsiteUrl } from "@/lib/enrichment/profile";
+import { runEnrichmentForSignup } from "@/lib/db/enrichment-trigger";
+import { after } from "next/server";
 
 export type SignupState = {
   ok: boolean;
@@ -125,6 +128,13 @@ export type SignupPatch = Partial<{
   // extra.accountType; only "student" is persisted (parent is the absence of it,
   // matching pre-existing parent rows).
   accountType: string;
+  // Personal/company website URL (NEW optional field — mirrors LinkedIn/GitHub).
+  // Stored in extra.websiteUrl (jsonb, no schema drift); normalized to a safe
+  // http(s) URL or cleared. Shown as a link on the profile next to LinkedIn/GitHub.
+  websiteUrl: string;
+  // Opt-in: build my profile automatically from public data. DEFAULT OFF; stored
+  // in extra.enrichmentOptIn. Enrichment only runs when this is true.
+  enrichmentOptIn: boolean;
 }>;
 
 // Translate a (trusted-but-untyped) SignupPatch into a sanitized Drizzle `set`
@@ -181,6 +191,15 @@ export async function sanitizeSignupPatch(
   }
   if ("studentResourceOptIn" in patch) {
     extraPatch.studentResourceOptIn = patch.studentResourceOptIn === true;
+  }
+  // Personal website — normalized to a safe http(s) URL (or removed when blank).
+  if ("websiteUrl" in patch) {
+    const url = normalizeWebsiteUrl(patch.websiteUrl);
+    extraPatch.websiteUrl = url ?? undefined;
+  }
+  // Enrichment opt-in — only `true` opts in; anything else clears the key (OFF).
+  if ("enrichmentOptIn" in patch) {
+    extraPatch.enrichmentOptIn = patch.enrichmentOptIn === true ? true : undefined;
   }
   // Account type: only "student" is persisted. A "parent" account (or any
   // unrecognized value) clears the key entirely, so parent rows carry NO
@@ -304,6 +323,19 @@ export async function completeSignup(id: string): Promise<SignupState> {
       console.error("notifyAdminsVerifyProfile failed:", err);
     }
   }
+
+  // Build the member's profile from public data in the BACKGROUND (after the
+  // response is sent) — but ONLY if they opted in. The trigger self-gates on the
+  // opt-in flag + available inputs + a rate limit, so scheduling it
+  // unconditionally is safe and a no-op when the member didn't opt in.
+  after(async () => {
+    try {
+      await runEnrichmentForSignup(id);
+    } catch (err) {
+      console.error("background enrichment (completeSignup) failed:", err);
+    }
+  });
+
   return { ok: true };
 }
 

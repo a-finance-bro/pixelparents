@@ -105,9 +105,16 @@ function StudentBadge() {
 function Card({ card, wide }: { card: DirectoryCard; wide: boolean }) {
   const thumbs = card.thumbUrls.slice(0, 4);
   const childNames = card.children.map((c) => c.name).filter(Boolean);
-  // Interests + skillsets share one chip strip; deduped case-insensitively.
+  // Interests + skillsets + (shared) enrichment expertise share one chip strip;
+  // deduped case-insensitively. The enrichment expertise tags only appear when
+  // the owner enabled the "profile_enrichment" share field (gated upstream in
+  // buildDirectoryCard) — card.enrichment is null otherwise.
   const tagByKey = new Map<string, string>();
-  for (const t of [...card.interests, ...card.skillsets]) {
+  for (const t of [
+    ...card.interests,
+    ...card.skillsets,
+    ...(card.enrichment?.expertiseTags ?? []),
+  ]) {
     const k = t.toLowerCase();
     if (!tagByKey.has(k)) tagByKey.set(k, t);
   }
@@ -151,6 +158,9 @@ function Card({ card, wide }: { card: DirectoryCard; wide: boolean }) {
         </div>
       )}
       {card.location && <p className="text-sm text-white/55">{card.location}</p>}
+      {card.enrichment?.bio && (
+        <p className="line-clamp-2 text-sm text-white/65">{card.enrichment.bio}</p>
+      )}
       {childNames.length > 0 && (
         <p className="text-sm text-amber-400/90">{childNames.join(", ")}</p>
       )}

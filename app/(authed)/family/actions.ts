@@ -15,6 +15,13 @@ import {
   generateShareToken,
   type ShareVisibility,
 } from "@/lib/share";
+import { after } from "next/server";
+import { getEnrichment, saveEnrichment } from "@/lib/db/enrichment";
+import { runEnrichmentForSignup } from "@/lib/db/enrichment-trigger";
+import {
+  type StoredEnrichment,
+  type EnrichmentOwnerEdit,
+} from "@/lib/enrichment/profile";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -246,6 +253,128 @@ export async function setFamilyMemberVisibility(
     return { ok: true, visibility: tier };
   } catch (err) {
     console.error("setFamilyMemberVisibility failed:", err);
+    return { ok: false };
+  }
+}
+
+// --- Enrichment (auto-built profile) ------------------------------------------
+//
+// All actions below are FAMILY-SCOPED owner actions: the caller is derived from
+// the session and the target must share the caller's family (authorizedTarget),
+// mirroring the builder/visibility actions above. Enrichment is OPT-IN and the
+// raw facts/status roster are owner-only, so these never expose another family's
+// data.
+
+// Toggle a member's enrichment opt-in. Turning it ON kicks a background run (the
+// trigger self-gates on opt-in + inputs + rate limit). Turning it OFF just flips
+// the flag — the stored enrichment is left intact; deleteEnrichment removes it.
+export async function setEnrichmentOptIn(
+  targetSignupId: string,
+  on: boolean,
+): Promise<{ ok: boolean; optedIn?: boolean }> {
+  const target = await authorizedTarget(targetSignupId);
+  if (!target) return { ok: false };
+
+  const nextExtra: Record<string, unknown> = { ...target.extra };
+  if (on === true) nextExtra.enrichmentOptIn = true;
+  else delete nextExtra.enrichmentOptIn;
+
+  try {
+    await getDb().update(signups).set({ extra: nextExtra }).where(eq(signups.id, target.id));
+  } catch (err) {
+    console.error("setEnrichmentOptIn failed:", err);
+    return { ok: false };
+  }
+
+  // Kick a background build on enable (no-op if there's nothing to enrich).
+  if (on === true) {
+    after(async () => {
+      try {
+        await runEnrichmentForSignup(target.id);
+      } catch (err) {
+        console.error("background enrichment (opt-in) failed:", err);
+      }
+    });
+  }
+  return { ok: true, optedIn: on === true };
+}
+
+// Manual, owner-only "Refresh profile data" — rate-limited inside the trigger
+// (force=true still honors MIN_REFRESH_MS). Runs inline so the caller learns
+// whether it actually ran (the family UI shows a status). Idempotent.
+export async function refreshEnrichment(
+  targetSignupId: string,
+): Promise<{ ok: boolean; ran?: boolean; reason?: string }> {
+  const target = await authorizedTarget(targetSignupId);
+  if (!target) return { ok: false };
+  try {
+    const r = await runEnrichmentForSignup(target.id, { force: true });
+    revalidatePath("/family");
+    return { ok: true, ran: r.ran, reason: r.reason };
+  } catch (err) {
+    console.error("refreshEnrichment failed:", err);
+    return { ok: false };
+  }
+}
+
+// Save an owner's manual edits to the AI-built bio/expertise/help. Stored under
+// extra.enrichment.ownerEdit and merged over the AI output on read; a later
+// refresh preserves it (see preserveOwnerEdit). Marks editedByOwner so a refresh
+// won't clobber it.
+export async function saveEnrichmentOwnerEdit(
+  targetSignupId: string,
+  edit: { bio?: string; expertiseTags?: string[]; canHelpWith?: string[] },
+): Promise<{ ok: boolean }> {
+  const target = await authorizedTarget(targetSignupId);
+  if (!target) return { ok: false };
+
+  const previous = (await getEnrichment(target.id)) as StoredEnrichment | null;
+  if (!previous) return { ok: false };
+
+  const clean = (v: unknown): string => (typeof v === "string" ? v.trim().slice(0, 2000) : "");
+  const cleanList = (v: unknown): string[] =>
+    Array.isArray(v)
+      ? v
+          .filter((x): x is string => typeof x === "string")
+          .map((x) => x.trim())
+          .filter(Boolean)
+          .slice(0, 30)
+      : [];
+
+  const ownerEdit: EnrichmentOwnerEdit = {
+    bio: clean(edit.bio),
+    expertiseTags: cleanList(edit.expertiseTags),
+    canHelpWith: cleanList(edit.canHelpWith),
+    editedByOwner: true,
+    editedAt: new Date().toISOString(),
+  };
+
+  try {
+    await saveEnrichment(target.id, { ...previous, ownerEdit });
+    revalidatePath("/family");
+    return { ok: true };
+  } catch (err) {
+    console.error("saveEnrichmentOwnerEdit failed:", err);
+    return { ok: false };
+  }
+}
+
+// Delete a member's stored enrichment entirely (owner choice). Reads the row's
+// extra, drops the `enrichment` key, and writes it back (read-modify-write so
+// sibling keys survive). Leaves the opt-in flag as-is.
+export async function deleteEnrichment(
+  targetSignupId: string,
+): Promise<{ ok: boolean }> {
+  const target = await authorizedTarget(targetSignupId);
+  if (!target) return { ok: false };
+  const nextExtra: Record<string, unknown> = { ...target.extra };
+  delete nextExtra.enrichment;
+  try {
+    await getDb().update(signups).set({ extra: nextExtra }).where(eq(signups.id, target.id));
+    revalidatePath("/family");
+    return { ok: true };
+  } catch (err) {
+    console.error("deleteEnrichment failed:", err);
     return { ok: false };
   }
 }
