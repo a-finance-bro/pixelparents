@@ -13,6 +13,7 @@ import {
   US_STATES,
   COUNTRIES,
   BUILDER_INTEREST,
+  ACCOUNT_TYPE,
 } from "@/lib/options";
 import { signupSchema, linkedinUrlFromHandle } from "@/lib/validation";
 import { generateShareToken } from "@/lib/share";
@@ -119,6 +120,11 @@ export type SignupPatch = Partial<{
   builderInterest: string;
   // Opt-in to being a resource for OHS students (shown when LinkedIn is filled).
   studentResourceOptIn: boolean;
+  // Who is signing up: "parent" (default) or "student". A student account must
+  // link a parent/guardian (see the thanks-page parent-invite step). Stored in
+  // extra.accountType; only "student" is persisted (parent is the absence of it,
+  // matching pre-existing parent rows).
+  accountType: string;
 }>;
 
 // Translate a (trusted-but-untyped) SignupPatch into a sanitized Drizzle `set`
@@ -176,6 +182,13 @@ export async function sanitizeSignupPatch(
   if ("studentResourceOptIn" in patch) {
     extraPatch.studentResourceOptIn = patch.studentResourceOptIn === true;
   }
+  // Account type: only "student" is persisted. A "parent" account (or any
+  // unrecognized value) clears the key entirely, so parent rows carry NO
+  // accountType — byte-for-byte identical to the pre-existing parent shape.
+  if ("accountType" in patch) {
+    const t = oneOf(ACCOUNT_TYPE, patch.accountType);
+    extraPatch.accountType = t === "student" ? "student" : undefined;
+  }
   if (Object.keys(extraPatch).length > 0) {
     const [cur] = await getDb()
       .select({ extra: signups.extra })
@@ -183,7 +196,14 @@ export async function sanitizeSignupPatch(
       .where(eq(signups.id, rowId))
       .limit(1);
     const extra = (cur?.extra ?? {}) as Record<string, unknown>;
-    set.extra = { ...extra, ...extraPatch };
+    const merged = { ...extra, ...extraPatch };
+    // An explicit `undefined` in extraPatch means "remove this key" (e.g. a
+    // parent account clearing a stale accountType) — drop it so the stored jsonb
+    // doesn't carry a null/undefined remnant.
+    for (const k of Object.keys(extraPatch)) {
+      if (extraPatch[k] === undefined) delete merged[k];
+    }
+    set.extra = merged;
   }
   return set;
 }

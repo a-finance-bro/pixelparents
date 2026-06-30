@@ -1,13 +1,79 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { signups, children, type Photo } from "@/lib/db/schema/signups";
 import { canonicalizeAgainstPool } from "@/lib/interests";
+import { isStudentAccount } from "@/lib/family-display";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// --- Student → parent link status --------------------------------------------
+
+// Whether a STUDENT account has satisfied the "kid accounts require a linked
+// parent" rule, and enough context for the thanks page to show family status and
+// gate the student's "Finish". A parent is considered LINKED once another
+// (non-student) member shares the family; PENDING once the student has sent at
+// least one parent invite (counted via the shared coParentInvitesSent counter).
+export type StudentParentLinkStatus = {
+  // True only for a student account — callers (the parent path) get isStudent:false.
+  isStudent: boolean;
+  // A non-student member already joined this family (the parent linked up).
+  hasLinkedParent: boolean;
+  // The student has sent at least one parent invite (awaiting them to join).
+  hasPendingInvite: boolean;
+  // First name(s) of any non-student family members, for a friendly status line.
+  linkedParentNames: string[];
+};
+
+export async function getStudentParentLinkStatus(
+  signupId: string,
+): Promise<StudentParentLinkStatus> {
+  const empty: StudentParentLinkStatus = {
+    isStudent: false,
+    hasLinkedParent: false,
+    hasPendingInvite: false,
+    linkedParentNames: [],
+  };
+  if (!UUID_RE.test(signupId)) return empty;
+  try {
+    const [self] = await getDb()
+      .select({ familyId: signups.familyId, extra: signups.extra })
+      .from(signups)
+      .where(eq(signups.id, signupId))
+      .limit(1);
+    if (!self) return empty;
+    if (!isStudentAccount({ extra: self.extra as Record<string, unknown> | null })) {
+      return empty;
+    }
+
+    // Other members of the same family (excludes the student themselves).
+    const others = await getDb()
+      .select({ firstName: signups.firstName, extra: signups.extra })
+      .from(signups)
+      .where(and(eq(signups.familyId, self.familyId), ne(signups.id, signupId)));
+
+    const parents = others.filter(
+      (m) => !isStudentAccount({ extra: m.extra as Record<string, unknown> | null }),
+    );
+    const extra = (self.extra ?? {}) as Record<string, unknown>;
+    const invitesSent = Number(extra.coParentInvitesSent ?? 0) || 0;
+
+    return {
+      isStudent: true,
+      hasLinkedParent: parents.length > 0,
+      hasPendingInvite: invitesSent > 0,
+      linkedParentNames: parents
+        .map((p) => (p.firstName ?? "").trim())
+        .filter((n) => n.length > 0),
+    };
+  } catch (err) {
+    console.error("getStudentParentLinkStatus failed:", err);
+    return empty;
+  }
+}
 
 // --- Auto-save: live child list (add / patch / remove) -----------------------
 

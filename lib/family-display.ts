@@ -38,7 +38,10 @@ export type FamilyDisplay<M extends DisplayMember, C extends DisplayChild> = {
   unmatchedKids: C[];
 };
 
-export function isStudentAccount(m: DisplayMember): boolean {
+// Only the `extra` blob is needed to classify a member, so accept any shape that
+// carries it (the full DisplayMember satisfies this) — callers that have just an
+// `extra` (e.g. a single signup row) don't need to fabricate an id.
+export function isStudentAccount(m: Pick<DisplayMember, "extra">): boolean {
   return ((m.extra ?? {}) as Record<string, unknown>).accountType === "student";
 }
 

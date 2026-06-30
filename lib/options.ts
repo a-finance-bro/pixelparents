@@ -16,6 +16,13 @@ export const AFFILIATIONS = OHS_AFFILIATIONS;
 // signups.extra.builderInterest.
 export const BUILDER_INTEREST = ["builder", "aspiring", "no"] as const;
 
+// Who is filling out the signup. A "student" account is a signup with
+// extra.accountType === "student" (a minor who must link a parent/guardian); a
+// "parent" account is the default (and stores no accountType, matching the
+// pre-existing parent rows). Persisted in signups.extra.accountType.
+export const ACCOUNT_TYPE = ["parent", "student"] as const;
+export type AccountType = (typeof ACCOUNT_TYPE)[number];
+
 export const TECHNICAL_DEPTH = [
   "Yegge or Linus Level",
   "10x Developer",

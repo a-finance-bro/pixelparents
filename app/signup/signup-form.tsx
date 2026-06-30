@@ -27,7 +27,7 @@ import { TagPicker, PhotoUploader } from "./thanks/family-form";
 
 // Bump when the `empty` shape changes incompatibly — stored drafts from an older
 // shape are discarded on restore rather than spread in with stale keys.
-const DRAFT_VERSION = 2;
+const DRAFT_VERSION = 3;
 
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
@@ -89,6 +89,10 @@ const empty = {
   studentResource: "yes" as "yes" | "no",
   // Interest in helping build Pixel Parents software (no default selection).
   builderInterest: "" as "" | "builder" | "aspiring" | "no",
+  // Who's signing up. Default "parent" keeps the parent path exactly as before;
+  // "student" routes step-2 to "add your parent / guardian". In co-parent join
+  // mode this is forced to "parent" (a co-parent is always a parent).
+  accountType: "parent" as "parent" | "student",
 };
 
 // `joinToken`, when present, puts the form in co-parent "join mode": the draft
@@ -268,6 +272,12 @@ export default function SignupForm({
     setV((prev) => ({ ...prev, builderInterest: choice }));
     queue({ builderInterest: choice }, true);
   }
+  // Role choice (parent vs student). Persisted immediately so the thanks page
+  // (read server-side from extra.accountType) routes to the right step-2.
+  function setAccountType(choice: "parent" | "student") {
+    setV((prev) => ({ ...prev, accountType: choice }));
+    queue({ accountType: choice }, true);
+  }
   function toggleSkill(opt: string) {
     setV((prev) => {
       const next = prev.skillsets.includes(opt)
@@ -312,6 +322,9 @@ export default function SignupForm({
         // country doesn't leave a stale state on the row.
         state: v.country === "United States" ? v.state : "",
         builderInterest: v.builderInterest,
+        // In join mode a co-parent is always a parent; otherwise persist the
+        // chosen role so the thanks page routes to the right step-2.
+        accountType: joinToken ? "parent" : v.accountType,
         ...(v.linkedinHandle.trim() !== ""
           ? { studentResourceOptIn: v.studentResource === "yes" }
           : {}),
@@ -349,6 +362,49 @@ export default function SignupForm({
           <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
             {message}
           </p>
+        )}
+
+        {/* Role choice — who is signing up. Hidden in co-parent join mode (an
+            invited co-parent is always a parent joining an existing family). */}
+        {!joinToken && (
+          <Section
+            title="Who's signing up?"
+            description="This tailors the next step to you."
+          >
+            <fieldset>
+              <legend className={legendCls}>
+                I&apos;m signing up as <span className="text-red-400">*</span>
+              </legend>
+              <div className="mt-2 flex flex-col gap-2">
+                <label className="flex items-start gap-2 text-sm text-white/80">
+                  <input
+                    type="radio"
+                    name="accountType"
+                    checked={v.accountType === "parent"}
+                    onChange={() => setAccountType("parent")}
+                    className="mt-1 h-4 w-4 accent-amber-500"
+                  />
+                  <span>A parent / guardian</span>
+                </label>
+                <label className="flex items-start gap-2 text-sm text-white/80">
+                  <input
+                    type="radio"
+                    name="accountType"
+                    checked={v.accountType === "student"}
+                    onChange={() => setAccountType("student")}
+                    className="mt-1 h-4 w-4 accent-amber-500"
+                  />
+                  <span>The student</span>
+                </label>
+              </div>
+              {v.accountType === "student" && (
+                <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm text-white/75">
+                  Next, you&apos;ll add (invite) your parent or guardian so they can
+                  join your family.
+                </p>
+              )}
+            </fieldset>
+          </Section>
         )}
 
         <Section
@@ -745,7 +801,9 @@ export default function SignupForm({
         </Section>
 
         {/* Invite a spouse / other parent(s) to fill out their own info. They
-            join the same family and share these children. */}
+            join the same family and share these children. Hidden for student
+            accounts — a student links their parent in step-2 instead. */}
+        {!(!joinToken && v.accountType === "student") && (
         <Section
           title="Invite a co-parent"
           description="Optional — they'll fill out their own info and join the same family."
@@ -785,6 +843,7 @@ export default function SignupForm({
           )}
         </div>
         </Section>
+        )}
 
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <button
@@ -794,7 +853,11 @@ export default function SignupForm({
             title={status === "error" ? "Your info hasn't been saved yet — retry the save first." : undefined}
             className="rounded-lg bg-amber-400 px-6 py-3 font-semibold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {submitting ? "…" : "Add Your Child(ren) →"}
+            {submitting
+              ? "…"
+              : !joinToken && v.accountType === "student"
+                ? "Add Your Parent →"
+                : "Add Your Child(ren) →"}
           </button>
           {/* On save failure, retry is the ONLY way forward — the button above is
               disabled until the save succeeds. */}
