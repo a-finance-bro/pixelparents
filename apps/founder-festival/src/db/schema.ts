@@ -300,6 +300,16 @@ export const users = pgTable(
     // grounded facts. Validated at the app layer (http/https, length-capped) —
     // no DB CHECK so the rules can evolve without a migration. Null = none set.
     websiteUrl: text("website_url"),
+    // Self-selected member type for the OHS connect-mode "asks → expertise"
+    // connector (feat/ff-asks-connector). Drives who SEEKS help vs. who HELPS:
+    // anyone can post an ask, but only non-student profiles are surfaced as
+    // candidate helpers by the matcher (src/lib/ask-matching.ts). One of
+    // "student" | "parent" | "alumni" | "community"; defaults to "community"
+    // so legacy rows and fresh claims are treated as helpers until they pick.
+    // Validated at the app layer (MEMBER_TYPES in src/lib/member-type.ts) — no
+    // DB CHECK so the set can evolve without a migration. Only meaningful when
+    // CONNECT_MODE is on; ignored by the festival.so scoring product.
+    memberType: text("member_type").notNull().default("community"),
     // Notification preferences set on /account/setup. All four default true
     // so the "locked-on while disabled" UI on the setup page matches the
     // stored value when the contact method later gets verified — otherwise
@@ -1929,3 +1939,80 @@ export const profileDossiers = pgTable("profile_dossiers", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// ── OHS "asks → expertise matching" connector (feat/ff-asks-connector) ──────
+// Gated behind CONNECT_MODE. A claimed member posts an "ask" (e.g. "I want to
+// talk to a VC who cares about EdTech"); the matcher (src/lib/ask-matching.ts)
+// ranks candidate HELPER profiles (non-students) by expertise-tag overlap, and
+// helpers reply with a short offer the asker can accept/decline. Mirrors the
+// connectionRequests semantics: a response is an offer; on accept we reveal an
+// intro/contact path.
+
+// One row per ask. authorEvaluationId links the ask to the poster's claimed
+// profile (the evaluation a `users` row points at); authorClerkUserId is kept
+// alongside so auth checks don't need a join. expertiseTags holds canonical
+// industry slugs (src/lib/industries.ts) the matcher overlaps against helper
+// profiles' canonical_industries.
+export const asks = pgTable(
+  "asks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    authorEvaluationId: uuid("author_evaluation_id")
+      .notNull()
+      .references(() => evaluations.id, { onDelete: "cascade" }),
+    authorClerkUserId: text("author_clerk_user_id").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    // Canonical industry/expertise slugs. text[] (not jsonb) so it can overlap
+    // against evaluations.canonical_industries with the same `&&` operator the
+    // directory uses. Empty by default (an untagged ask still lists, just won't
+    // match anyone).
+    expertiseTags: text("expertise_tags")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    // "open" | "matched" | "closed". open = accepting offers; matched = the
+    // asker accepted at least one offer; closed = the asker closed it.
+    status: text("status").notNull().default("open"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    authorIdx: index("asks_author_evaluation_id_idx").on(t.authorEvaluationId),
+    // Board query: open asks, newest first.
+    statusCreatedIdx: index("asks_status_created_idx").on(t.status, t.createdAt),
+  }),
+);
+
+// A helper's offer in response to an ask. Mirrors connectionRequests: an offer
+// the asker can accept/decline. On accept, the UI reveals a connect/intro path
+// (and an email is a nice-to-have follow-up). One offer per (ask, responder).
+export const askResponses = pgTable(
+  "ask_responses",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    askId: uuid("ask_id")
+      .notNull()
+      .references(() => asks.id, { onDelete: "cascade" }),
+    responderEvaluationId: uuid("responder_evaluation_id")
+      .notNull()
+      .references(() => evaluations.id, { onDelete: "cascade" }),
+    responderClerkUserId: text("responder_clerk_user_id").notNull(),
+    // The short (≈2-sentence) offer text. Length-capped at the app layer.
+    offer: text("offer").notNull(),
+    // What the helper proposes: "async_advice" | "zoom" | "dinner" | "other".
+    proposes: text("proposes").notNull().default("async_advice"),
+    // "offered" | "accepted" | "declined". The asker decides.
+    status: text("status").notNull().default("offered"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+  },
+  (t) => ({
+    // One offer per helper per ask.
+    askResponderUnique: uniqueIndex("ask_responses_ask_responder_unique").on(
+      t.askId,
+      t.responderEvaluationId,
+    ),
+    askIdx: index("ask_responses_ask_id_idx").on(t.askId, t.status),
+  }),
+);

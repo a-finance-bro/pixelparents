@@ -14,6 +14,9 @@ import { EventConnectionPref } from "@/components/events/EventConnectionPref";
 import { getConnectionPreferences, connectionChoiceForScope, type PrefAction } from "@/lib/attendee-connections";
 import { listMemberMessagesForViewer } from "@/lib/member-messages";
 import { MessagesSection } from "@/components/account/MessagesSection";
+import { MemberTypeSection } from "@/components/account/MemberTypeSection";
+import { isConnectMode } from "@/lib/config/connect-mode";
+import { normalizeMemberType, type MemberType } from "@/lib/member-type";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +53,11 @@ export default async function AccountPage() {
   // before they claimed) their evaluation id.
   const viewerEvaluationId = await loadViewerEvaluationId(user.id);
   const messages = await listMemberMessagesForViewer({ clerkUserId: user.id, evaluationId: viewerEvaluationId });
+  // Connect-mode "asks connector": claimed members pick how they relate to OHS.
+  // Only loaded/rendered when CONNECT_MODE is on so festival.so is unaffected.
+  const connectMode = isConnectMode();
+  const memberType: MemberType | null =
+    connectMode && claimed ? await loadMemberType(user.id) : null;
 
   return (
     <div className="flex flex-col flex-1 bg-[#151515] text-zinc-100">
@@ -100,6 +108,18 @@ export default async function AccountPage() {
           <MessagesSection messages={messages} />
         </section>
         {claimed && <ProfileSettingsSection initial={claimed} />}
+        {connectMode && claimed && memberType && (
+          <section id="member-type" className="mt-10 flex flex-col gap-3 scroll-mt-20">
+            <div className="flex flex-col gap-1">
+              <h2 className="font-display text-xl font-bold">How you&rsquo;re part of OHS</h2>
+              <p className="text-sm text-zinc-400">
+                This helps us route asks. Students post asks looking for help;
+                parents, alumni, and community members can also offer to help.
+              </p>
+            </div>
+            <MemberTypeSection initial={memberType} />
+          </section>
+        )}
         {claimed && globalConnectionChoice && (
           <section id="event-connections" className="mt-10 flex flex-col gap-3 scroll-mt-20">
             <div className="flex flex-col gap-1">
@@ -157,6 +177,15 @@ async function loadViewerEvaluationId(clerkUserId: string): Promise<string | nul
     .where(eq(users.clerkUserId, clerkUserId))
     .limit(1);
   return row?.evaluationId ?? null;
+}
+
+async function loadMemberType(clerkUserId: string): Promise<MemberType> {
+  const [row] = await db
+    .select({ memberType: users.memberType })
+    .from(users)
+    .where(eq(users.clerkUserId, clerkUserId))
+    .limit(1);
+  return normalizeMemberType(row?.memberType);
 }
 
 async function loadGlobalConnectionChoice(clerkUserId: string): Promise<PrefAction | null> {

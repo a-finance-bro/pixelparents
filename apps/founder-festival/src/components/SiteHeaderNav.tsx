@@ -4,7 +4,7 @@ import Link from "next/link";
 import { HeaderSearch } from "./HeaderSearch";
 import { CONNECT_MODE_CLIENT } from "@/lib/config/connect-mode";
 
-export type SiteHeaderNavPage = "profile" | "account" | "leaderboard" | "events" | "changelog" | "docs";
+export type SiteHeaderNavPage = "profile" | "account" | "leaderboard" | "events" | "changelog" | "docs" | "asks";
 
 type Props = {
   // The page the user is currently on. Renders this link in white (no link
@@ -68,6 +68,15 @@ export function SiteHeaderNav({
         href="/leaderboard"
         isActive={currentPage === "leaderboard"}
       />
+      {/* Asks board — the OHS "asks → expertise" connector. Connect-mode only;
+          on festival.so this tab never renders. */}
+      {CONNECT_MODE_CLIENT && (
+        <NavItem
+          label="Asks"
+          href="/asks"
+          isActive={currentPage === "asks"}
+        />
+      )}
       {/* Events is a public page — always link straight to it (no claim gate),
           so signed-out visitors browsing a profile can reach it directly. */}
       <NavItem
