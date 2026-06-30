@@ -126,23 +126,22 @@ export default async function Home() {
             <span className="text-amber-400">
               {studentBuilders.toLocaleString()}
             </span>{" "}
-            {studentBuilders === 1 ? "student" : "students"} building Pixel
-            Parents
+            OHS {studentBuilders === 1 ? "student" : "students"}
           </>
         )}
-        .{" "}
-        <Link
-          href="/builders#student-builders"
-          className="text-amber-400 underline decoration-amber-400/60 underline-offset-2 transition-colors hover:text-amber-300"
-        >
-          Become a student builder
-        </Link>
         .{" "}
         <Link
           href="/builders"
           className="text-amber-400 underline decoration-amber-400/60 underline-offset-2 transition-colors hover:text-amber-300"
         >
           Learn more about us
+        </Link>
+        .{" "}
+        <Link
+          href="/builders#student-builders"
+          className="text-amber-400 underline decoration-amber-400/60 underline-offset-2 transition-colors hover:text-amber-300"
+        >
+          Become a student builder
         </Link>
         .
       </footer>

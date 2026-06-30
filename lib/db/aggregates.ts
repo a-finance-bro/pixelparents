@@ -119,6 +119,33 @@ export type Stats = {
 export async function getStats(filters: Filters = {}): Promise<Stats> {
   const updated_at = new Date().toISOString();
   const filtered = hasFilters(filters);
+
+  // Fast unfiltered path (dashboard + community hot path): all three counts in ONE
+  // round-trip instead of ~5 (tableExists ×2 + three counts). Falls through to the
+  // robust path below on any error (e.g. a pre-families schema).
+  if (hasDatabase() && !filtered) {
+    try {
+      const rows = (await getSql()`
+        SELECT
+          (SELECT count(*) FROM signups)::int AS s,
+          (SELECT count(DISTINCT family_id) FROM signups)::int AS f,
+          (SELECT count(*) FROM children)::int AS c
+      `) as Array<{ s: number; f: number; c: number }>;
+      const r = rows[0];
+      if (r) {
+        return {
+          total_signups: r.s,
+          total_families: r.f,
+          total_children: r.c,
+          updated_at,
+          database: "ready",
+        };
+      }
+    } catch {
+      // fall through to the robust (tableExists + per-count) path
+    }
+  }
+
   if (!hasDatabase() || !(await tableExists("signups"))) {
     return {
       total_signups: 0,
