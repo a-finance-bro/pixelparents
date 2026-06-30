@@ -20,6 +20,12 @@ import {
   setBuilderManual,
   setFamilyMemberVisibility,
 } from "./actions";
+import { EnrichmentPanel } from "./enrichment-panel";
+import {
+  websiteUrlOf,
+  enrichmentOptInOf,
+  type StoredEnrichment,
+} from "@/lib/enrichment/profile";
 
 // Per-member visibility control. UNLIKE components/visibility-control.tsx (which
 // routes through the owner-only setShareVisibility paths), this calls the
@@ -273,6 +279,7 @@ export function MemberCard({
       /^https?:\/\/(www\.)?linkedin\.com\/in\//,
       "",
     ),
+    websiteUrl: websiteUrlOf((member.extra ?? {}) as Record<string, unknown>) ?? "",
     ohsAffiliation: member.ohsAffiliation ?? "",
     city: member.city ?? "",
     state: member.state ?? "",
@@ -404,6 +411,27 @@ export function MemberCard({
               className="w-full rounded-r-lg bg-transparent py-2 pr-3 text-white outline-none"
             />
           </div>
+        </div>
+        <div className="sm:col-span-2">
+          <label className={labelCls}>Personal website</label>
+          <input
+            type="url"
+            inputMode="url"
+            value={v.websiteUrl}
+            onChange={(e) => set("websiteUrl", e.target.value)}
+            placeholder="https://yourname.com"
+            className={inputCls}
+          />
+        </div>
+        {/* Owner-only auto-built profile: opt-in, status, refresh, edit, delete. */}
+        <div className="sm:col-span-2">
+          <EnrichmentPanel
+            memberId={member.id}
+            initialOptIn={enrichmentOptInOf((member.extra ?? {}) as Record<string, unknown>)}
+            initialEnrichment={
+              ((member.extra ?? {}) as Record<string, unknown>).enrichment as StoredEnrichment | null
+            }
+          />
         </div>
       </div>
 

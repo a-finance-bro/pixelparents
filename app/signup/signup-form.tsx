@@ -75,6 +75,11 @@ const empty = {
   phone: "",
   githubUsername: "",
   linkedinHandle: "",
+  // Personal/company website (optional). Stored in extra.websiteUrl; one of the
+  // public sources the opt-in enrichment can build a profile from.
+  websiteUrl: "",
+  // Opt-in: build my profile automatically from public data. DEFAULT OFF.
+  enrichmentOptIn: false,
   ohsAffiliation: "",
   technicalDepth: "",
   timeCommitment: "",
@@ -311,6 +316,8 @@ export default function SignupForm({
         phone: v.phone,
         githubUsername: v.githubUsername,
         linkedinHandle: v.linkedinHandle,
+        websiteUrl: v.websiteUrl,
+        enrichmentOptIn: v.enrichmentOptIn,
         ohsAffiliation: v.ohsAffiliation,
         technicalDepth: v.technicalDepth,
         timeCommitment: v.timeCommitment,
@@ -481,6 +488,43 @@ export default function SignupForm({
               />
             </div>
             <FieldError msg={errors.linkedinHandle} />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className={labelCls} htmlFor="websiteUrl">
+              Personal website (optional)
+            </label>
+            <input
+              id="websiteUrl"
+              type="url"
+              inputMode="url"
+              value={v.websiteUrl}
+              onChange={(e) => set("websiteUrl", e.target.value)}
+              placeholder="https://yourname.com"
+              className={inputCls}
+              autoComplete="url"
+            />
+          </div>
+
+          {/* Explicit, default-OFF consent to build a profile from public data. */}
+          <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <label className="flex items-start gap-2 text-sm text-white/85">
+              <input
+                type="checkbox"
+                checked={v.enrichmentOptIn}
+                onChange={(e) => set("enrichmentOptIn", e.target.checked, true)}
+                className="mt-1 h-4 w-4 accent-amber-500"
+              />
+              <span>
+                Build my profile automatically from public data (LinkedIn, GitHub,
+                personal website, etc.).{" "}
+                <em className="text-white/60">
+                  Off by default. We only use public, you-provided sources, never
+                  school systems. You can review, edit, share, or delete the result
+                  anytime — and choose whether it appears to other families.
+                </em>
+              </span>
+            </label>
           </div>
 
           {v.linkedinHandle.trim() !== "" && (

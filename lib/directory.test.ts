@@ -545,3 +545,79 @@ describe("familyWithinRadius (radius filter predicate)", () => {
     expect(familyWithinRadius(null, sf, 50)).toBe(false);
   });
 });
+
+// --- Enrichment share-field gating (the "profile_enrichment" field) -----------
+//
+// The curated auto-built profile may appear on a directory card ONLY when the
+// owner enabled the NEW, default-OFF "profile_enrichment" share field. The raw
+// fact dump + source-status roster are never projected onto a card.
+describe("buildDirectoryCard — enrichment is gated behind profile_enrichment", () => {
+  const URLS = new Map<string, string>();
+  const stored = {
+    enrichedAt: "2026-06-30T00:00:00.000Z",
+    subject: { name: "Ada Lovelace" },
+    info: {
+      identity: {
+        name: "Ada Lovelace",
+        headline: null,
+        currentRole: null,
+        currentCompany: null,
+        location: null,
+        education: [],
+      },
+      bio: "Builds compilers.",
+      expertiseTags: ["compilers"],
+      canHelpWith: ["mentoring"],
+    },
+    infoExtracted: true,
+    factsBySource: [{ source: "github", facts: ["SECRET RAW FACT"] }],
+    statuses: [{ source: "github", status: "ok", factCount: 1 }],
+    citations: [],
+    buildStatus: "ready",
+  };
+
+  it("omits enrichment when the share field is OFF (default)", () => {
+    // DEFAULT_SHARE_FIELDS (shareFields:null) does NOT include profile_enrichment.
+    const card = buildDirectoryCard(
+      signup({ extra: { approvalStatus: "approved", enrichment: stored } }),
+      [],
+      URLS,
+      3,
+      YEAR,
+    );
+    expect(card.enrichment).toBeNull();
+  });
+
+  it("surfaces only the curated info when the share field is ON — never raw facts/statuses", () => {
+    const card = buildDirectoryCard(
+      signup({
+        shareFields: ["profile_enrichment"],
+        extra: { approvalStatus: "approved", enrichment: stored },
+      }),
+      [],
+      URLS,
+      3,
+      YEAR,
+    );
+    expect(card.enrichment).toEqual({
+      bio: "Builds compilers.",
+      expertiseTags: ["compilers"],
+      canHelpWith: ["mentoring"],
+    });
+    // The raw fact dump is NEVER exposed on a card.
+    expect(JSON.stringify(card)).not.toContain("SECRET RAW FACT");
+    expect(card).not.toHaveProperty("factsBySource");
+    expect(card).not.toHaveProperty("statuses");
+  });
+
+  it("is null when opted into the field but no enrichment was built", () => {
+    const card = buildDirectoryCard(
+      signup({ shareFields: ["profile_enrichment"], extra: { approvalStatus: "approved" } }),
+      [],
+      URLS,
+      3,
+      YEAR,
+    );
+    expect(card.enrichment).toBeNull();
+  });
+});

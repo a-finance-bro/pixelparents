@@ -10,6 +10,12 @@ import { renderCaption } from "@/lib/mentions";
 import { builderStatusOf } from "@/lib/builder";
 import { childFullName } from "@/lib/directory";
 import {
+  websiteUrlOf,
+  curatedEnrichmentOf,
+  type StoredEnrichment,
+} from "@/lib/enrichment/profile";
+import { IconGlobe } from "@/components/icons";
+import {
   IconPhone,
   IconMail,
   IconCode,
@@ -142,13 +148,25 @@ export async function ProfileView({
   // so it's shown to anyone who can view this profile regardless of share fields.
   const builder = builderStatusOf((signup.extra ?? {}) as Record<string, unknown>);
 
-  // Opt-in professional links — only when the NEW "links" field is enabled.
+  // Opt-in professional links — only when the NEW "links" field is enabled. The
+  // personal website rides with the same opt-in (it's a professional link too).
   const showLinks = visible.has("links");
   const linkedinUrl = showLinks ? signup.linkedinUrl?.trim() || null : null;
   const githubUrl =
     showLinks && signup.githubUsername?.trim()
       ? `https://github.com/${signup.githubUsername.trim()}`
       : null;
+  const extra = (signup.extra ?? {}) as Record<string, unknown>;
+  const websiteUrl = showLinks ? websiteUrlOf(extra) : null;
+
+  // Curated auto-built profile (bio / expertise / how-they-can-help) — behind the
+  // NEW, default-OFF "profile_enrichment" share field. ONLY the curated info is
+  // shown here; the raw facts + source-status roster are owner-only (family page).
+  // This view is already behind the canViewProfile gate above, so a signed-out
+  // viewer never reaches it — zero enrichment PII leaks.
+  const enrichment = visible.has("profile_enrichment")
+    ? curatedEnrichmentOf(extra.enrichment as StoredEnrichment | null | undefined)
+    : null;
 
   // A student card never lists children (a minor isn't shown as a "parent of").
   const showChildren = visible.has("children") && !isStudent && kids.length > 0;
@@ -249,8 +267,19 @@ export async function ProfileView({
         </div>
       )}
 
-      {(linkedinUrl || githubUrl) && (
+      {(linkedinUrl || githubUrl || websiteUrl) && (
         <div className="mt-4 flex flex-wrap gap-2">
+          {websiteUrl && (
+            <a
+              href={websiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 text-sm text-white/85 transition-colors hover:border-amber-400/40 hover:text-white"
+            >
+              <IconGlobe className="h-4 w-4" />
+              Website
+            </a>
+          )}
           {linkedinUrl && (
             <a
               href={linkedinUrl}
@@ -287,6 +316,35 @@ export async function ProfileView({
         <section className="mt-9">
           <Label>Skills</Label>
           <Pills items={skillsets} />
+        </section>
+      )}
+
+      {/* Curated auto-built profile (shared, owner-controlled). Only bio /
+          expertise / how-they-can-help — never the raw facts or source roster. */}
+      {enrichment && (
+        <section className="mt-9">
+          <Label>About</Label>
+          {enrichment.bio && <p className="text-white/80">{enrichment.bio}</p>}
+          {enrichment.expertiseTags.length > 0 && (
+            <div className="mt-4">
+              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-white/35">
+                Areas of expertise
+              </div>
+              <Pills items={enrichment.expertiseTags} />
+            </div>
+          )}
+          {enrichment.canHelpWith.length > 0 && (
+            <div className="mt-4">
+              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-white/35">
+                How they can help
+              </div>
+              <ul className="list-disc pl-5 text-[15px] text-white/75">
+                {enrichment.canHelpWith.map((h) => (
+                  <li key={h}>{h}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
       )}
 

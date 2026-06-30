@@ -12,6 +12,12 @@ export const SHARE_FIELDS = [
   // Professional links (LinkedIn + GitHub). NEW field — intentionally absent
   // from DEFAULT_SHARE_FIELDS below so it is OFF by default; a member must opt in.
   { key: "links", label: "LinkedIn & GitHub links" },
+  // The AI-built profile (bio / expertise / how they can help), curated from
+  // public data. NEW field — absent from DEFAULT_SHARE_FIELDS so it is OFF by
+  // default; only the curated info ever appears (never the raw facts/status
+  // roster, which stay owner-only). Requires the member to have opted into
+  // enrichment in the first place.
+  { key: "profile_enrichment", label: "AI-built profile (bio & expertise)" },
 ] as const;
 
 export type ShareFieldKey = (typeof SHARE_FIELDS)[number]["key"];

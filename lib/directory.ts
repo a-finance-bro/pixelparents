@@ -2,6 +2,7 @@ import { canViewProfile, coerceShareVisibility, shareFieldsOrDefault } from "@/l
 import { childAge } from "@/lib/directory-filters";
 import { builderStatusOf } from "@/lib/builder";
 import { isStudentAccount } from "@/lib/family-display";
+import { curatedEnrichmentOf, type StoredEnrichment } from "@/lib/enrichment/profile";
 import type { SignupRow, ChildRow } from "@/lib/db/schema/signups";
 
 // Build a public GitHub profile URL from a stored handle. Returns null for a
@@ -65,6 +66,15 @@ export type DirectoryCard = {
   // GitHub username. Null when not shared / not provided.
   linkedinUrl: string | null;
   githubUrl: string | null;
+  // Curated, shareable slice of the member's auto-built profile (bio / expertise
+  // / how-they-can-help). Gated behind the NEW, default-OFF "profile_enrichment"
+  // share field. NEVER includes the raw fact dump or the source-status roster —
+  // those stay owner-only (see the family page). Null when not shared / empty.
+  enrichment: {
+    bio: string;
+    expertiseTags: string[];
+    canHelpWith: string[];
+  } | null;
 };
 
 // Families that signed up BEFORE this cutoff are grandfathered into the directory
@@ -201,6 +211,23 @@ export function buildDirectoryCard(
   const linkedinUrl = showLinks ? row.linkedinUrl?.trim() || null : null;
   const githubUrl = showLinks ? githubUrlFromUsername(row.githubUsername) : null;
 
+  // Auto-built profile (curated info only) — behind the NEW, default-OFF
+  // "profile_enrichment" share field. We expose ONLY the curated bio/expertise/
+  // help (with the owner's edits merged in by curatedEnrichmentOf); the raw facts
+  // + source-status roster are intentionally never projected onto a card.
+  const stored = ((row.extra ?? {}) as Record<string, unknown>).enrichment as
+    | StoredEnrichment
+    | null
+    | undefined;
+  const curated = fields.has("profile_enrichment") ? curatedEnrichmentOf(stored) : null;
+  const enrichment = curated
+    ? {
+        bio: curated.bio,
+        expertiseTags: curated.expertiseTags,
+        canHelpWith: curated.canHelpWith,
+      }
+    : null;
+
   // For students, surname is omitted from the displayed name (first name only —
   // a minor-privacy measure). Parents keep their full name.
   const name = isStudent
@@ -222,5 +249,6 @@ export function buildDirectoryCard(
     isStudent,
     linkedinUrl,
     githubUrl,
+    enrichment,
   };
 }
