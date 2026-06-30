@@ -6,9 +6,12 @@ import { IconCircleCheck, IconWarning, IconBan } from "@/components/icons";
 export function VerifiedBadge({
   status,
   className = "",
+  compact = false,
 }: {
   status: ApprovalStatus | null;
   className?: string;
+  // `compact` renders an icon-only square (for the mobile sidebar rail).
+  compact?: boolean;
 }) {
   const config = {
     approved: {
@@ -22,12 +25,25 @@ export function VerifiedBadge({
       cls: "border-amber-400/30 bg-amber-400/10 text-amber-300",
     },
     denied: {
-      label: "Not verified",
+      label: "Declined",
       Icon: IconBan,
       cls: "border-red-400/30 bg-red-400/10 text-red-300",
     },
   } as const;
   const { label, Icon, cls } = config[status ?? "pending"];
+
+  if (compact) {
+    return (
+      <span
+        title={label}
+        aria-label={label}
+        className={`inline-grid h-7 w-7 place-items-center rounded-lg border ${cls} ${className}`}
+      >
+        <Icon className="h-4 w-4" />
+      </span>
+    );
+  }
+
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${cls} ${className}`}
