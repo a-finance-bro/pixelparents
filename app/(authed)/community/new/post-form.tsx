@@ -103,13 +103,16 @@ export function PostForm({
     >
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-white/80">What kind of post?</span>
-        <div className="inline-flex w-fit overflow-hidden rounded-full border border-white/15">
+        {/* Full-width segmented control on phones (each option takes half) so the
+            two labels never overflow the viewport; shrinks to fit its content at
+            sm+. */}
+        <div className="flex w-full overflow-hidden rounded-full border border-white/15 sm:w-fit">
           {ASK_KINDS.map((k) => (
             <button
               key={k}
               type="button"
               onClick={() => setKind(k)}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
+              className={`flex-1 whitespace-nowrap px-3 py-2 text-xs font-medium transition-colors sm:flex-none sm:px-4 sm:text-sm ${
                 kind === k ? "bg-amber-400 text-black" : "text-white/65 hover:bg-white/10"
               }`}
             >
@@ -176,7 +179,7 @@ export function PostForm({
             }}
             disabled={tags.length >= ASK_TAGS_MAX}
             placeholder={tags.length >= ASK_TAGS_MAX ? "Max tags added" : "Add a tag and press Enter"}
-            className={`${controlCls} w-48`}
+            className={`${controlCls} w-full min-w-[10rem] flex-1 sm:w-48 sm:flex-none`}
           />
         </div>
         {remainingSuggestions.length > 0 && (
@@ -197,13 +200,13 @@ export function PostForm({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-5">
+      <div className="flex flex-col gap-5 sm:flex-row sm:flex-wrap">
         <label className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-white/80">Urgency</span>
           <select
             value={urgency}
             onChange={(e) => setUrgency(e.target.value as AskUrgency)}
-            className={`${controlCls} w-40`}
+            className={`${controlCls} w-full sm:w-40`}
           >
             {ASK_URGENCIES.map((u) => (
               <option key={u} value={u}>
@@ -221,7 +224,7 @@ export function PostForm({
             type="date"
             value={validUntil}
             onChange={(e) => setValidUntil(e.target.value)}
-            className={`${controlCls} w-48`}
+            className={`${controlCls} w-full sm:w-48`}
           />
         </label>
       </div>
