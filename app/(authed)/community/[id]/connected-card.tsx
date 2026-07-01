@@ -138,9 +138,15 @@ export function ConnectedCard({ data }: { data: ConnectedCardData }) {
 
         {data.methods.length > 0 ? (
           <div className="flex flex-col gap-2">
-            {data.methods.map((m) => (
-              <CopyRow key={`${m.kind}-${m.href}`} method={m} />
-            ))}
+            {/* Compress the reveal to a single Profile row — it already links to
+                everything the person chose to share, and the raw email/phone are
+                still delivered in the warm-intro email. Fall back to the full set
+                only if there's no shareable profile link. */}
+            {(() => {
+              const profile = data.methods.filter((m) => m.kind === "profile");
+              const shown = profile.length > 0 ? profile : data.methods;
+              return shown.map((m) => <CopyRow key={`${m.kind}-${m.href}`} method={m} />);
+            })()}
           </div>
         ) : (
           <p className="rounded-lg border border-emerald-400/15 bg-emerald-400/[0.04] px-3 py-2 text-sm text-emerald-100/80">
