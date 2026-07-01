@@ -29,7 +29,7 @@ export function SignedOutPanel({ area }: { area: string }) {
             Sign in
           </Link>
           <Link
-            href="/sign-in?redirect_url=/dashboard"
+            href="/signup"
             className="rounded-full border border-white/15 px-5 py-2 text-sm font-medium text-white/80 transition hover:bg-white/5 hover:text-white"
           >
             Create account

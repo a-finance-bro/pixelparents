@@ -96,7 +96,12 @@ export default async function AuthorizePage({ searchParams }: { searchParams: SP
   const signup = email ? await getSignupByEmail(email) : null;
   const verified = isOhsVerified(signup);
   const isStudent = roleOf(signup) === "student";
-  const displayName = signup?.firstName ?? user?.firstName ?? email ?? "your account";
+  // Prefer a real name; if none exists, fall back to the email's local part
+  // (the bit before "@") rather than exposing the full raw address on a screen a
+  // third-party app initiated. "your account" is the last resort.
+  const emailLocalPart = email ? (email.split("@")[0] || null) : null;
+  const displayName =
+    signup?.firstName ?? user?.firstName ?? emailLocalPart ?? "your account";
 
   // 5. REMEMBERED CONSENT: if the user already granted this client a scope set that
   //    covers what's being requested, skip the screen and issue the code directly
