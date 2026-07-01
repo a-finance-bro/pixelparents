@@ -86,7 +86,7 @@ export function StatStrip({
   const animate = !reduce;
   const values: Record<string, number> = { families, parents, kids, builders };
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
       {ITEMS.map((it) => (
         <StatChip
           key={it.key}
