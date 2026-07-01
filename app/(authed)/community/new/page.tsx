@@ -6,10 +6,44 @@ import { getSignupByEmail } from "@/lib/db/signups";
 import { readApprovalStatus, type ApprovalStatus } from "@/lib/approval";
 import { isAdminEmail } from "@/lib/admin";
 import { isFamilyVerified, expertiseSignalsOf } from "@/lib/directory";
+import { resolveMentionables } from "@/lib/db/community-members";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { SignedOutPanel } from "@/components/signed-out-panel";
 import { IconArrowRight } from "@/components/icons";
-import { PostForm } from "./post-form";
+import { PostForm, type ConnectTarget } from "./post-form";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Parse + AUTHORIZE the "connect with this person" pre-scope from the Directory
+// profile CTA. The signup id is re-resolved against the DB here so we only ever
+// pre-fill a mention for a real, VERIFIED, mentionable member (never a client-
+// forged id), using that member's AUTHORITATIVE coarsened name — not whatever
+// name the URL carried. Topics are the person's own tags to offer as chips; we
+// only sanitize/cap them (they're just editable suggestions, not identities).
+async function resolveConnectTarget(
+  raw: Record<string, string | string[] | undefined>,
+  selfSignupId: string,
+): Promise<ConnectTarget | null> {
+  const id = typeof raw.connect === "string" ? raw.connect : null;
+  if (!id || !UUID_RE.test(id) || id === selfSignupId) return null;
+  const resolved = await resolveMentionables([id]);
+  const member = resolved.get(id);
+  if (!member) return null; // unknown / unverified / not mentionable → no pre-scope
+
+  const topicsRaw = typeof raw.topics === "string" ? raw.topics : "";
+  const seen = new Set<string>();
+  const topics: string[] = [];
+  for (const t of topicsRaw.split(",")) {
+    const clean = t.trim().slice(0, 40);
+    if (!clean) continue;
+    const key = clean.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    topics.push(clean);
+    if (topics.length >= 12) break;
+  }
+  return { signupId: member.signupId, name: member.name, topics };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +52,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function NewExchangePostPage() {
+export default async function NewExchangePostPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
   const viewer = await currentUser();
   if (!viewer) {
     return (
@@ -68,6 +107,11 @@ export default async function NewExchangePostPage() {
   // same tags the matcher uses, so it primes a useful tag set.
   const suggestedTags = expertiseSignalsOf(viewerSignup!).slice(0, 12);
 
+  // If we arrived from a member's "Connect with <Name>" CTA, resolve + authorize
+  // the target so the composer opens pre-scoped to THIS person (auto @-mention +
+  // their topics as chips). Null when there's no/invalid connect param.
+  const connect = await resolveConnectTarget(sp, viewerSignup!.id);
+
   return shell(
     <>
       <header className="mb-8">
@@ -77,14 +121,29 @@ export default async function NewExchangePostPage() {
         >
           <IconArrowRight className="h-4 w-4 rotate-180" /> Back to Community
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">New post</h1>
-        <p className="mt-1 text-sm text-white/55">
-          Post an <span className="text-amber-300">Ask</span> (you need help) or an{" "}
-          <span className="text-violet-300">Offer</span> (you can help) — and tag the relevant
-          expertise.
-        </p>
+        {connect ? (
+          <>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Connect with {connect.name}
+            </h1>
+            <p className="mt-1 text-sm text-white/55">
+              Pick what you&apos;d like to connect about and send a quick note.{" "}
+              <span className="text-amber-300">{connect.name}</span> is @-mentioned, so they&apos;ll
+              be notified when you post.
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">New post</h1>
+            <p className="mt-1 text-sm text-white/55">
+              Post an <span className="text-amber-300">Ask</span> (you need help) or an{" "}
+              <span className="text-violet-300">Offer</span> (you can help) — and tag the relevant
+              expertise.
+            </p>
+          </>
+        )}
       </header>
-      <PostForm suggestedTags={suggestedTags} />
+      <PostForm suggestedTags={suggestedTags} connect={connect} />
     </>,
   );
 }

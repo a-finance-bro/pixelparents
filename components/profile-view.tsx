@@ -27,6 +27,7 @@ import {
 import { PhotoCarousel, type CaptionPart } from "@/components/photo-carousel";
 import { VisibilityControl } from "@/components/visibility-control";
 import { TagList } from "@/components/tag-list";
+import { ConnectCta } from "@/app/(authed)/directory/connect-cta";
 
 // Shared, reusable profile renderer. Powers BOTH:
 //   • the public secret share page  /p/<token>        (variant="public")
@@ -218,6 +219,30 @@ export async function ProfileView({
     ? signup.firstName
     : `${signup.firstName} ${signup.lastName ?? ""}`.trim();
 
+  // "Connect with this person" CTA (Daniel's #d5u7YmwJ feedback). Shown only to a
+  // signed-in viewer who ISN'T the profile owner — never "connect with yourself",
+  // and a signed-out viewer never reaches this code (canViewProfile gate above).
+  // The composer page (/community/new) re-authorizes the viewer as a VERIFIED
+  // family server-side, so a not-yet-verified viewer who taps through gets the
+  // clear "verify to post" prompt rather than a silent dead end.
+  const canConnect = loggedIn && !isOwner;
+  // The person's OWN topics, offered as click-to-select chips in the composer so
+  // the user picks context with taps: their interests + shared skills + any shared
+  // enrichment expertise, deduped case-insensitively (first spelling wins).
+  const connectTopics = (() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const t of [...interests, ...skillsets, ...(enrichment?.expertiseTags ?? [])]) {
+      const clean = t?.trim();
+      if (!clean) continue;
+      const key = clean.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(clean);
+    }
+    return out;
+  })();
+
   // Header (name + student badge + location + visibility control). Rendered
   // inside a banner-overlap wrapper when there's a banner photo, or standalone
   // when there isn't — see headerBlock / variant rendering below.
@@ -247,6 +272,11 @@ export async function ProfileView({
       </div>
       {visible.has("location") && location && (
         <p className="mt-1.5 text-white/60">{location}</p>
+      )}
+      {canConnect && (
+        <div className="mt-4">
+          <ConnectCta signupId={signup.id} name={displayName} topics={connectTopics} />
+        </div>
       )}
     </>
   );
@@ -337,9 +367,20 @@ export async function ProfileView({
         <section className="mt-9">
           <div className="mb-3 flex items-center justify-between gap-3">
             <Label>About</Label>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/25 bg-amber-400/[0.08] px-2.5 py-1 text-[11px] font-medium text-amber-200">
+            {/* Completion + save state for the app's auto-built enrichment. The
+                curated profile only renders once enrichment has finished and been
+                saved, so this badge is the clear "done + saved" indicator (and
+                notes when the owner has since refined it by hand). */}
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/25 bg-amber-400/[0.08] px-2.5 py-1 text-[11px] font-medium text-amber-200"
+              title={
+                enrichment.editedByOwner
+                  ? "Auto-built by Pixel Parents, then refined by this member. Saved."
+                  : "Automatically built by Pixel Parents. Saved."
+              }
+            >
               <IconSparkles className="h-3 w-3" />
-              Auto-built profile
+              {enrichment.editedByOwner ? "Auto-built · edited" : "Auto-built profile"}
             </span>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
