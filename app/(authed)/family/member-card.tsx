@@ -93,7 +93,7 @@ function FamilyVisibilityControl({
       <p className="text-xs text-white/40">
         {v === "private"
           ? "Hidden from everyone except your family."
-          : "Visible to signed-in OHS families in the directory and via the share link."}
+          : "Visible to signed-in OHS families in the directory."}
       </p>
       {error && <p className="text-xs text-red-400" aria-live="polite">{error}</p>}
     </div>
