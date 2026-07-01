@@ -31,12 +31,31 @@ function ChatIcon({ className }: { className?: string }) {
 // reused by both the sidebar popover (FeedbackWidget) and the help menu's
 // feedback sheet. Resolves the current page path at submit time
 // (window.location.pathname) so admins know which surface a note is about.
-export function FeedbackComposer({ onDone }: { onDone?: () => void }) {
+export function FeedbackComposer({
+  onDone,
+  sent: sentProp,
+  onSentChange,
+}: {
+  onDone?: () => void;
+  // When the parent owns the sent state (so the confirmation survives a popover
+  // close/reopen), it passes `sent` + `onSentChange` and the composer becomes
+  // controlled on that flag. Left undefined, the composer manages it internally
+  // (the help-menu sheet path, which stays mounted while open).
+  sent?: boolean;
+  onSentChange?: (sent: boolean) => void;
+}) {
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [sentInternal, setSentInternal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fieldId = useId();
+
+  const controlled = sentProp !== undefined;
+  const sent = controlled ? sentProp : sentInternal;
+  const setSent = (v: boolean) => {
+    if (!controlled) setSentInternal(v);
+    onSentChange?.(v);
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -81,7 +100,10 @@ export function FeedbackComposer({ onDone }: { onDone?: () => void }) {
         </span>
         <p className="text-sm font-semibold text-white">Thanks — sent!</p>
         <p className="text-xs text-white/55">
-          We read every note. We may follow up if we need more detail.
+          {/* No follow-up promise: feedback stores no contact email and admin
+              triage has no reply affordance, so promising a reply would erode
+              trust when none comes. */}
+          We read every note — thanks for helping us improve.
         </p>
         <button
           type="button"
@@ -144,6 +166,10 @@ export function FeedbackWidget({
   variant?: "sidebar" | "drawer";
 }) {
   const [open, setOpen] = useState(false);
+  // Lifted so a successful send's confirmation survives a click-outside / Escape
+  // close and a later reopen — otherwise the composer unmounts and reopening
+  // shows a fresh empty form, so a cautious user re-submits the same note.
+  const [sent, setSent] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const close = useCallback(() => setOpen(false), []);
@@ -211,7 +237,15 @@ export function FeedbackWidget({
               <IconX className="h-4 w-4" />
             </button>
           </div>
-          <FeedbackComposer onDone={close} />
+          <FeedbackComposer
+            sent={sent}
+            onSentChange={setSent}
+            onDone={() => {
+              // "Done" clears the confirmation and closes the popover.
+              setSent(false);
+              close();
+            }}
+          />
         </div>
       )}
     </div>

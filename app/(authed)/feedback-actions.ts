@@ -4,9 +4,8 @@ import { after } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { Resend } from "resend";
 import { primaryEmail } from "@/lib/clerk";
-import { isAdminEmail, getAdminRecipients } from "@/lib/admin";
-import { getFamilyForEmail, getSignupByEmail } from "@/lib/db/signups";
-import { verifiedEmailsOf } from "@/lib/verify";
+import { getAdminRecipients } from "@/lib/admin";
+import { getSignupByEmail } from "@/lib/db/signups";
 import {
   createFeedback,
   sanitizeFeedbackMessage,
@@ -17,10 +16,10 @@ import {
 //
 // Backs the always-reachable "Send feedback" widget (sidebar + help menu). The
 // author is resolved ENTIRELY server-side from the Clerk session — a client can
-// never spoof another identity. We require a signed-in, VERIFIED family (any
-// verified OHS student in the family, mirroring the community/directory gate;
-// admins are always allowed) so feedback comes from real members, then persist
-// to the `feedback` table (the source of truth admins triage at /admin/feedback).
+// never spoof another identity. We require only a signed-in user (NO verification
+// gate): feedback is low risk, the author is already resolved, and gating it hid
+// exactly the "I can't verify" notes we most need. Persisted to the `feedback`
+// table (the source of truth admins triage at /admin/feedback).
 //
 // PUBLIC repo: no personal contact is ever hardcoded; the best-effort admin
 // email notification is env-driven (Resend + getAdminRecipients).
@@ -100,35 +99,17 @@ export async function submitFeedbackAction(input: {
     return { ok: false, error: "That message is a bit long — please trim it." };
   }
 
-  // Verified gate: admins always pass; otherwise the caller's family must carry at
-  // least one verified OHS student (same union-across-family rule the layout gate
-  // and community surface use). Best-effort — a lookup failure falls through to
-  // "not verified" rather than throwing.
-  let allowed = false;
+  // No verification gate: the author is already resolved server-side from the
+  // Clerk session (a client can't spoof another identity), and feedback is low
+  // risk — often the note is "I can't verify / verification is broken", which the
+  // old gate silenced with a type-it-all-then-rejected dead end. We still resolve
+  // the signup id (best-effort) so admin triage can coarsely attribute the note.
   let signupId: string | null = null;
   try {
-    if (await isAdminEmail(email)) {
-      allowed = true;
-    }
-    const [signup, family] = await Promise.all([
-      getSignupByEmail(email),
-      getFamilyForEmail(email),
-    ]);
+    const signup = await getSignupByEmail(email);
     signupId = signup?.id ?? null;
-    if (!allowed && family) {
-      allowed = family.members.some(
-        (m) => verifiedEmailsOf((m.extra ?? {}) as Record<string, unknown>).length > 0,
-      );
-    }
   } catch (err) {
-    console.error("submitFeedbackAction: verification lookup failed:", err);
-  }
-
-  if (!allowed) {
-    return {
-      ok: false,
-      error: "Verify your OHS student to send feedback — it only takes a minute.",
-    };
+    console.error("submitFeedbackAction: signup lookup failed:", err);
   }
 
   const pagePath = cleanPagePath(input.pagePath);

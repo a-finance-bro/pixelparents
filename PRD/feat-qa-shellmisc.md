@@ -1,5 +1,34 @@
 # feat/qa-shellmisc — QA fix pass (app shell, notifications, help/feedback, admin, changelog, legal, report/error)
 
+## Progress Update as of [June 30, 2026 — 9:55 PM Pacific]
+
+### Summary of changes since last update
+Cleared the feedback bucket (findings 3, 10, 12): unverified-but-signed-in users
+can now send feedback (dropped the verified gate — the author is already resolved
+server-side and the gate silenced the "I can't verify" notes we most need); the
+confirmation no longer over-promises a follow-up the app can't deliver; and the
+sent confirmation now survives a popover close/reopen so a cautious user doesn't
+re-submit a duplicate note.
+
+### Detail of changes made:
+- **[3] Feedback dead-end for unverified users** — `feedback-actions.ts` removes the
+  verified-family gate entirely (option a). Still resolves the signup id best-effort
+  for coarse admin attribution; dropped now-unused imports (`isAdminEmail`,
+  `getFamilyForEmail`, `verifiedEmailsOf`). Signed-in is the only requirement.
+- **[10] Over-promised follow-up** — `feedback-widget.tsx` confirmation copy changed
+  from "We may follow up…" to "We read every note — thanks for helping us improve."
+  (feedback stores no contact email and admin triage has no reply affordance).
+- **[12] Lost confirmation on reopen** — lifted the `sent` state up to `FeedbackWidget`;
+  `FeedbackComposer` now accepts optional controlled `sent`/`onSentChange` props
+  (defaults to internal state for the still-mounted help-menu sheet path). Reopening
+  the sidebar popover after a successful send shows the confirmation, not a fresh form.
+
+### Files touched (this commit)
+- `app/(authed)/feedback-actions.ts`
+- `components/feedback-widget.tsx`
+
+---
+
 ## Progress Update as of [June 30, 2026 — 9:53 PM Pacific]
 
 ### Summary of changes since last update
