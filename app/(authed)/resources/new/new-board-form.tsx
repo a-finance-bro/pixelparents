@@ -30,11 +30,11 @@ export function NewBoardForm() {
           setError(res.error);
         }
       } catch {
-        // A thrown action must not crash to the error boundary — the board may
-        // have been created. Show a recoverable notice.
-        setError(
-          "Something went wrong — your board may have been created. Refresh the Resources page to check.",
-        );
+        // A thrown action means a transport failure (predictable errors return a
+        // definite {ok:false}). Take the user to Resources and refresh so they
+        // can SEE whether the board was created — that beats a "maybe" message.
+        router.push("/resources");
+        router.refresh();
       }
     });
   };

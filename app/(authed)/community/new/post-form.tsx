@@ -127,11 +127,11 @@ export function PostForm({
           setError(res.error);
         }
       } catch {
-        // A THROWN action (network blip/timeout) must not crash to the error
-        // boundary — the post may have been created. Show a recoverable notice.
-        setError(
-          "Something went wrong while submitting — your post may have been saved. Refresh the Community page to check.",
-        );
+        // A THROWN action means a transport failure (predictable errors return a
+        // definite {ok:false}). Take the user to the board and refresh so they
+        // can SEE whether it posted — that beats a "maybe" message.
+        router.push("/community");
+        router.refresh();
       }
     });
   };

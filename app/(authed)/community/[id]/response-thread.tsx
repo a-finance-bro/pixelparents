@@ -260,7 +260,7 @@ function EventProposalCard({
         if (res.ok) onChange();
         else setError(res.error);
       } catch {
-        setError("Something went wrong — this may have gone through. Refresh to check.");
+        setError("Your connection dropped before we could confirm. Reload the page to see the latest, then try again if it is not there.");
       }
     });
   };
@@ -569,7 +569,7 @@ function Composer({ responseId, onDone }: { responseId: string; onDone: () => vo
       } catch {
         // A thrown action must not crash to the error boundary — it may have
         // gone through. Show a recoverable notice.
-        setError("Something went wrong — this may have gone through. Refresh to check.");
+        setError("Your connection dropped before we could confirm. Reload the page to see the latest, then try again if it is not there.");
       }
     });
   };

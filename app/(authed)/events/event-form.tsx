@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   EVENT_TITLE_MAX,
@@ -46,16 +45,10 @@ export function EventForm({ initial }: { initial?: EventFormInitial }) {
   const [location, setLocation] = useState(initial?.location ?? "");
   const [onlineUrl, setOnlineUrl] = useState(initial?.onlineUrl ?? "");
   const [error, setError] = useState<string | null>(null);
-  // A THROWN action (network blip / timeout that can arrive AFTER the server
-  // already committed the event) must NOT crash to the error boundary — that's
-  // the "posted but showed an error" bug. When set, we show a graceful inline
-  // notice (with a link to Events) instead of the normal validation error.
-  const [threwWhileSubmitting, setThrewWhileSubmitting] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const submit = () => {
     setError(null);
-    setThrewWhileSubmitting(false);
     startTransition(async () => {
       const payload = {
         title,
@@ -81,10 +74,13 @@ export function EventForm({ initial }: { initial?: EventFormInitial }) {
           setError(res.error);
         }
       } catch {
-        // The action threw (not a returned {ok:false}). The write may have
-        // already committed server-side, so we don't imply failure — we show a
-        // recoverable notice and point the user at the Events page to check.
-        setThrewWhileSubmitting(true);
+        // The action itself never throws for predictable failures (it returns a
+        // definite {ok:false}); a throw here means a genuine transport failure.
+        // Rather than guess whether it posted, take the user to Events and
+        // refresh — the truth is self-evident there (their event is listed or
+        // it isn't), which is more useful than a "maybe" message.
+        router.push("/events");
+        router.refresh();
       }
     });
   };
@@ -244,15 +240,6 @@ export function EventForm({ initial }: { initial?: EventFormInitial }) {
       </fieldset>
 
       {error && <p className="text-sm text-red-300">{error}</p>}
-
-      {threwWhileSubmitting && (
-        <p className="text-sm text-amber-300">
-          Something went wrong while submitting — your event may have been posted.{" "}
-          <Link href="/events" className="underline underline-offset-2 hover:text-amber-200">
-            Check the Events page.
-          </Link>
-        </p>
-      )}
 
       <div>
         <button

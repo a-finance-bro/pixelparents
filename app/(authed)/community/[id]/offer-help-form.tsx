@@ -70,7 +70,7 @@ export function OfferHelpForm({ askId, kind }: { askId: string; kind: AskKind })
         // A thrown action must not crash to the error boundary — the response may
         // have been recorded. Show a recoverable notice.
         setError(
-          "Something went wrong while sending — your response may have gone through. Refresh to check.",
+          "Your connection dropped before we could confirm. Reload the page to see the latest, then resend if your response is not there.",
         );
       }
     });
