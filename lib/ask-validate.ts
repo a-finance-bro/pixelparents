@@ -46,7 +46,9 @@ function cleanMultiline(input: unknown): string {
 
 export function validateAskTitle(input: unknown): Result<string> {
   const v = cleanLine(input);
-  if (!v) return { ok: false, error: "Add a short title for your ask.", field: "title" };
+  // Kind-neutral copy: the same validators back both Asks and Offers, so the
+  // message must read correctly for either (an Offer isn't "your ask").
+  if (!v) return { ok: false, error: "Add a short title.", field: "title" };
   if (v.length > ASK_TITLE_MAX)
     return { ok: false, error: `Title must be ${ASK_TITLE_MAX} characters or fewer.`, field: "title" };
   return { ok: true, value: v };
@@ -54,7 +56,9 @@ export function validateAskTitle(input: unknown): Result<string> {
 
 export function validateAskBody(input: unknown): Result<string> {
   const v = cleanMultiline(input);
-  if (!v) return { ok: false, error: "Describe what you need help with.", field: "body" };
+  // Kind-neutral: reads correctly for an Ask (what you need) and an Offer (what
+  // you can help with) alike.
+  if (!v) return { ok: false, error: "Add some details.", field: "body" };
   if (v.length > ASK_BODY_MAX)
     return { ok: false, error: `Please keep it under ${ASK_BODY_MAX} characters.`, field: "body" };
   return { ok: true, value: v };

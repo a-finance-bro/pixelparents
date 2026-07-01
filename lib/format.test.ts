@@ -43,8 +43,11 @@ describe("formatLastUsed", () => {
     expect(formatLastUsed(new Date("2026-06-26T12:00:00Z"), now)).toBe("3 days ago");
   });
 
-  it("falls back to an absolute UTC date a week or older", () => {
+  it("falls back to an absolute Pacific date a week or older", () => {
     expect(formatLastUsed(new Date("2026-06-12T08:00:00Z"), now)).toBe("Jun 12, 2026");
+    // 02:00 UTC on Jun 12 is 19:00 Pacific on Jun 11 — the fallback must render
+    // the Pacific calendar day (Jun 11), matching the admin timestamps, not UTC.
+    expect(formatLastUsed(new Date("2026-06-12T02:00:00Z"), now)).toBe("Jun 11, 2026");
   });
 
   it("accepts an ISO string as well as a Date", () => {

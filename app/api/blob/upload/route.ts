@@ -25,6 +25,35 @@ const BOARD_FILE_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 ]);
 
+// Extension fallback for when the browser reports no MIME type. Browsers often
+// send an empty string or "application/octet-stream" for text formats they don't
+// have a registered type for (notably .md, and sometimes .txt/.csv), so a file
+// the picker's `accept` list explicitly allowed would otherwise be rejected here.
+// Kept in lockstep with the picker's `accept` (board-client.tsx) so the two agree.
+const BOARD_FILE_EXTENSIONS = new Set([
+  "pdf",
+  "txt",
+  "md",
+  "csv",
+  "doc",
+  "docx",
+  "xls",
+  "xlsx",
+  "ppt",
+  "pptx",
+]);
+
+// True when the type is absent/opaque — the case where we must fall back to the
+// filename extension to decide whether the upload is allowed.
+function typeIsUnknown(type: string): boolean {
+  return type === "" || type === "application/octet-stream";
+}
+
+function extensionOf(name: string): string {
+  const dot = name.lastIndexOf(".");
+  return dot >= 0 ? name.slice(dot + 1).toLowerCase() : "";
+}
+
 export async function POST(request: Request) {
   // Auth gate: require a signed-in Clerk user. Identity comes from the session
   // (currentUser) — never the client — matching the rest of the app's server
@@ -56,7 +85,14 @@ export async function POST(request: Request) {
 
   const isImage = file.type.startsWith("image/");
   if (isBoardFile) {
-    if (!isImage && !BOARD_FILE_TYPES.has(file.type)) {
+    // Accept when the MIME type is on the allow-list, OR — when the browser
+    // gave us no usable type — when the filename extension is one we allow. This
+    // keeps the server in agreement with the picker's `accept` list so a file
+    // the dialog offered (e.g. a .md with an empty reported type) actually uploads.
+    const allowedByType = isImage || BOARD_FILE_TYPES.has(file.type);
+    const allowedByExtension =
+      typeIsUnknown(file.type) && BOARD_FILE_EXTENSIONS.has(extensionOf(file.name));
+    if (!allowedByType && !allowedByExtension) {
       return NextResponse.json({ error: "unsupported file type" }, { status: 415 });
     }
   } else if (!isImage) {

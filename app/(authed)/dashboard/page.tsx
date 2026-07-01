@@ -256,7 +256,11 @@ export default async function DashboardPage() {
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <StatTile label="Families" value={stats.total_families} Icon={IconHome} />
               <StatTile label="Parents" value={stats.total_signups} Icon={IconUsers} />
-              <StatTile label="Kids at OHS" value={stats.total_children} Icon={IconGradCap} />
+              {/* "Children" (not "Kids at OHS"): total_children counts every
+                  child of a completed family, including those explicitly marked
+                  "Not an OHS child" — so "Kids at OHS" would overstate actual OHS
+                  enrollment. Matches the directory stat-strip relabel. */}
+              <StatTile label="Children" value={stats.total_children} Icon={IconGradCap} />
             </div>
           </section>
         )}

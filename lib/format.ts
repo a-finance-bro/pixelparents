@@ -15,11 +15,14 @@ export function formatPhone(raw: string | null | undefined): string {
 
 // Human-friendly "last used" string for the API usage panel. Recent times read
 // relative ("just now", "5 minutes ago", "3 days ago"); anything a week or older
-// falls back to an absolute UTC date (e.g. "Jun 12, 2026"). `null`/`undefined`
+// falls back to an absolute date (e.g. "Jun 12, 2026"). `null`/`undefined`
 // means the key has never been used. `now` is injectable for deterministic tests.
 //
-// UTC is intentional for the absolute fallback so a server-rendered string and a
-// client re-render agree (no hydration drift) — same approach as the changelog.
+// The absolute fallback is pinned to America/Los_Angeles (Pacific) to match the
+// admin timestamps (admin/api-requests + admin/oauth-apps) so a parent comparing
+// their key's "Last used" against what an admin sees never gets a date that's a
+// day off. A fixed zone also keeps the server render and any client re-render in
+// agreement (no hydration drift), same as the changelog.
 export function formatLastUsed(
   value: Date | string | null | undefined,
   now: Date = new Date(),
@@ -46,6 +49,6 @@ export function formatLastUsed(
     year: "numeric",
     month: "short",
     day: "numeric",
-    timeZone: "UTC",
+    timeZone: "America/Los_Angeles",
   });
 }
