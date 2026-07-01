@@ -5,6 +5,7 @@ import { PixelMascot } from "@/components/pixel-mascot";
 import { IrlTooltip } from "@/components/irl-tooltip";
 import { IconHeart, IconArrowRight } from "@/components/icons";
 import ReportDialog from "./report/report-dialog";
+import { InstallPrompt } from "@/components/install-prompt";
 import { isAdminEmail } from "@/lib/admin";
 import {
   getSignupCount,
@@ -67,7 +68,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="relative flex flex-1 flex-col overflow-hidden bg-black px-6 py-12 text-center">
+    <main className="relative flex flex-1 flex-col overflow-hidden bg-black px-4 py-10 text-center sm:px-6 sm:py-12">
       <InterestTiles interests={interests} variant="fade" />
       {/* Amber brand wash behind the mosaic so the background subtly pulses in
           brand color rather than reading as a flat grayscale field. Pure CSS,
@@ -91,12 +92,12 @@ export default async function Home() {
 
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-5">
         <PixelMascot widthClass="w-48 max-w-[80vw] sm:w-64" />
-        <h1 className="max-w-3xl text-balance text-4xl font-bold tracking-tight text-white sm:text-6xl">
+        <h1 className="max-w-3xl text-balance text-3xl font-bold tracking-tight text-white sm:text-6xl">
           Join{" "}
           <span className="text-amber-400">{count.toLocaleString()}</span> other
           Pixel Parents
         </h1>
-        <h2 className="max-w-prose text-lg font-medium text-white/70 sm:text-xl">
+        <h2 className="max-w-prose text-pretty text-base font-medium text-white/70 sm:text-xl">
           Connect with{" "}
           <span className="font-semibold text-amber-400">{kidsCount.toLocaleString()}</span>{" "}
           OHS kids around{" "}
@@ -182,6 +183,10 @@ export default async function Home() {
           </Link>
         </div>
       </footer>
+
+      {/* Mobile-only "Add to home screen" banner (self-gates: hides on desktop,
+          when already installed, or after dismissal). */}
+      <InstallPrompt />
     </main>
   );
 }

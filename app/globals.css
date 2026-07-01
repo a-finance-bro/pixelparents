@@ -184,9 +184,16 @@ samp {
 .pp-pop { animation: pp-pop 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .pp-blink { animation: pp-blink 1.05s steps(1, end) infinite; }
 
+/* PWA install banner: slide up from the bottom on first paint. */
+@keyframes pp-install-in {
+  0% { transform: translateY(120%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.pp-install { animation: pp-install-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
   .pp-bob, .pp-float, .pp-wave-cell, .pp-dot, .pp-shimmer, .pp-glitch,
-  .pp-shake, .pp-glow, .pp-scan, .pp-pop, .pp-blink {
+  .pp-shake, .pp-glow, .pp-scan, .pp-pop, .pp-blink, .pp-install {
     animation: none !important;
   }
 }
