@@ -1,5 +1,55 @@
 # feat/help-v2 — Help + Onboarding + Feedback surface
 
+## Progress Update as of [June 30, 2026 — 8:54 PM Pacific]
+
+### Summary of changes since last update
+Built pieces 2 (floating help ? button + menu + GitHub/FAQ dialogs) and 3
+(guided walkthrough tour), and mounted both in the shell (authed only). All four
+cohesive pieces are now implemented. Full suite green: tsc clean, lint clean,
+754 tests pass.
+
+### Detail of changes made:
+- `components/walkthrough-steps.ts` — pure step model: `TOUR_STEPS` (intro → six
+  Explore cards → notifications → feedback → account → outro), `TOUR_STORAGE_KEY`,
+  and pure helpers `clampStep`/`isFirstStep`/`isLastStep`/`primaryLabel`.
+- `components/walkthrough-steps.test.ts` — 9 tests over the sequence + nav math.
+- `components/walkthrough-tour.tsx` — the overlay: spotlight ring (box-shadow
+  "hole" dimming + blur, blur dropped under prefers-reduced-motion), instructional
+  card (title/body, Back/Next/Skip, progress dots), started via a
+  `pp:start-walkthrough` window event (`startWalkthrough()`), navigates to
+  /dashboard on start, scrolls targets into view, skips missing targets, Escape/
+  click-out to exit, persists a localStorage completed flag. Renders nothing until
+  started.
+- `components/help-menu.tsx` — presentational stacked-strip menu (Begin
+  walkthrough, FAQ, Privacy, Terms, Changelog, Send feedback, GitHub).
+- `components/help-button.tsx` — the floating "?" button (fixed bottom-right,
+  above the mobile tab bar, safe-area aware; a data-help-button media rule pulls
+  it to the corner on md+), toggling the menu and orchestrating the FAQ/GitHub/
+  feedback overlays.
+- `components/faq-dialog.tsx` — 7 real Q&As (what it is, who for, verification,
+  public vs private, connecting, contributing, joining the builder group) as an
+  accessible accordion dialog.
+- `components/github-dialog.tsx` — "built in the open" dialog: WhatsApp builder
+  group (NEXT_PUBLIC_DRODIO_WHATSAPP_URL, the existing repo env name), message
+  Daniel to be added showing NEXT_PUBLIC_DRODIO_PHONE ONLY when set (graceful
+  omit otherwise — never hardcoded), and the repo link.
+- `components/dashboard-shell.tsx` — mounts `<HelpButton>` + `<WalkthroughTour>`
+  for authed users.
+- `.env.example` — documented `NEXT_PUBLIC_DRODIO_PHONE` (placeholder, no real
+  value).
+- `vitest.config.ts` — include now also matches `components/**/*.test.ts` (needed
+  to run the tour step-model tests, which colocate with the component).
+
+### Potential concerns to address:
+- Env name mismatch vs brief: brief said `NEXT_PUBLIC_WHATSAPP_URL`; the repo
+  already standardizes on `NEXT_PUBLIC_DRODIO_WHATSAPP_URL`, so the GitHub dialog
+  uses the existing name for consistency (both are graceful-fallback).
+- `next build` intentionally NOT run in the worktree (per directive). Verified
+  via tsc + lint + vitest only; no browser preview run.
+- The tour's rect measurement uses fixed timings (220ms after smooth scroll);
+  robust in practice but a very slow route transition could momentarily mis-place
+  the card before the next tick recomputes.
+
 ## Progress Update as of [June 30, 2026 — 8:58 PM Pacific]
 
 ### Summary of changes since last update

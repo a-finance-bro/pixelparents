@@ -8,6 +8,8 @@ import type { ApprovalStatus } from "@/lib/approval";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { NotificationBell } from "@/components/notification-bell";
 import { FeedbackWidget } from "@/components/feedback-widget";
+import { HelpButton } from "@/components/help-button";
+import { WalkthroughTour } from "@/components/walkthrough-tour";
 import {
   IconGrid,
   IconHome,
@@ -412,6 +414,16 @@ export function DashboardShell({
           {children}
         </div>
       </div>
+
+      {/* Floating help (?) button + the guided walkthrough overlay — authed only.
+          The button is fixed bottom-right (above the mobile tab bar, safe-area
+          aware); the tour renders nothing until started from the help menu. */}
+      {authed && (
+        <>
+          <HelpButton />
+          <WalkthroughTour />
+        </>
+      )}
     </div>
   );
 }
