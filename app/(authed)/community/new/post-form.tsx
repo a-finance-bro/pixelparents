@@ -7,6 +7,14 @@ import { ASK_BODY_MAX, ASK_TAGS_MAX, ASK_TITLE_MAX } from "@/lib/ask-validate";
 import { ASK_KINDS, ASK_URGENCIES, type AskKind, type AskUrgency } from "@/lib/db/asks";
 import { MentionInput } from "../mention-input";
 import { createAskAction, updateAskAction } from "../actions";
+import {
+  type ConnectTarget,
+  connectInitialTitle,
+  connectComposeBody,
+  toggleTopic,
+} from "./connect-compose";
+
+export type { ConnectTarget };
 
 const controlCls =
   "w-full rounded-md border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none placeholder:text-white/35 focus:border-amber-400/50";
@@ -28,6 +36,7 @@ const URGENCY_LABEL: Record<AskUrgency, string> = {
 export function PostForm({
   suggestedTags,
   initial,
+  connect,
 }: {
   suggestedTags: string[];
   initial?: {
@@ -39,18 +48,48 @@ export function PostForm({
     urgency: AskUrgency;
     validUntil: string | null; // YYYY-MM-DD for the date input
   };
+  // When present, the form opens as a GUIDED "connect with this person" composer:
+  // pre-scoped to ask about connecting with the target (auto @-mention + their
+  // topics as click-to-select chips). See ./connect-compose.
+  connect?: ConnectTarget | null;
 }) {
   const router = useRouter();
   const editing = Boolean(initial);
+  // Connection posts are always an Ask ("I'd love to connect / need an intro").
   const [kind, setKind] = useState<AskKind>(initial?.kind ?? "ask");
-  const [title, setTitle] = useState(initial?.title ?? "");
-  const [body, setBody] = useState(initial?.body ?? "");
+  const [title, setTitle] = useState(
+    initial?.title ?? (connect ? connectInitialTitle(connect) : ""),
+  );
+  // Connection composer starts with the target @-mentioned and no topics picked;
+  // the body stays auto-managed by the topic chips until the user edits it by hand.
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [bodyTouched, setBodyTouched] = useState(false);
+  const [body, setBody] = useState(
+    initial?.body ?? (connect ? connectComposeBody(connect, []) : ""),
+  );
   const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
   const [tagInput, setTagInput] = useState("");
   const [urgency, setUrgency] = useState<AskUrgency>(initial?.urgency ?? "normal");
   const [validUntil, setValidUntil] = useState(initial?.validUntil ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // Tap a topic chip: toggle it in the selection, add/remove it as an expertise
+  // tag, and (while the body is still auto-managed) regenerate the pre-filled
+  // message so it reads naturally with the current picks. Once the user types in
+  // the body themselves we stop overwriting it.
+  const onToggleTopic = (topic: string) => {
+    if (!connect) return;
+    const next = toggleTopic(connect.topics, selectedTopics, topic);
+    setSelectedTopics(next);
+    setTags((prev) => {
+      const has = prev.some((t) => t.toLowerCase() === topic.toLowerCase());
+      if (has) return prev.filter((t) => t.toLowerCase() !== topic.toLowerCase());
+      if (prev.length >= ASK_TAGS_MAX) return prev;
+      return [...prev, topic];
+    });
+    if (!bodyTouched) setBody(connectComposeBody(connect, next));
+  };
 
   const addTag = (raw: string) => {
     const t = raw.trim();
@@ -133,11 +172,61 @@ export function PostForm({
         />
       </label>
 
+      {/* Guided connection composer: the target's OWN topics as click-to-select
+          chips. Tapping one shapes the pre-filled message + adds it as a tag —
+          the user picks context with taps instead of typing. */}
+      {connect && connect.topics.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-white/80">
+            What would you like to connect about?
+          </span>
+          <p className="text-xs text-white/45">
+            Tap the topics that fit — they&apos;ll shape your message to {connect.name}.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {connect.topics.map((topic) => {
+              const on = selectedTopics.some((t) => t.toLowerCase() === topic.toLowerCase());
+              return (
+                <button
+                  key={topic}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => onToggleTopic(topic)}
+                  className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                    on
+                      ? "border-amber-400 bg-amber-400 font-medium text-black"
+                      : "border-white/15 bg-white/[0.04] text-white/75 hover:bg-white/10"
+                  }`}
+                >
+                  {topic}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-white/80">Details</span>
+        <span className="text-sm font-medium text-white/80">
+          {connect ? "Your message" : "Details"}
+        </span>
+        {connect && (
+          <p className="text-xs text-white/45">
+            {connect.name} is mentioned here, so they&apos;ll be notified. Edit freely.
+          </p>
+        )}
+        {/* MentionInput initializes its editable text from `value` ONCE (it owns
+            its caret state after that). While the connection body is still auto-
+            managed by the topic chips, we remount it on each pick via a changing
+            key so the regenerated message shows; once the user edits by hand the
+            key freezes and their text is preserved. */}
         <MentionInput
+          key={connect && !bodyTouched ? `auto-${selectedTopics.join("|")}` : "manual"}
           value={body}
-          onChange={setBody}
+          onChange={(v) => {
+            if (connect && !bodyTouched) setBodyTouched(true);
+            setBody(v);
+          }}
           maxLength={ASK_BODY_MAX}
           rows={5}
           placeholder="Give the community enough context."
@@ -237,7 +326,13 @@ export function PostForm({
           disabled={pending}
           className="rounded-full bg-amber-400 px-6 py-2.5 text-sm font-semibold text-black transition hover:bg-amber-300 disabled:opacity-50"
         >
-          {pending ? "Saving…" : editing ? "Save changes" : "Post"}
+          {pending
+            ? "Saving…"
+            : editing
+              ? "Save changes"
+              : connect
+                ? `Send to ${connect.name}`
+                : "Post"}
         </button>
       </div>
     </form>
