@@ -8,8 +8,9 @@ export default defineConfig({
     environment: "node",
     // Pure-logic unit tests live next to lib helpers, plus a few pure helpers
     // colocated with route handlers under app/ (e.g. the unsubscribe outcome
-    // logic). No live DB / no Next runtime is exercised by these.
-    include: ["lib/**/*.test.ts", "app/**/*.test.ts"],
+    // logic) and a few pure UI-model helpers under components/ (e.g. the
+    // walkthrough tour step model). No live DB / no Next runtime is exercised.
+    include: ["lib/**/*.test.ts", "app/**/*.test.ts", "components/**/*.test.ts"],
   },
   resolve: {
     alias: {

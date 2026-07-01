@@ -9,16 +9,29 @@ const items = [
   { href: "/admin/api-requests", label: "API Requests" },
   { href: "/admin/oauth-apps", label: "Sign-in Apps" },
   { href: "/admin/reports", label: "Reports" },
+  { href: "/admin/feedback", label: "Feedback" },
 ];
 
-export default function AdminNav({ openReports = 0 }: { openReports?: number }) {
+export default function AdminNav({
+  openReports = 0,
+  openFeedback = 0,
+}: {
+  openReports?: number;
+  openFeedback?: number;
+}) {
   const path = usePathname();
   return (
     <nav className="flex flex-col gap-1">
       {items.map((it) => {
         const active =
           it.href === "/admin" ? path === "/admin" : path.startsWith(it.href);
-        const badge = it.href === "/admin/reports" && openReports > 0 ? openReports : null;
+        const badgeCount =
+          it.href === "/admin/reports"
+            ? openReports
+            : it.href === "/admin/feedback"
+              ? openFeedback
+              : 0;
+        const badge = badgeCount > 0 ? badgeCount : null;
         return (
           <Link
             key={it.href}
