@@ -5,6 +5,7 @@ import { UserButton } from "@clerk/nextjs";
 import { clerkAppearance } from "@/lib/clerk-appearance";
 import { isAdminEmail } from "@/lib/admin";
 import { openReportCount } from "@/lib/db/reports";
+import { countOpenFeedback } from "@/lib/db/feedback";
 import { IconLock } from "@/components/icons";
 import AdminNav from "./admin-nav";
 
@@ -21,7 +22,12 @@ export default async function AdminLayout({
   const admin = await isAdminEmail(email);
   // Open-report count for the nav badge — only fetched for admins (cheap COUNT),
   // and self-healing if the table doesn't exist yet (falls back to 0).
-  const openReports = admin ? await openReportCount().catch(() => 0) : 0;
+  const [openReports, openFeedback] = admin
+    ? await Promise.all([
+        openReportCount().catch(() => 0),
+        countOpenFeedback().catch(() => 0),
+      ])
+    : [0, 0];
 
   return (
     <div className="min-h-dvh bg-black text-white">
@@ -67,7 +73,7 @@ export default async function AdminLayout({
           </div>
           <div className="flex">
             <aside className="w-48 shrink-0 border-r border-white/10 p-4">
-              <AdminNav openReports={openReports} />
+              <AdminNav openReports={openReports} openFeedback={openFeedback} />
             </aside>
             <div className="min-w-0 flex-1 p-6">{children}</div>
           </div>

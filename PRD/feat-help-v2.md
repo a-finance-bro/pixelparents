@@ -1,5 +1,28 @@
 # feat/help-v2 — Help + Onboarding + Feedback surface
 
+## Progress Update as of [June 30, 2026 — 8:58 PM Pacific]
+
+### Summary of changes since last update
+Added the ADMIN FEEDBACK TRIAGE surface + nav badge. Piece 1 (feedback storage +
+widget + admin) is now complete end to end.
+
+### Detail of changes made:
+- `app/(authed)/admin/feedback/page.tsx` — lists feedback newest-first (coarsened
+  submitter #id, message, page path, date, status badge) with per-row Mark
+  reviewed / Mark resolved / Reopen forms; "N new" header pill; DB-less + non-admin
+  guards mirror /admin/reports.
+- `app/(authed)/admin/feedback/actions.ts` — `updateFeedbackStatus` (admin-gated,
+  validates status via isFeedbackStatus, revalidates the page).
+- `app/(authed)/admin/admin-nav.tsx` — added `{href:"/admin/feedback",
+  label:"Feedback"}` with an open-count (status='new') badge; nav now takes
+  `openFeedback` alongside `openReports`.
+- `app/(authed)/admin/layout.tsx` — fetches countOpenFeedback() in parallel with
+  openReportCount() (admins only, self-healing → 0) and threads it to AdminNav.
+
+### Potential concerns to address:
+- The floating help (?) button, help menu, GitHub dialog, FAQ, and walkthrough
+  tour are the remaining commits.
+
 ## Progress Update as of [June 30, 2026 — 8:52 PM Pacific]
 
 ### Summary of changes since last update
