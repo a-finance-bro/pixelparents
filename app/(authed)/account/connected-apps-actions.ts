@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { listConsentsForUser, revokeConsent } from "@/lib/oauth/store";
 
@@ -48,7 +47,12 @@ export async function revokeConnectedApp(
   if (!clientId) return { error: "Missing app." };
   try {
     const ok = await revokeConsent(userId, clientId);
-    revalidatePath("/account");
+    // Intentionally NO revalidatePath("/account") here: the connected-apps query
+    // filters on revoked_at IS NULL, so revalidating would drop the just-revoked
+    // row and replace the client's "Access revoked." confirmation with the app
+    // simply vanishing — ambiguous feedback for a security-sensitive action. The
+    // AppRow keeps its persistent "revoked" state; the row is gone on the next
+    // natural page load. (The grant + its refresh tokens are already burned.)
     return ok ? { revoked: clientId } : { error: "That app wasn't connected." };
   } catch (e) {
     console.error("revokeConnectedApp failed:", e);

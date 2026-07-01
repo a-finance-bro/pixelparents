@@ -1,3 +1,20 @@
+## Progress Update as of [June 30, 2026 — 10:08 PM Pacific]
+
+### Summary of changes since last update
+Findings 10, 11.
+
+### Detail of changes made:
+- **Finding 10 (co-parent join loses interest suggestions)** —
+  `app/signup/join/[token]/page.tsx` now fetches `getInterestPool()` and passes it
+  as `suggestedInterests` to SignupForm, matching the primary /signup page.
+- **Finding 11 (revoke confirmation flashes then vanishes)** —
+  `connected-apps-actions.ts`: dropped `revalidatePath("/account")` from
+  `revokeConnectedApp` (and the now-unused import). The query filters
+  `revoked_at IS NULL`, so revalidating dropped the just-revoked row and killed
+  the client's "Access revoked." confirmation. The AppRow's persistent client
+  state now keeps the confirmation until the next natural load. Grant + refresh
+  tokens are still burned server-side.
+
 ## Progress Update as of [June 30, 2026 — 10:04 PM Pacific]
 
 ### Summary of changes since last update
