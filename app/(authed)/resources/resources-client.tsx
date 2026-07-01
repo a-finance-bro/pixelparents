@@ -125,8 +125,9 @@ export function BoardsClient({
         </div>
       )}
 
-      {/* Sort switcher. */}
-      <div className="flex items-center gap-2">
+      {/* Sort switcher. On phones it becomes a horizontal scroll strip (with the
+          topic chips below) rather than wrapping / overflowing. */}
+      <div className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
         {SORTS.map(({ key, label, Icon }) => {
           const active = sort === key;
           return (
@@ -135,7 +136,7 @@ export function BoardsClient({
               type="button"
               onClick={() => setSort(key)}
               aria-pressed={active}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                 active
                   ? "border-amber-400/60 bg-amber-400/15 text-amber-200"
                   : "border-white/15 bg-white/[0.04] text-white/60 hover:bg-white/10 hover:text-white/80"
@@ -148,7 +149,8 @@ export function BoardsClient({
         })}
       </div>
 
-      {/* Topic filter chip strip — reuses the shared <TagList> "+N more" collapse. */}
+      {/* Topic filter chip strip — reuses the shared <TagList> "+N more" collapse.
+          Wraps to multiple lines on phones so no chip is clipped. */}
       {tagCounts.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium text-white/40">Filter by topic:</span>
