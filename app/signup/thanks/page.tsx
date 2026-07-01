@@ -200,6 +200,7 @@ export default async function ThanksPage({
             <FamilyForm
               signupId={validId}
               suggestedInterests={interestPool}
+              showFinish
               existingChildren={kids.map((k) => ({
                 id: k.id,
                 firstName: k.firstName,

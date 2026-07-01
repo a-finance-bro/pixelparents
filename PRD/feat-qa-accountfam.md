@@ -1,3 +1,20 @@
+## Progress Update as of [June 30, 2026 — 9:58 PM Pacific]
+
+### Summary of changes since last update
+Landed the "reused signup form on /family" cluster: findings 7, 13, 14.
+
+### Detail of changes made:
+- **Finding 7 (Finish→ bounces returning parents)** — `family-form.tsx` now takes
+  a `showFinish` prop (default false). Only `app/signup/thanks/page.tsx` passes it
+  (`showFinish`), so the /family editor omits the "Finish →" → /signup/welcome CTA.
+- **Finding 13 (share-link copy promises a link /family never surfaces)** —
+  `member-card.tsx`: dropped the "and via the share link" clause from the "OHS
+  Families" visibility explainer. The share link/copy button only exist on
+  /account (own signup), so the page now only promises what it delivers.
+- **Finding 14 (add-child fails silently)** — `family-form.tsx`: `onAddChild` now
+  sets an inline `addError` ("Couldn't add a child — please try again.") when
+  `addChild` returns a non-{id} shape, rendered under the button.
+
 ## Progress Update as of [June 30, 2026 — 9:53 PM Pacific]
 
 ### Summary of changes since last update

@@ -539,18 +539,26 @@ export default function FamilyForm({
   signupId,
   suggestedInterests,
   existingChildren = [],
+  // Only the signup onboarding flow (app/signup/thanks) shows the trailing
+  // "Finish →" CTA that links to /signup/welcome. The /family editor reuses this
+  // form for an already-onboarded parent, where that CTA would bounce them into
+  // the new-user completion screen — so it defaults OFF there.
+  showFinish = false,
 }: {
   signupId: string;
   suggestedInterests: string[];
   existingChildren?: ExistingChild[];
+  showFinish?: boolean;
 }) {
   const [children, setChildren] = useState<ExistingChild[]>(existingChildren);
   const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const candidates: MentionCandidate[] = children.map((c) => ({ id: c.id, name: c.firstName }));
 
   async function onAddChild() {
     setAdding(true);
+    setAddError(null);
     const r = await addChild(signupId);
     setAdding(false);
     if ("id" in r) {
@@ -558,6 +566,11 @@ export default function FamilyForm({
         ...cs,
         { id: r.id, firstName: "", grade: null, birthYear: null, interests: [], notes: null, studentEmail: null, photos: [], photoPreviews: {} },
       ]);
+    } else {
+      // The write failed / returned a non-{id} shape. Surface it inline instead
+      // of silently flipping the button back with no new row (which reads as a
+      // dead button).
+      setAddError("Couldn’t add a child — please try again.");
     }
   }
 
@@ -594,15 +607,22 @@ export default function FamilyForm({
         >
           {adding ? "Adding…" : "+ Add a child"}
         </button>
+        {addError && (
+          <p className="text-sm text-red-400" aria-live="polite">
+            {addError}
+          </p>
+        )}
       </section>
 
       <div className="flex items-center gap-3">
-        <Link
-          href="/signup/welcome"
-          className="rounded-full bg-white px-6 py-3 font-semibold text-black transition-opacity hover:opacity-90"
-        >
-          Finish →
-        </Link>
+        {showFinish && (
+          <Link
+            href="/signup/welcome"
+            className="rounded-full bg-white px-6 py-3 font-semibold text-black transition-opacity hover:opacity-90"
+          >
+            Finish →
+          </Link>
+        )}
         <span className="text-xs text-white/40">Everything saves automatically as you go.</span>
       </div>
     </div>
