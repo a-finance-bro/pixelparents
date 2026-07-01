@@ -553,8 +553,10 @@ function Composer({ responseId, onDone }: { responseId: string; onDone: () => vo
       }}
       className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-3"
     >
-      {/* Mode selector */}
-      <div className="inline-flex flex-wrap gap-1 rounded-full border border-white/15 p-0.5">
+      {/* Mode selector. On phones the four tabs scroll horizontally (no-scrollbar)
+          so they stay on one tappable line instead of cramping; at sm+ they wrap
+          naturally within the pill. */}
+      <div className="-mx-1 flex gap-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:rounded-full sm:border sm:border-white/15 sm:px-0.5 sm:py-0.5">
         {(
           [
             ["comment", "Comment"],
@@ -570,8 +572,10 @@ function Composer({ responseId, onDone }: { responseId: string; onDone: () => vo
               setMode(value);
               setError(null);
             }}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-              mode === value ? "bg-amber-400 text-black" : "text-white/65 hover:bg-white/10"
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition sm:border-transparent sm:py-1 ${
+              mode === value
+                ? "border-amber-400 bg-amber-400 text-black sm:border-transparent"
+                : "border-white/15 text-white/65 hover:bg-white/10 sm:border-transparent"
             }`}
           >
             {label}
@@ -603,13 +607,13 @@ function Composer({ responseId, onDone }: { responseId: string; onDone: () => vo
             All day
           </label>
           <div className="flex flex-wrap items-end gap-2">
-            <label className="flex flex-col gap-1">
+            <label className="flex w-full flex-col gap-1 sm:w-40">
               <span className="text-[11px] text-white/55">Date</span>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className={`${controlCls} w-40`}
+                className={controlCls}
               />
             </label>
             {!allDay && (

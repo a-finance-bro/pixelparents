@@ -40,15 +40,15 @@ function StatTile({
   Icon: (p: { className?: string }) => React.ReactElement;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:border-amber-400/30">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 transition-colors hover:border-amber-400/30 sm:p-4">
       <span className="mb-3 grid h-8 w-8 place-items-center rounded-lg bg-amber-400/15 text-amber-300">
         <Icon className="h-4 w-4" />
       </span>
-      <div className="text-2xl font-semibold tracking-tight text-white">
+      <div className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
         <CountUp value={value ?? 0} />
       </div>
       <div className="mt-1 h-0.5 w-6 rounded-full bg-amber-400/70" aria-hidden />
-      <div className="mt-1.5 text-sm text-white/60">{label}</div>
+      <div className="mt-1.5 text-xs text-white/60 sm:text-sm">{label}</div>
     </div>
   );
 }
@@ -242,7 +242,7 @@ export default async function DashboardPage() {
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.1em] text-white/40">
               Community at a glance
             </h2>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <StatTile label="Families" value={stats.total_families} Icon={IconHome} />
               <StatTile label="Parents" value={stats.total_signups} Icon={IconUsers} />
               <StatTile label="Kids at OHS" value={stats.total_children} Icon={IconGradCap} />

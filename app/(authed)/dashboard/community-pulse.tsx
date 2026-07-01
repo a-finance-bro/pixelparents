@@ -24,7 +24,7 @@ function Bar({
   const pct = max > 0 ? Math.max(6, Math.round((count / max) * 100)) : 0;
   return (
     <div className="flex items-center gap-3">
-      <div className="w-28 shrink-0 truncate text-sm text-white/70" title={label}>
+      <div className="w-20 shrink-0 truncate text-sm text-white/70 sm:w-28" title={label}>
         {label}
       </div>
       <div className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
