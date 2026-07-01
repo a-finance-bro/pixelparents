@@ -165,6 +165,21 @@ export function WalkthroughTour() {
       const measure = () => {
         if (cancelled) return;
         const r = el.getBoundingClientRect();
+        // A zero-size rect means the target is present but not laid out (e.g. a
+        // control hidden on this viewport — the sidebar feedback/account entries
+        // are `hidden md:flex` on phones). Treat it like a missing target and skip
+        // the step gracefully rather than spotlighting an invisible 0×0 box.
+        if (r.width === 0 && r.height === 0) {
+          setStep((s) => {
+            const next = clampStep(s + 1);
+            if (next === s) {
+              finish(true);
+              return s;
+            }
+            return next;
+          });
+          return;
+        }
         setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
       };
       if (noMotion) {

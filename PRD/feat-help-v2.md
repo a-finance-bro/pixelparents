@@ -1,5 +1,17 @@
 # feat/help-v2 — Help + Onboarding + Feedback surface
 
+## Progress Update as of [June 30, 2026 — 8:56 PM Pacific]
+
+### Summary of changes since last update
+Hardened the walkthrough tour: a target that's present but laid out at 0×0 (e.g.
+the sidebar feedback/account entries are `hidden md:flex` on phones) is now
+treated like a missing target and skipped, so the tour never spotlights an
+invisible box on small viewports. tsc + lint clean.
+
+### Detail of changes made:
+- `components/walkthrough-tour.tsx` — the measure step now skips when the target's
+  getBoundingClientRect is 0×0 (advances, or finishes if it was the last step).
+
 ## Progress Update as of [June 30, 2026 — 8:54 PM Pacific]
 
 ### Summary of changes since last update
