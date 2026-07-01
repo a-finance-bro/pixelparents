@@ -17,6 +17,22 @@ export type DbState = "ready" | "pending";
 // Filtered results never reveal a subpopulation smaller than this.
 export const K_ANON = 5;
 
+// Completed-signup predicate (welcome step fired → extra.notified='true'). Both
+// getStats and getBreakdowns count ONLY completed rows so the directory's map,
+// "N countries / M states represented" copy, and "Here to build" chip never
+// include abandoned/draft signups — otherwise those numbers visibly disagree
+// with the completed-only Families/Parents/Kids chips beside them. Applied as a
+// base condition on every signups query below (and, for children/skillset
+// breakdowns, scoped to completed families).
+export const COMPLETED = "(extra->>'notified') = 'true'";
+
+// Same predicate, correlated to an arbitrary signups alias, for use inside an
+// EXISTS subquery scoping a children (or other family-derived) query to families
+// whose signup completed.
+export function completedFamily(childTable: string): string {
+  return `EXISTS (SELECT 1 FROM signups s WHERE s.family_id = ${childTable}.family_id AND s.${COMPLETED})`;
+}
+
 async function tableExists(name: string): Promise<boolean> {
   const sql = getSql();
   const rows = (await sql`SELECT to_regclass(${"public." + name}) IS NOT NULL AS present`) as Array<{
@@ -138,6 +154,8 @@ export async function getStats(filters: Filters = {}): Promise<Stats> {
              SELECT 1 FROM signups s WHERE s.family_id = ch.family_id AND (s.extra->>'notified') = 'true'
           ))::int AS c
       `) as Array<{ s: number; f: number; c: number }>;
+      // NOTE: kept inline (not the COMPLETED constant) so this hot-path query
+      // stays a static tagged template — the completed predicate is identical.
       const r = rows[0];
       if (r) {
         return {
@@ -166,7 +184,7 @@ export async function getStats(filters: Filters = {}): Promise<Stats> {
   const sql = getSql();
   const { conds, params } = signupConds(filters);
   // Completed-only, matching the fast path above — never count draft/abandoned rows.
-  const where = whereClause(["(extra->>'notified') = 'true'"], conds);
+  const where = whereClause([COMPLETED], conds);
 
   // Each parent is a signup row; a family groups one or more parents.
   const sRows = (await sql.query(
@@ -188,9 +206,8 @@ export async function getStats(filters: Filters = {}): Promise<Stats> {
   if (await tableExists("children")) {
     const scope = childScope(conds);
     // Only children of a COMPLETED family, matching the fast path.
-    const completedFamily =
-      "EXISTS (SELECT 1 FROM signups s WHERE s.family_id = children.family_id AND (s.extra->>'notified') = 'true')";
-    const cw = scope ? `WHERE ${scope} AND ${completedFamily}` : `WHERE ${completedFamily}`;
+    const cf = completedFamily("children");
+    const cw = scope ? `WHERE ${scope} AND ${cf}` : `WHERE ${cf}`;
     children = await safeQuery(async () => {
       const rows = (await sql.query(
         `SELECT count(*)::int AS c FROM children ${cw}`,
@@ -276,28 +293,32 @@ export async function getBreakdowns(filters: Filters = {}): Promise<Breakdowns> 
     signups_by_skillset,
     signups_by_builder_interest,
   ] = await Promise.all([
-    countMap(["state IS NOT NULL"], "state"),
-    countMap(["country IS NOT NULL"], "country"),
-    countMap(["ohs_affiliation IS NOT NULL"], "ohs_affiliation"),
-    countMap(["technical_depth IS NOT NULL"], "technical_depth"),
-    countMap(["time_commitment IS NOT NULL"], "time_commitment"),
+    countMap([COMPLETED, "state IS NOT NULL"], "state"),
+    countMap([COMPLETED, "country IS NOT NULL"], "country"),
+    countMap([COMPLETED, "ohs_affiliation IS NOT NULL"], "ohs_affiliation"),
+    countMap([COMPLETED, "technical_depth IS NOT NULL"], "technical_depth"),
+    countMap([COMPLETED, "time_commitment IS NOT NULL"], "time_commitment"),
     // unnest array into a derived column, then count
     safeQuery(async () => {
       const rows = (await sql.query(
-        `SELECT skill AS k, count(*)::int AS c FROM signups, unnest(skillsets) AS skill ${whereClause([], conds)} GROUP BY skill`,
+        `SELECT skill AS k, count(*)::int AS c FROM signups, unnest(skillsets) AS skill ${whereClause([COMPLETED], conds)} GROUP BY skill`,
         params,
       )) as Array<{ k: string | null; c: number }>;
       return toCountMap(rows, suppress);
     }, {} as CountMap),
     // Builder interest lives in signups.extra (JSONB).
-    countMap(["extra->>'builderInterest' IS NOT NULL"], "extra->>'builderInterest'"),
+    countMap([COMPLETED, "extra->>'builderInterest' IS NOT NULL"], "extra->>'builderInterest'"),
   ]);
 
   // Grade lives on children — scope to the filtered signups when filtering.
   const signups_by_grade = hasChildren
     ? await safeQuery(async () => {
         const scope = childScope(conds);
-        const where = whereClause(["grade IS NOT NULL", ...(scope ? [scope] : [])], []);
+        // Only children of COMPLETED families, matching getStats' total_children.
+        const where = whereClause(
+          ["grade IS NOT NULL", completedFamily("ch"), ...(scope ? [scope] : [])],
+          [],
+        );
         const rows = (await sql.query(
           `SELECT grade AS k, count(*)::int AS c FROM children ch ${where} GROUP BY grade`,
           params,
@@ -311,7 +332,7 @@ export async function getBreakdowns(filters: Filters = {}): Promise<Breakdowns> 
     const rows = (await sql.query(
       `SELECT technical_depth AS td, skill AS sk, count(*)::int AS c
        FROM signups, unnest(skillsets) AS skill
-       ${whereClause(["technical_depth IS NOT NULL"], conds)}
+       ${whereClause([COMPLETED, "technical_depth IS NOT NULL"], conds)}
        GROUP BY td, sk`,
       params,
     )) as Array<{ td: string | null; sk: string | null; c: number }>;
@@ -326,12 +347,19 @@ export async function getBreakdowns(filters: Filters = {}): Promise<Breakdowns> 
 
   const top_interests = await safeQuery(async () => {
     const scope = childScope(conds);
+    // Completed-only on both sides: parent interests from completed signups, and
+    // child interests scoped to completed families (via completedFamily), so the
+    // pool matches the completed-only headline stats.
+    const childWhere = whereClause(
+      [completedFamily("children"), ...(scope ? [scope] : [])],
+      [],
+    );
     const childUnion = hasChildren
-      ? `UNION ALL SELECT unnest(interests) AS interest FROM children ${scope ? `WHERE ${scope}` : ""}`
+      ? `UNION ALL SELECT unnest(interests) AS interest FROM children ${childWhere}`
       : "";
     const rows = (await sql.query(
       `SELECT interest AS k, count(*)::int AS c FROM (
-         SELECT unnest(parent_interests) AS interest FROM signups ${whereClause([], conds)}
+         SELECT unnest(parent_interests) AS interest FROM signups ${whereClause([COMPLETED], conds)}
          ${childUnion}
        ) t
        WHERE interest IS NOT NULL AND interest <> ''

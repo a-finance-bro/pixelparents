@@ -16,7 +16,11 @@ type IconType = typeof IconHome;
 const ITEMS: { key: string; label: string; Icon: IconType }[] = [
   { key: "families", label: "Families", Icon: IconHome },
   { key: "parents", label: "Parents", Icon: IconUsers },
-  { key: "kids", label: "Kids at OHS", Icon: IconGradCap },
+  // Labeled "Children" (not "Kids at OHS"): total_children counts every child of
+  // a completed family, including siblings explicitly marked "Not an OHS child"
+  // (a non-OHS child collects a birth year instead of a grade). "Kids at OHS"
+  // would overstate actual OHS enrollment; "Children" stays truthful to the data.
+  { key: "kids", label: "Children", Icon: IconGradCap },
   { key: "builders", label: "Here to build", Icon: IconCode },
 ];
 
