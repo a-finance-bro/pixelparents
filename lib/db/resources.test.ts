@@ -259,3 +259,62 @@ describe("updateContribution (author-scoped)", () => {
     expect(lastCallMatching(/UPDATE resource_boards SET updated_at = now\(\)/)).toBeUndefined();
   });
 });
+
+// The legacy→"General" migration must seed the board as SYSTEM-OWNED (nil-UUID
+// author, no clerk id) rather than attributing it to the earliest legacy member.
+// Ownership drives edit/delete, so a real seed author could otherwise rename or
+// DELETE a community-wide board. We import the module FRESH (resetModules) so its
+// memoized `ensured` is null and both the DDL + migrateLegacyResources run.
+//
+// NB: ensureBoardsTables builds its DDL by evaluating each `sql``` template
+// (that's how the statements are recorded), so those calls also drain the mock
+// queue. We don't care about their results, so we drive the migration by the
+// SQL that was ISSUED (lastCallMatching) rather than by exact queue position,
+// and make the count-probe non-empty by returning a nonzero count for EVERY
+// unmatched call — the probe reads `pending[0]?.c`.
+describe("migrateLegacyResources — General board ownership", () => {
+  // A queue item shifted for any DDL/probe call: report "2 un-migrated rows" so
+  // the probe (SELECT count ... AS c) sees pending > 0 and the migration runs.
+  const NONZERO_COUNT = [{ c: 2 }];
+
+  it("creates the General board with the nil-UUID system owner and null clerk id", async () => {
+    vi.resetModules();
+    calls.length = 0;
+    // Every call returns the nonzero-count row; the only results that matter are
+    // the "existing General board" lookup (empty → create) and the INSERT id.
+    queue = Array.from({ length: 40 }, () => NONZERO_COUNT);
+    // Slot the "no existing General board" + INSERT-id results after the DDL
+    // (18 statements) + the count probe.
+    queue[19] = []; // SELECT existing "General" board → none
+    queue[20] = [{ id: "general-board-id" }]; // INSERT ... RETURNING id
+
+    const fresh = await import("./resources");
+    await fresh.ensureBoardsTables();
+
+    const insert = lastCallMatching(
+      /INSERT INTO resource_boards \(title, description, author_signup_id/,
+    );
+    expect(insert).toBeTruthy();
+    // The author is the nil UUID (system-owned), and NO earliest-legacy-author
+    // SELECT was issued to pick a real member.
+    expect(insert!.values).toContain("00000000-0000-0000-0000-000000000000");
+    expect(
+      lastCallMatching(/SELECT author_signup_id, author_clerk_id FROM resources/),
+    ).toBeUndefined();
+  });
+
+  it("does NOT re-create the board when a General board already exists", async () => {
+    vi.resetModules();
+    calls.length = 0;
+    queue = Array.from({ length: 40 }, () => NONZERO_COUNT);
+    queue[19] = [{ id: "existing-general" }]; // General board already present
+
+    const fresh = await import("./resources");
+    await fresh.ensureBoardsTables();
+
+    // No INSERT for a new board — it reuses the existing one.
+    expect(
+      lastCallMatching(/INSERT INTO resource_boards \(title, description, author_signup_id/),
+    ).toBeUndefined();
+  });
+});

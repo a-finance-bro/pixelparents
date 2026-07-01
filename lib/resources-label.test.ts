@@ -415,6 +415,51 @@ describe("sortBoards", () => {
     const ids = sortBoards(tied, "top", NOW);
     expect(ids[0]!.createdAtMs).toBe(NOW); // newer wins the tie
   });
+
+  // Pinned boards must sit at the very top in EVERY mode (matches the DB's
+  // `ORDER BY pinned DESC` + the "Pinned" badge the UI shows), even if their
+  // hot/top/new rank would otherwise sink them into the middle/bottom.
+  const withPinned: Array<Rankable & { id: string }> = [
+    // A stale, low-upvote board that is PINNED — should still lead in every mode.
+    {
+      id: "pinned-stale",
+      upvotes: 0,
+      pinned: true,
+      createdAtMs: NOW - 90 * 24 * 3600 * 1000,
+      lastActivityMs: NOW - 90 * 24 * 3600 * 1000,
+    },
+    { id: "hot-unpinned", upvotes: 50, createdAtMs: NOW - 1 * 3600 * 1000, lastActivityMs: NOW - 1 * 3600 * 1000 },
+    { id: "old-unpinned", upvotes: 3, createdAtMs: NOW - 30 * 24 * 3600 * 1000, lastActivityMs: NOW - 30 * 24 * 3600 * 1000 },
+  ];
+
+  it("keeps a pinned board first under 'new' despite being the oldest", () => {
+    expect(sortBoards(withPinned, "new", NOW)[0]!.id).toBe("pinned-stale");
+  });
+  it("keeps a pinned board first under 'top' despite zero upvotes", () => {
+    expect(sortBoards(withPinned, "top", NOW)[0]!.id).toBe("pinned-stale");
+  });
+  it("keeps a pinned board first under 'hot' despite being stale + unvoted", () => {
+    expect(sortBoards(withPinned, "hot", NOW)[0]!.id).toBe("pinned-stale");
+  });
+  it("still ranks normally WITHIN each pin group", () => {
+    // Two pinned boards: the higher-upvote one leads under 'top'; the unpinned
+    // boards follow, also in 'top' order.
+    const twoPinned: Array<Rankable & { id: string }> = [
+      { id: "pin-low", upvotes: 1, pinned: true, createdAtMs: NOW },
+      { id: "pin-high", upvotes: 20, pinned: true, createdAtMs: NOW },
+      { id: "free-high", upvotes: 100, pinned: false, createdAtMs: NOW },
+    ];
+    expect(sortBoards(twoPinned, "top", NOW).map((b) => b.id)).toEqual([
+      "pin-high",
+      "pin-low",
+      "free-high",
+    ]);
+  });
+  it("treats a missing `pinned` flag as unpinned (unchanged ordering)", () => {
+    // No pinned flags anywhere → identical to the original 'top' ordering.
+    const ids = sortBoards(boards, "top", NOW).map((b) => b.id);
+    expect(ids).toEqual(["old-popular", "mid-warm", "new-quiet"]);
+  });
 });
 
 describe("autoLabelBoard", () => {

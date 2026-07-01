@@ -100,16 +100,29 @@ export function BoardDetailClient({
   const [showForm, setShowForm] = useState(false);
   const [editingBoard, setEditingBoard] = useState(false);
   const [following, setFollowing] = useState(header.following);
+  const [followError, setFollowError] = useState<string | null>(null);
   const [followPending, startFollow] = useTransition();
   const [deletePending, startDelete] = useTransition();
 
   const toggleFollow = () => {
     const prev = following;
+    setFollowError(null);
     setFollowing(!prev);
     startFollow(async () => {
-      const res = await toggleBoardFollowAction({ boardId: header.id });
-      if (res.ok) setFollowing(res.following);
-      else setFollowing(prev);
+      try {
+        const res = await toggleBoardFollowAction({ boardId: header.id });
+        if (res.ok) setFollowing(res.following);
+        else {
+          // Roll back the optimistic flip AND tell the user why — otherwise the
+          // button just snaps back with no explanation (mirrors the inline error
+          // pattern used for contribution/board mutations).
+          setFollowing(prev);
+          setFollowError(res.error);
+        }
+      } catch {
+        setFollowing(prev);
+        setFollowError("Couldn't update follow. Please try again.");
+      }
     });
   };
 
@@ -221,6 +234,12 @@ export function BoardDetailClient({
             )}
           </span>
         </div>
+
+        {followError && (
+          <p className="mt-3 text-sm text-red-300" role="alert">
+            {followError}
+          </p>
+        )}
       </header>
       )}
 

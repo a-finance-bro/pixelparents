@@ -219,6 +219,10 @@ export type Rankable = {
   // createdAtMs). A board getting fresh contributions stays warm.
   lastActivityMs?: number;
   contributionCount?: number;
+  // Pinned boards are held at the very top regardless of the Hot/Top/New mode,
+  // matching the DB's `ORDER BY b.pinned DESC` intent (and the "Pinned" badge the
+  // UI shows). Absent → treated as unpinned.
+  pinned?: boolean;
 };
 
 // A Reddit-style "hot" score: log-dampened vote weight MINUS an age-decay term,
@@ -240,20 +244,28 @@ export function hotScore(item: Rankable, nowMs: number): number {
 }
 
 // Sort a list of rankables by the chosen mode, returning a NEW array (stable,
-// non-mutating). "hot" uses hotScore; "top" is pure upvotes desc; "new" is
-// recency desc. Ties fall back to recency so ordering is deterministic.
+// non-mutating). PINNED items are always held at the top (matching the DB's
+// `pinned DESC` intent + the "Pinned" badge the UI shows) via a primary
+// comparator that runs BEFORE the mode's own comparison. Within each pin group:
+// "hot" uses hotScore; "top" is pure upvotes desc; "new" is recency desc. Ties
+// fall back to recency so ordering is deterministic.
 export function sortBoards<T extends Rankable>(
   items: readonly T[],
   sort: BoardSort,
   nowMs: number = Date.now(),
 ): T[] {
   const arr = [...items];
+  // Pinned-first: true sorts ahead of false in every mode.
+  const pinCmp = (a: T, b: T) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned));
   if (sort === "new") {
-    arr.sort((a, b) => b.createdAtMs - a.createdAtMs);
+    arr.sort((a, b) => pinCmp(a, b) || b.createdAtMs - a.createdAtMs);
   } else if (sort === "top") {
-    arr.sort((a, b) => b.upvotes - a.upvotes || b.createdAtMs - a.createdAtMs);
+    arr.sort((a, b) => pinCmp(a, b) || b.upvotes - a.upvotes || b.createdAtMs - a.createdAtMs);
   } else {
-    arr.sort((a, b) => hotScore(b, nowMs) - hotScore(a, nowMs) || b.createdAtMs - a.createdAtMs);
+    arr.sort(
+      (a, b) =>
+        pinCmp(a, b) || hotScore(b, nowMs) - hotScore(a, nowMs) || b.createdAtMs - a.createdAtMs,
+    );
   }
   return arr;
 }

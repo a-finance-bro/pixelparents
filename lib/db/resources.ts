@@ -37,6 +37,16 @@ import {
 // The fixed slug/title of the auto-created home for migrated legacy resources.
 const DEFAULT_BOARD_TITLE = "General";
 
+// The "General" board is a SHARED, system-owned home for migrated legacy
+// resources — it belongs to no single member. We seed it with the nil UUID as
+// its author so nobody's `isMine` check ever matches it: ownership drives
+// edit/delete (updateBoard/deleteBoard scope every mutation to
+// author_signup_id, and no real signup carries the nil UUID), so this board
+// cannot be renamed, re-tagged, or DELETED out from under the community by an
+// arbitrary early contributor. It also keeps everyone's migrated contributions
+// safe from an accidental cascade delete.
+const SYSTEM_BOARD_OWNER = "00000000-0000-0000-0000-000000000000";
+
 let ensured: Promise<void> | null = null;
 export function ensureBoardsTables(): Promise<void> {
   if (!ensured) {
@@ -157,19 +167,10 @@ async function migrateLegacyResources(): Promise<void> {
   `) as unknown as { c: number }[];
   if ((pending[0]?.c ?? 0) === 0) return;
 
-  // Ensure a single "General" board exists to receive migrated resources. Pick
-  // the earliest legacy author as the board author so attribution stays sane;
-  // fall back to the first un-migrated row.
-  const seed = (await sql`
-    SELECT author_signup_id, author_clerk_id
-    FROM resources
-    WHERE migrated_to_contribution_id IS NULL
-    ORDER BY created_at ASC
-    LIMIT 1
-  `) as unknown as { author_signup_id: string; author_clerk_id: string | null }[];
-  const seedAuthor = seed[0];
-  if (!seedAuthor) return;
-
+  // Ensure a single "General" board exists to receive migrated resources. It is
+  // SYSTEM-OWNED (nil-UUID author, no author_clerk_id) — a shared community home,
+  // not attributed to any one member — so it can't be edited or deleted by the
+  // accidental "earliest legacy author" (see SYSTEM_BOARD_OWNER above).
   const existing = (await sql`
     SELECT id FROM resource_boards WHERE title = ${DEFAULT_BOARD_TITLE} ORDER BY created_at ASC LIMIT 1
   `) as unknown as { id: string }[];
@@ -181,8 +182,8 @@ async function migrateLegacyResources(): Promise<void> {
       VALUES (
         ${title.ok ? title.value : DEFAULT_BOARD_TITLE},
         ${"Community resources shared before boards existed — and a home for anything that doesn't fit elsewhere."},
-        ${seedAuthor.author_signup_id},
-        ${seedAuthor.author_clerk_id},
+        ${SYSTEM_BOARD_OWNER},
+        ${null},
         ${["ohs", "resource"]}::text[],
         ${true}
       )
