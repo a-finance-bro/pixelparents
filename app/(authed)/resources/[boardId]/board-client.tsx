@@ -538,7 +538,7 @@ function ContributionForm({ boardId, onDone }: { boardId: string; onDone: () => 
         // A thrown action must not crash to the error boundary — the
         // contribution may have been saved. Show a recoverable notice.
         setError(
-          "Something went wrong — your contribution may have been added. Refresh to check.",
+          "Your connection dropped before we could confirm. Reload the page to see the latest, then resubmit if it is not there.",
         );
       }
     });
@@ -689,7 +689,7 @@ function BoardEditForm({
         if (res.ok) onDone();
         else setError(res.error);
       } catch {
-        setError("Something went wrong — your changes may have been saved. Refresh to check.");
+        setError("Your connection dropped before we could confirm. Reload the page to see the latest, then resave if your change is not there.");
       }
     });
   };
@@ -797,7 +797,7 @@ function ContributionEditForm({
         if (res.ok) onDone();
         else setError(res.error);
       } catch {
-        setError("Something went wrong — your changes may have been saved. Refresh to check.");
+        setError("Your connection dropped before we could confirm. Reload the page to see the latest, then resave if your change is not there.");
       }
     });
   };

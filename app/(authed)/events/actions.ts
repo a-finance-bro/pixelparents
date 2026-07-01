@@ -147,18 +147,22 @@ function validateEventForm(input: EventFormInput):
 }
 
 export async function createEventAction(input: EventFormInput): Promise<ActionResult> {
-  const caller = await verifiedCaller();
-  if (!caller) return { ok: false, error: "You must be a verified OHS family to create an event." };
-
-  const v = validateEventForm(input);
-  if (!v.ok) return v;
-
-  const recent = await countEventsByAuthorSince(caller.user.id, Date.now() - EVENT_RATE_WINDOW_MS);
-  if (recent >= EVENT_RATE_LIMIT) {
-    return { ok: false, error: "You've created a lot of events recently — please try again later." };
-  }
-
+  // Whole-body try/catch so this action NEVER throws to the client for a
+  // predictable failure (auth hiccup, rate-limit query, DB error) — every such
+  // case returns a definite {ok:false}. That leaves a client-side throw meaning
+  // only a genuine transport failure, which the form handles distinctly.
   try {
+    const caller = await verifiedCaller();
+    if (!caller) return { ok: false, error: "You must be a verified OHS family to create an event." };
+
+    const v = validateEventForm(input);
+    if (!v.ok) return v;
+
+    const recent = await countEventsByAuthorSince(caller.user.id, Date.now() - EVENT_RATE_WINDOW_MS);
+    if (recent >= EVENT_RATE_LIMIT) {
+      return { ok: false, error: "You've created a lot of events recently — please try again later." };
+    }
+
     const event = await createEvent({
       authorSignupId: caller.user.id,
       authorClerkId: caller.clerkId,
@@ -176,24 +180,26 @@ export async function createEventAction(input: EventFormInput): Promise<ActionRe
 export async function updateEventAction(input: { id: string } & EventFormInput): Promise<ActionResult> {
   if (!UUID_RE.test(input.id)) return { ok: false, error: "Unknown event." };
 
-  const caller = await verifiedCaller();
-  if (!caller) return { ok: false, error: "You must be a verified OHS family." };
-
-  // Authorization: the event must exist, be a USER event, and the caller must be
-  // an admin of it (author or added admin). OHS events are never editable.
-  const existing = await getEventById(input.id);
-  if (!existing) return { ok: false, error: "Unknown event." };
-  if (existing.source !== "user") {
-    return { ok: false, error: "OHS calendar events can't be edited." };
-  }
-  if (!(await isEventAdmin(input.id, caller.user.id))) {
-    return { ok: false, error: "You can only edit events you organize." };
-  }
-
-  const v = validateEventForm(input);
-  if (!v.ok) return v;
-
+  // Whole-body try/catch — see createEventAction: a predictable failure returns a
+  // definite {ok:false}; only a transport failure reaches the client as a throw.
   try {
+    const caller = await verifiedCaller();
+    if (!caller) return { ok: false, error: "You must be a verified OHS family." };
+
+    // Authorization: the event must exist, be a USER event, and the caller must be
+    // an admin of it (author or added admin). OHS events are never editable.
+    const existing = await getEventById(input.id);
+    if (!existing) return { ok: false, error: "Unknown event." };
+    if (existing.source !== "user") {
+      return { ok: false, error: "OHS calendar events can't be edited." };
+    }
+    if (!(await isEventAdmin(input.id, caller.user.id))) {
+      return { ok: false, error: "You can only edit events you organize." };
+    }
+
+    const v = validateEventForm(input);
+    if (!v.ok) return v;
+
     const updated = await updateEvent({ id: input.id, ...v.value });
     if (!updated) return { ok: false, error: "Couldn't save your changes." };
     revalidatePath("/events");
