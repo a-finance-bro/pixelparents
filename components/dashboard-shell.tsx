@@ -10,6 +10,7 @@ import { NotificationBell } from "@/components/notification-bell";
 import { FeedbackWidget } from "@/components/feedback-widget";
 import { HelpButton } from "@/components/help-button";
 import { WalkthroughTour } from "@/components/walkthrough-tour";
+import { InstallPrompt } from "@/components/install-prompt";
 import {
   IconGrid,
   IconHome,
@@ -422,6 +423,12 @@ export function DashboardShell({
         <>
           <HelpButton />
           <WalkthroughTour />
+          {/* "Add to home screen" banner. The manifest's start_url is /dashboard
+              and the whole product is the signed-in shell, so the marketing splash
+              was the wrong (and only) place it surfaced — the users most likely to
+              install never saw it. InstallPrompt self-gates (mobile only, hidden
+              once installed or dismissed), so it's safe to mount app-wide here. */}
+          <InstallPrompt />
         </>
       )}
     </div>

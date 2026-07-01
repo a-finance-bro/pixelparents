@@ -3,6 +3,7 @@ import { isAdminEmail } from "@/lib/admin";
 import { hasDatabase } from "@/lib/db";
 import { listReports } from "@/lib/db/reports";
 import { updateStatus } from "./actions";
+import { StatusSubmitButton } from "../status-submit-button";
 
 export const dynamic = "force-dynamic";
 
@@ -124,19 +125,13 @@ export default async function ReportsPage() {
                       value={resolved ? "open" : "resolved"}
                     />
                     {resolved ? (
-                      <button
-                        type="submit"
-                        className="rounded-full border border-white/20 px-4 py-1.5 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
-                      >
+                      <StatusSubmitButton className="rounded-full border border-white/20 px-4 py-1.5 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white">
                         Reopen
-                      </button>
+                      </StatusSubmitButton>
                     ) : (
-                      <button
-                        type="submit"
-                        className="rounded-full bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-black transition hover:bg-emerald-400"
-                      >
+                      <StatusSubmitButton className="rounded-full bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-black transition hover:bg-emerald-400">
                         Mark resolved
-                      </button>
+                      </StatusSubmitButton>
                     )}
                   </form>
                 </div>

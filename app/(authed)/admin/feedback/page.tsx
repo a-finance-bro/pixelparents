@@ -3,6 +3,7 @@ import { isAdminEmail } from "@/lib/admin";
 import { hasDatabase } from "@/lib/db";
 import { listFeedback } from "@/lib/db/feedback";
 import { updateFeedbackStatus } from "./actions";
+import { StatusSubmitButton } from "../status-submit-button";
 
 export const dynamic = "force-dynamic";
 
@@ -97,36 +98,27 @@ export default async function FeedbackAdminPage() {
                   <form action={updateFeedbackStatus}>
                     <input type="hidden" name="id" value={f.id} />
                     <input type="hidden" name="status" value="reviewed" />
-                    <button
-                      type="submit"
-                      className="rounded-full border border-sky-500/40 px-4 py-1.5 text-sm font-semibold text-sky-300 transition hover:bg-sky-500/10"
-                    >
+                    <StatusSubmitButton className="rounded-full border border-sky-500/40 px-4 py-1.5 text-sm font-semibold text-sky-300 transition hover:bg-sky-500/10">
                       Mark reviewed
-                    </button>
+                    </StatusSubmitButton>
                   </form>
                 )}
                 {f.status !== "resolved" && (
                   <form action={updateFeedbackStatus}>
                     <input type="hidden" name="id" value={f.id} />
                     <input type="hidden" name="status" value="resolved" />
-                    <button
-                      type="submit"
-                      className="rounded-full bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-black transition hover:bg-emerald-400"
-                    >
+                    <StatusSubmitButton className="rounded-full bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-black transition hover:bg-emerald-400">
                       Mark resolved
-                    </button>
+                    </StatusSubmitButton>
                   </form>
                 )}
                 {f.status !== "new" && (
                   <form action={updateFeedbackStatus}>
                     <input type="hidden" name="id" value={f.id} />
                     <input type="hidden" name="status" value="new" />
-                    <button
-                      type="submit"
-                      className="rounded-full border border-white/20 px-4 py-1.5 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
-                    >
+                    <StatusSubmitButton className="rounded-full border border-white/20 px-4 py-1.5 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white">
                       Reopen
-                    </button>
+                    </StatusSubmitButton>
                   </form>
                 )}
               </div>

@@ -1,5 +1,33 @@
 # feat/qa-shellmisc — QA fix pass (app shell, notifications, help/feedback, admin, changelog, legal, report/error)
 
+## Progress Update as of [June 30, 2026 — 9:57 PM Pacific]
+
+### Summary of changes since last update
+Admin triage feedback (finding 11) + PWA install prompt reach (finding 17). Admin
+status-change buttons now disable + show "Saving…" while their server action is
+pending (no more silent double-submits), and the install banner now mounts inside
+the persistent DashboardShell so it can surface on the authed surfaces (it already
+self-gates mobile-only / hide-when-installed).
+
+### Detail of changes made:
+- **[11] No feedback on admin status change** — new `app/(authed)/admin/status-submit-button.tsx`
+  client component uses `useFormStatus()` to disable + swap in a "Saving…" label
+  while the enclosing form's action is pending. Wired into all three
+  `/admin/feedback` controls (reviewed/resolved/reopen) and both `/admin/reports`
+  controls (resolve/reopen).
+- **[17] PWA prompt only on landing** — `dashboard-shell.tsx` now renders
+  `<InstallPrompt/>` (authed branch only). The component self-gates (mobile-only,
+  hides once installed/dismissed), so the authed users most likely to install
+  finally see "Add to home screen".
+
+### Files touched (this commit)
+- `app/(authed)/admin/status-submit-button.tsx` (new)
+- `app/(authed)/admin/feedback/page.tsx`
+- `app/(authed)/admin/reports/page.tsx`
+- `components/dashboard-shell.tsx`
+
+---
+
 ## Progress Update as of [June 30, 2026 — 9:55 PM Pacific]
 
 ### Summary of changes since last update
