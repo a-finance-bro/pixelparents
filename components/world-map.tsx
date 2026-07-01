@@ -11,7 +11,13 @@ import type { Marker } from "@/lib/community-map";
 // projected once at module load (the geometry never changes); markers are
 // projected per render. Rendered as a client island so pins can animate in
 // (staggered drop, largest clusters first) and reveal a hover/tap tooltip
-// ("California — N families"). All motion is gated on prefers-reduced-motion.
+// ("California — N members"). All motion is gated on prefers-reduced-motion.
+//
+// NOTE on the label: markers come from signups_by_state / signups_by_country,
+// which count PARENT SIGNUPS grouped by place — NOT distinct families (a
+// two-parent household in one state is two signups). So the tooltip says
+// "members", not "families", to stay truthful and not double-count a household
+// against the distinct-family "Families" stat chip beside the map.
 
 const W = 800;
 const H = 412;
@@ -67,7 +73,7 @@ export function WorldMap({ markers, accent = "#fbbf24" }: { markers: Marker[]; a
         viewBox={`0 0 ${W} ${H}`}
         className="w-full"
         role="img"
-        aria-label="World map of where Pixel Parents families are"
+        aria-label="World map of where Pixel Parents members are"
       >
         <g>
           {COUNTRY_PATHS.map((d, i) => (
@@ -161,7 +167,7 @@ export function WorldMap({ markers, accent = "#fbbf24" }: { markers: Marker[]; a
                 <span className="text-white/55">
                   {" "}
                   — {active.count.toLocaleString()}{" "}
-                  {active.count === 1 ? "family" : "families"}
+                  {active.count === 1 ? "member" : "members"}
                 </span>
               </motion.div>
             );

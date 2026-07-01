@@ -232,7 +232,12 @@ export async function ProfileView({
   const connectTopics = (() => {
     const seen = new Set<string>();
     const out: string[] = [];
-    for (const t of [...interests, ...skillsets, ...(enrichment?.expertiseTags ?? [])]) {
+    // Only surface interests as composer chips when the owner opted into sharing
+    // them (same gate the "Parent interests" display uses at `visible.has`). A
+    // member who turned the interests share OFF must never have those interests
+    // leak into the Connect composer chips or the ?topics= URL param.
+    const topicInterests = visible.has("interests") ? interests : [];
+    for (const t of [...topicInterests, ...skillsets, ...(enrichment?.expertiseTags ?? [])]) {
       const clean = t?.trim();
       if (!clean) continue;
       const key = clean.toLowerCase();

@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { getStats, getBreakdowns, getTrends, hasFilters, K_ANON } from "@/lib/db/aggregates";
+import {
+  getStats,
+  getBreakdowns,
+  getTrends,
+  hasFilters,
+  K_ANON,
+  COMPLETED,
+  completedFamily,
+} from "@/lib/db/aggregates";
 
 // No DATABASE_URL in the test env, so every aggregate takes the graceful
 // "pending" path — verifying it never throws and degrades to safe defaults.
@@ -7,6 +15,22 @@ import { getStats, getBreakdowns, getTrends, hasFilters, K_ANON } from "@/lib/db
 describe("aggregates (no DB → pending)", () => {
   it("K_ANON is 5", () => {
     expect(K_ANON).toBe(5);
+  });
+
+  it("COMPLETED predicate matches only welcome-fired (notified) signups", () => {
+    // The map / breakdowns must share the SAME completed-only predicate getStats
+    // uses, so their numbers never disagree with the Families/Parents chips.
+    expect(COMPLETED).toBe("(extra->>'notified') = 'true'");
+  });
+
+  it("completedFamily scopes a child table to completed families via the shared predicate", () => {
+    const frag = completedFamily("ch");
+    // Correlates the child table's family_id to a completed signup, and reuses
+    // the COMPLETED predicate (single source of truth) — no divergent copy.
+    expect(frag).toContain("ch.family_id");
+    expect(frag).toContain("FROM signups s");
+    expect(frag).toContain(`s.${COMPLETED}`);
+    expect(frag.startsWith("EXISTS (SELECT 1")).toBe(true);
   });
 
   it("hasFilters detects an active filter", () => {
